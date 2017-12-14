@@ -60,9 +60,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
 #check if release already exists
 version=$(printf '%s' $(cat $GIT_VERSIONFILE))
-echo "Version is $version"
-	
-wget -qs ${EGGREPO_URL}${GIT_NAME}/f/${GIT_NAME}-${version}.tar.gz 2>/dev/null
+wget -qs "${EGGREPO_URL}d/${GIT_NAME}/f/${GIT_NAME}-${version}.tar.gz" 2>&1
 if [ $? -ne 0 ]; then
    export HOME=$(pwd)
    echo "[distutils]
