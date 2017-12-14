@@ -54,10 +54,17 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         fi             
  fi
      
-if [[ "$GIT_BRANCH" == "master" ]; then     
+if [[ "$GIT_BRANCH" == "master" ]]; then     
 
    export HOME=$(pwd)
-   echo "[distutils]\nindex-servers =\n   eea\n\n[eea]\nrepository: http://eggrepo.apps.eea.europa.eu/\nusername: ${EGGREPO_USERNAME}\npassword: ${EGGREPO_PASSWORD}" > .pypirc
+   echo "[distutils]
+index-servers =
+   eea
+
+[eea]
+repository: http://eggrepo.apps.eea.europa.eu/
+username: ${EGGREPO_USERNAME}
+password: ${EGGREPO_PASSWORD}" > .pypirc
    python setup.py register -r eea
    python setup.py sdist upload -r eea
 
