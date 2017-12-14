@@ -2,6 +2,8 @@
 
 set -e
 
+EGGREPO_URL=http://eggrepo.apps.eea.europa.eu/
+
 CMD="$1"
 
 if [ -z "$GIT_SRC" ]; then
@@ -56,18 +58,28 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
      
 if [[ "$GIT_BRANCH" == "master" ]]; then     
 
+#check if release already exists
+version=$(printf '%s' $(cat $GIT_VERSIONFILE))
+echo "Version is $version"
+	
+wget -qs ${EGGREPO_URL}${GIT_NAME}/f/${GIT_NAME}-${version}.tar.gz 2>/dev/null
+if [ $? -ne 0 ]; then
    export HOME=$(pwd)
    echo "[distutils]
 index-servers =
    eea
 
 [eea]
-repository: http://eggrepo.apps.eea.europa.eu/
+repository: $EGGREPO_URL
 username: ${EGGREPO_USERNAME}
 password: ${EGGREPO_PASSWORD}" > .pypirc
+
    python setup.py register -r eea
    python setup.py sdist upload -r eea
 
+else
+echo "Release skipped because ${GIT_NAME}-${version}.tar.gz already exists on repo"
+fi
 fi
 
 exec "$@"
