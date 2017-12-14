@@ -9,11 +9,17 @@ echo "GIT source not given"
 exit 1
 fi
 
+if [ -z "$GIT_NAME" ]; then
+echo "GIT repo name not given"
+exit 1
+fi
 
+git clone $GIT_SRC
+cd $GIT_NAME
+	
 if [ ! -z "$GIT_CHANGE_ID" ]; then
 
-        git clone $GIT_SRC
-        cd $GIT_NAME
+
         git fetch origin pull/$GIT_CHANGE_ID/head:$GIT_BRANCH
         files_changed=$(git --no-pager diff --name-only $GIT_BRANCH $(git merge-base $GIT_BRANCH master))
 
@@ -46,10 +52,15 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
          echo "Pipeline aborted due to version ${version} being smaller than last version ${last_version}"
 	 exit 1
         fi             
-                        
-                        
-        
-        
-     fi
+ fi
      
+if [[ "$GIT_BRANCH" == "master" ]; then     
+
+   export HOME=$(pwd)
+   echo "[distutils]\nindex-servers =\n   eea\n\n[eea]\nrepository: http://eggrepo.apps.eea.europa.eu/\nusername: ${EGGREPO_USERNAME}\npassword: ${EGGREPO_PASSWORD}" > .pypirc
+   python setup.py register -r eea
+   python setup.py sdist upload -r eea
+
+fi
+
 exec "$@"
