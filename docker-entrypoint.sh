@@ -2,8 +2,6 @@
 
 set -e
 
-EGGREPO_URL=http://eggrepo.apps.eea.europa.eu/
-
 CMD="$1"
 
 if [ -z "$GIT_SRC" ]; then
@@ -32,6 +30,18 @@ if [ -z "$GIT_EMAIL" ]; then
  GIT_EMAIL="eea-github@googlegroups.com"
 fi
 
+if [ -z "$EGGREPO_URL" ]; then
+ EGGREPO_URL=https://eggrepo.apps.eea.europa.eu/
+fi
+
+
+if [ -z "$KGS_GITNAME" ]; then
+  KGS_GITNAME=eea.docker.kgs
+fi
+
+if [ -z "KGS_VERSIONS_PATH" ]; then
+  KGS_VERSIONS_PATH=src/plone/versions.cfg
+fi
 
 
 git clone $GIT_SRC
@@ -125,8 +135,6 @@ password: ${EGGREPO_PASSWORD}" > .pypirc
 	fi
 
  # Updating versions.cfg	
- KGS_GITNAME=eea.docker.kgs
- KGS_VERSIONS_PATH=src/plone/versions.cfg
 
  curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  > versions.cfg
  
