@@ -1,7 +1,7 @@
 FROM python:2-alpine
 MAINTAINER "EEA: IDM2 A-Team" <eea-edw-a-team-alerts@googlegroups.com>
 
-RUN apk add --no-cache --virtual .run-deps git bash 
+RUN apk add --no-cache --virtual .run-deps git bash curl 
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 

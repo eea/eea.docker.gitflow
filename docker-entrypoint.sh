@@ -7,14 +7,32 @@ EGGREPO_URL=http://eggrepo.apps.eea.europa.eu/
 CMD="$1"
 
 if [ -z "$GIT_SRC" ]; then
-echo "GIT source not given"
-exit 1
+ echo "GIT source not given"
+ exit 1
 fi
 
 if [ -z "$GIT_NAME" ]; then
-echo "GIT repo name not given"
-exit 1
+ echo "GIT repo name not given"
+ exit 1
 fi
+
+if [ -z "$GIT_USERNAME" ]; then
+ GIT_USERNAME="EEA Jenkins"
+fi
+
+if [ -z "$GIT_EMAIL" ]; then
+ GIT_EMAIL="eea-github@googlegroups.com"
+fi
+
+if [ -z "$GIT_USERNAME" ]; then
+ GIT_USERNAME="EEA Jenkins"
+fi
+
+if [ -z "$GIT_EMAIL" ]; then
+ GIT_EMAIL="eea-github@googlegroups.com"
+fi
+
+
 
 git clone $GIT_SRC
 cd $GIT_NAME
@@ -36,7 +54,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 	git checkout $GIT_BRANCH
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "Version is $version"
-        if [ $(git tag | grep -E "^$version$" | wc -l) -ne 0 ]; then                        
+        if [ $(git tag | grep -c "^$version$" ) -ne 0 ]; then                        
          echo "Pipeline aborted due to version already present in tags"
          exit 1
         fi
@@ -54,16 +72,17 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
          echo "Pipeline aborted due to version ${version} being smaller than last version ${last_version}"
 	 exit 1
         fi             
- fi
+fi
      
 if [[ "$GIT_BRANCH" == "master" ]]; then     
 
-#check if release already exists
-version=$(printf '%s' $(cat $GIT_VERSIONFILE))
-wget -qs "${EGGREPO_URL}d/${GIT_NAME}/f/${GIT_NAME}-${version}.tar.gz" 2>&1
-if [ $? -ne 0 ]; then
-   export HOME=$(pwd)
-   echo "[distutils]
+        #check if release already exists
+	version=$(printf '%s' $(cat $GIT_VERSIONFILE))
+	http_code=$(curl -s -o /dev/null -I -w  "%{http_code}" "${EGGREPO_URL}d/${GIT_NAME}/f/${GIT_NAME}-${version}.tar.gz")
+
+	if [ $http_code -ne 200 ]; then
+	 export HOME=$(pwd)
+   	 echo "[distutils]
 index-servers =
    eea
 
@@ -72,12 +91,62 @@ repository: $EGGREPO_URL
 username: ${EGGREPO_USERNAME}
 password: ${EGGREPO_PASSWORD}" > .pypirc
 
-   python setup.py register -r eea
-   python setup.py sdist upload -r eea
+   	 python setup.py register -r eea
+   	 python setup.py sdist upload -r eea
 
-else
-echo "Release skipped because ${GIT_NAME}-${version}.tar.gz already exists on repo"
-fi
+	else
+	 echo "Release ${GIT_NAME}-${version}.tar.gz already exists on repo, skipping"
+	fi
+
+	#check if tag exiss
+	if [ $(git tag | grep -c "^$version$") -eq 0 ]; then
+	 echo "Starting the creation of the tag $version on master"   
+
+	 export PYTHONIOENCODING=utf8
+	 sha_commit=$(curl -s -H "Authorization: bearer $GIT_TOKEN" https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/git/refs/heads/master |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+	 echo "Got master sha: $sha_commit"
+
+	 sha_tag=$(curl -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{ \"tag\": \"$version\", \"message\": \"Release $version\",\"object\": \"${sha_commit}\", \"type\": \"commit\", \"tagger\":{\"name\": \"${GIT_USERNAME}\",\"email\": \"${GIT_EMAIL}\"}}"  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/git/tags |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+	 echo "Created tag with sha: $sha_tag"
+
+	 curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{ \"ref\": \"refs/tags/$version\",  \"sha\": \"${sha_tag}\"}"  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/git/refs 
+
+	 git fetch --tags
+
+	 if [ $(git tag | grep -c "^$version$") -eq 0 ]; then
+	   echo "Tag $version not created, exiting with error"
+	   exit 1
+	 else
+	   echo "Tag $version succesfully created"
+	 fi
+
+	else
+	  echo "Tag $version already created, skipping"
+	fi
+
+ # Updating versions.cfg	
+ KGS_GITNAME=eea.docker.kgs
+ KGS_VERSIONS_PATH=src/plone/versions.cfg
+
+ curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  > versions.cfg
+ 
+ if [ $(grep -c "^${GIT_NAME} = $version$" versions.cfg) -eq 1 ]; then
+ 	 echo "KGS versions file already updated, skipping"
+ else
+	echo "Starting the update of KGS versions file with released version"
+  	sha_versionfile=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+  	grep -q "^${GIT_NAME} =" versions.cfg  && sed -i "s/^${GIT_NAME} =.*/${GIT_NAME} = $version/" versions.cfg || sed -i "/# automatically set /a ${GIT_NAME} = $version" versions.cfg
+
+  	result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}")
+      
+       if [ $(echo $result | grep -c "HTTP/1.1 200 OK") -eq 1 ]; then
+         echo "KGS versions file updated succesfully"
+       else
+         echo "There was an error updating the KGS file, please check the execution"
+         exit 1
+       fi 
+ fi
+
 fi
 
 exec "$@"
