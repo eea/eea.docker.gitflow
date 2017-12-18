@@ -34,7 +34,7 @@ To run from jenkins:
 2. GIT_ORG  - Organisation name, default: "eea"
 3. GIT_VERSIONFILE - Location of the Versionfile, default: "eea/testegg/version.txt"
 4. GIT_USERNAME - User that will do the changes in github, default "EEA Jenkins"
-4. GIT_EMAIL - Email that will do the changes in github, default "eea-github@googlegroups.com"
+4. GIT_EMAIL - Email that will do the changes in github, default value set in code
 1. EGGREPO_URL - URL of Repository for python eggs - default: https://eggrepo.eea.europa.eu/
 1. KGS_GITNAME - Repository name on github for KGS (Docker image for Plone with EEA Common Add-ons) - default: eea.docker.kgs
 1. KGS_VERSIONS_PATH - Location of file from KGS where the version of the egg is configured  - default: src/plone/versions.cfg
