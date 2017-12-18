@@ -31,18 +31,9 @@ if [ -z "$GIT_EMAIL" ]; then
  GIT_EMAIL="eea-github@googlegroups.com"
 fi
 
-if [ -z "$GIT_USERNAME" ]; then
- GIT_USERNAME="EEA Jenkins"
-fi
-
-if [ -z "$GIT_EMAIL" ]; then
- GIT_EMAIL="eea-github@googlegroups.com"
-fi
-
 if [ -z "$EGGREPO_URL" ]; then
  EGGREPO_URL=https://eggrepo.eea.europa.eu/
 fi
-
 
 if [ -z "$KGS_GITNAME" ]; then
   KGS_GITNAME=eea.docker.kgs
