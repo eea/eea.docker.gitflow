@@ -168,6 +168,7 @@ password: ${EGGREPO_PASSWORD}" > .pypirc
 
  	 echo "Starting the update of KGS versions file with released version"
 
+         export PYTHONIOENCODING=utf8
          sha_versionfile=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
   	 grep -q "^${GIT_NAME} =" versions.cfg  && sed -i "s/^${GIT_NAME} =.*/${GIT_NAME} = $version/" versions.cfg || sed -i "/# automatically set /a ${GIT_NAME} = $version" versions.cfg
 
