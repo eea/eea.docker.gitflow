@@ -58,31 +58,45 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 	     echo "Pipeline aborted due to no history file changed"
              exit 1
         fi
+        echo "Passed check: History file updated"
+    
 	if [ $(echo $files_changed | grep $GIT_VERSIONFILE | wc -l) -eq 0 ]; then                        
 	     echo "Pipeline aborted due to no version file changed"
              exit 1
         fi
+        echo "Passed check: Version file updated"
+        
 	git checkout $GIT_BRANCH
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "Version is $version"
+        
         if [ $(git tag | grep -c "^$version$" ) -ne 0 ]; then                        
          echo "Pipeline aborted due to version already present in tags"
          exit 1
         fi
+        echo "Passed check: Version is not present in git tags"
         
         if [[ ! $version  =~ ^[0-9]+\.[0-9]+$ ]] ; then 
          echo "Version ${version} does not respect format: \"number.number\", please change it"
          exit 1
         fi
+        echo "Passed check: Version format is number.number"
+        
 				      
 	git fetch --tags
-        latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-        check_version_bigger=$(echo $version"."$latestTag | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
+        if [ $(git tag | wc -l) -eq 0 ]; then
+             echo "Passed check: New version is bigger than last released version (no versions released yet)"
+        else
+        	latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+        	check_version_bigger=$(echo $version"."$latestTag | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
         
-        if [[ ! $check_version_bigger == "OK" ]]; then 
-         echo "Pipeline aborted due to version ${version} being smaller than last version ${last_version}"
-	 exit 1
-        fi             
+        	if [[ ! $check_version_bigger == "OK" ]]; then 
+        	 echo "Pipeline aborted due to version ${version} being smaller than last version ${last_version}"
+		 exit 1
+        	fi             
+        	echo "Passed check: New version is bigger than last released version"
+        fi
+        echo "Passed all checks"
 fi
      
 if [[ "$GIT_BRANCH" == "master" ]]; then     
