@@ -41,7 +41,7 @@ if [ -z "$KGS_GITNAME" ]; then
   KGS_GITNAME=eea.docker.kgs
 fi
 
-if [ -z "KGS_VERSIONS_PATH" ]; then
+if [ -z "$KGS_VERSIONS_PATH" ]; then
   KGS_VERSIONS_PATH=src/plone/versions.cfg
 fi
 
@@ -169,8 +169,6 @@ password: ${EGGREPO_PASSWORD}" > .pypirc
  	 echo "Starting the update of KGS versions file with released version"
 
          export PYTHONIOENCODING=utf8
-         echo "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"
-         curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"
 
          sha_versionfile=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
   	 
