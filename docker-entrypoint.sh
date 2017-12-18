@@ -4,17 +4,24 @@ set -e
 
 CMD="$1"
 
-if [ -z "$GIT_ORG" ]; then
- echo "GIT organization not given"
- exit 1
-fi
-
 if [ -z "$GIT_NAME" ]; then
  echo "GIT repo name not given"
  exit 1
 fi
 
+if [ -z "$GIT_ORG" ]; then
+ GIT_ORG="eea"
+fi
+
 GIT_SRC=https://github.com/${GIT_ORG}/${GIT_NAME}.git
+
+if [ -z "$GIT_VERSIONFILE" ]; then
+  GIT_VERSIONFILE="$(echo $GIT_NAME | sed 's|\.|/|g')/version.txt"
+fi
+
+if [ -z "$GIT_HISTORYFILE" ]; then
+  GIT_HISTORYFILE="docs/HISTORY.txt"
+fi
 
 if [ -z "$GIT_USERNAME" ]; then
  GIT_USERNAME="EEA Jenkins"
