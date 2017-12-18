@@ -33,7 +33,7 @@ if [ -z "$GIT_EMAIL" ]; then
 fi
 
 if [ -z "$EGGREPO_URL" ]; then
- EGGREPO_URL=https://eggrepo.apps.eea.europa.eu/
+ EGGREPO_URL=https://eggrepo.eea.europa.eu/
 fi
 
 
@@ -103,9 +103,11 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
         #check if release already exists
 	version=$(printf '%s' $(cat $GIT_VERSIONFILE))
+        echo "Checking if version is released on EGGREPO"
 	http_code=$(curl -s -o /dev/null -I -w  "%{http_code}" "${EGGREPO_URL}d/${GIT_NAME}/f/${GIT_NAME}-${version}.tar.gz")
 
 	if [ $http_code -ne 200 ]; then
+         echo "Starting the release ${GIT_NAME}-${version}.tar.gz on repo"
 	 export HOME=$(pwd)
    	 echo "[distutils]
 index-servers =
