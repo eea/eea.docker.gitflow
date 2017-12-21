@@ -3,8 +3,8 @@ LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
 
 RUN apk add --no-cache --virtual .run-deps git bash curl \
- && pip install jarn.mkrelease
+ && pip install jarn.mkrelease docutils
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY src/* /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
