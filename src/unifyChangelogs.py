@@ -3,33 +3,31 @@
 
 Usage:
 
-  $ /unifyChnagelogs.py <VERSION_OR_URL_TO_PREVIOUS_VERSIONS.CFG>  <VERSION_OR_URL_TO_LATEST_VERSIONS.CFG> > changelog.md
-  $ cat changelog.md
+  $ /unifyChnagelogs.py <VERSION_OR_URL_TO_PREVIOUS_VERSIONS.CFG>  <VERSION_OR_URL_TO_LATEST_VERSIONS.CFG> [json] 2> /dev/null
 
 
 Example:
 
-  $ /unifyChangelogs.py 12.9 13.0 > changelog.md
+  $ /unifyChangelogs.py 12.9 13.0 2> /dev/null
 
   # or:
 
-  $ /unifyChangelogs.py 13.1 master > changelog.md
+  $ /unifyChangelogs.py 13.1 master json 2> /dev/null
 
   # or:
 
-  $ /unifyChangelogs.py https://raw.githubusercontent.com/eea/eea.docker.kgs/14.0/src/plone/versions.cfg https://raw.githubusercontent.com/eea/eea.docker.kgs/14.1/src/plone/versions.cfg > changelog.md
-
-  # results:
-
-  $ cat changelog.md
+  $ /unifyChangelogs.py https://raw.githubusercontent.com/eea/eea.docker.kgs/14.0/src/plone/versions.cfg https://raw.githubusercontent.com/eea/eea.docker.kgs/14.1/src/plone/versions.cfg 2> /dev/null
 
 """
 
+from __future__ import print_function
+import sys
+import json
 import contextlib
 import urllib2
 from distutils.version import StrictVersion
 from docutils.core import publish_doctree
-import sys
+from StringIO import StringIO
 
 SOURCES = 'https://raw.githubusercontent.com/eea/eea.docker.kgs/master/src/plone/sources.cfg'
 KGS_VERSION = 'https://raw.githubusercontent.com/eea/eea.docker.kgs/{version}/src/plone/versions.cfg'
@@ -76,7 +74,7 @@ def pullSources(url):
             yield package, location
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         raise RuntimeError(__doc__)
 
     try:
@@ -102,6 +100,12 @@ def main():
     if after == 'master':
         after = KGS_VERSION.format(version=after)
 
+    format = sys.argv[3].lower() if len(sys.argv) > 3 else ''
+    if format == 'json':
+        out = StringIO()
+    else:
+        out = sys.stdout
+
     before = pullVersions(before)
     after = pullVersions(after)
     sources = pullSources(SOURCES)
@@ -114,7 +118,7 @@ def main():
             continue
 
         change = "\n## %s: %s ~ %s" % (package, previous, version)
-        print(change)
+        print(change, file=out)
 
         source = sources.get(package, None)
         if not source:
@@ -167,9 +171,14 @@ def main():
                 for child in childlist.children:
                     text = child.astext()
                     text = text.replace("\n","\n" + " "*len(bullet))
-                    print("* {text}".format(text=text))
+                    print("* {text}".format(text=text), file=out)
         else:
-            print("* https://pypi.python.org/pypi/{package}#changelog".format(package=package))
+            print("* https://pypi.python.org/pypi/{package}#changelog".format(package=package), file=out)
+
+    if format == 'json':
+        out.seek(0)
+        print(json.dumps(out.read()))
+
 
 if __name__ == "__main__":
     main()
