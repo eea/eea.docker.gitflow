@@ -48,7 +48,7 @@ cd $GIT_NAME
 
 if [ ! -z "$GIT_CHANGE_ID" ]; then
 
-
+        GIT_BRANCH=PR-${GIT_CHANGE_ID}
         git fetch origin pull/$GIT_CHANGE_ID/head:$GIT_BRANCH
         files_changed=$(git --no-pager diff --name-only $GIT_BRANCH $(git merge-base $GIT_BRANCH master))
 
