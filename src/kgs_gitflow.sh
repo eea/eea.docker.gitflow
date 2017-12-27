@@ -121,6 +121,41 @@ for res in data_dict['results']:
        exit 1
      fi
 
+     echo "-------------------------------------------------------------------------------"
+     echo "Updating Dockerfile for WWW"
+     
+     githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${WWW_GITNAME}/contents/Dockerfile"
+     curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" $githubApiUrl  > Dockerfile
+
+     if [ $(grep -c "FROM " Dockerfile) -eq 0 ]; then
+       echo "There was a problem getting the WWW Dockerfile"
+       cat Dockerfile
+       exit 1
+     fi
+
+      curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $githubApiUrl )
+      if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
+          echo "There was a problem with the GitHub API request:"
+          echo $curl_result
+          exit 1
+      fi
+
+      sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+
+      sed -i "s/^FROM eeacms\/kgs.*/FROM eeacms\/kgs:$version/" Dockerfile
+
+      result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat Dockerfile | base64))\"}" $githubApiUrl)
+
+         if [ $(echo $result | grep -c "HTTP/1.1 200 OK") -eq 1 ]; then
+            echo "WWW Dockerfile updated succesfully"
+         else
+            echo "There was an error updating the WWW Dockerfile, please check the execution"
+            echo $result
+            exit 1
+         fi
+     echo "-------------------------------------------------------------------------------"
+
+
 
 
 fi

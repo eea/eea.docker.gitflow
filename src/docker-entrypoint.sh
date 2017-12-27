@@ -40,10 +40,13 @@ if [ -z "$KGS_GITNAME" ]; then
   KGS_GITNAME=eea.docker.kgs
 fi
 
+if [ -z "$WWW_GITNAME" ]; then
+  WWW_GITNAME=eea.docker.plone-eea-www
+fi
+
 if [ -z "$KGS_VERSIONS_PATH" ]; then
   KGS_VERSIONS_PATH=src/plone/versions.cfg
 fi
-
 
 if [ -z "$DOCKERHUB_REPO" ]; then
   DOCKERHUB_REPO="eeacms/kgs"
