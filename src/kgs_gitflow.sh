@@ -8,8 +8,6 @@ cd $GIT_NAME
 # KGS release
 if [[ "$GIT_BRANCH" == "master" ]]; then
 
-       #if there was any changes between master and last tagt fetch origin pull/$GIT_CHANGE_ID/head:$GIT_BRANCH
-        files_changed=$(git --no-pager diff --name-only $GIT_BRANCH $(git merge-base $GIT_BRANCH master))
         latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
         files_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | wc -l )
 
@@ -76,7 +74,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
       while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
-        FOUND_BUILD=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/?page_size=100 | grep -c "\"dockertag_name\": \"$version\"")
+        FOUND_BUILD=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_KGSREPO}/buildhistory/?page_size=100 | grep -c "\"dockertag_name\": \"$version\"")
         if [ $FOUND_BUILD -gt 0 ];then
           echo "DockerHub started the $version release"
           break
@@ -93,7 +91,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         TIME_TO_WAIT_RELEASE=$(( $TIME_TO_WAIT_RELEASE - 1 ))
         waiting=$(( $waiting + 1 ))
 
-        build_status=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/?page_size=100 | python -c "import sys, json
+        build_status=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_KGSREPO}/buildhistory/?page_size=100 | python -c "import sys, json
 data_dict = json.load(sys.stdin)
 dockertag_name = '$version'
 for res in data_dict['results']:
@@ -142,7 +140,9 @@ for res in data_dict['results']:
 
       sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
-      sed -i "s/^FROM eeacms\/kgs.*/FROM eeacms\/kgs:$version/" Dockerfile
+     
+      DOCKERHUB_KGSREPO_ESC=$(echo $DOCKERHUB_KGSREPO | sed 's/\//\\\//g')
+      sed -i "s/^FROM $DOCKERHUB_KGSREPO_ESC.*/FROM $DOCKERHUB_KGSREPO_ESC:$version/" Dockerfile
 
       result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat Dockerfile | base64))\"}" $githubApiUrl)
 

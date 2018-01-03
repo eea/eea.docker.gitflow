@@ -48,8 +48,12 @@ if [ -z "$KGS_VERSIONS_PATH" ]; then
   KGS_VERSIONS_PATH=src/plone/versions.cfg
 fi
 
-if [ -z "$DOCKERHUB_REPO" ]; then
-  DOCKERHUB_REPO="eeacms/kgs"
+if [ -z "$DOCKERHUB_KGSREPO" ]; then
+  DOCKERHUB_KGSREPO="eeacms/kgs"
+fi
+
+if [ -z "$DOCKERHUB_WWWREPO" ]; then
+  DOCKERHUB_WWWREPO="eeacms/www"
 fi
 
 if [ -z "$TIME_TO_WAIT_RELEASE" ]; then
@@ -61,12 +65,16 @@ if [ -z "$TIME_TO_WAIT_START" ]; then
 fi
 
 
-export GIT_ORG GIT_SRC GIT_VERSIONFILE GIT_HISTORYFILE GIT_USERNAME GIT_EMAIL EGGREPO_URL KGS_GITNAME KGS_VERSIONS_PATH DOCKERHUB_REPO TIME_TO_WAIT_RELEASE TIME_TO_WAIT_START 
+export GIT_ORG GIT_SRC GIT_VERSIONFILE GIT_HISTORYFILE GIT_USERNAME GIT_EMAIL EGGREPO_URL KGS_GITNAME KGS_VERSIONS_PATH DOCKERHUB_KGSREPO TIME_TO_WAIT_RELEASE TIME_TO_WAIT_START DOCKERHUB_WWWREPO WWW_GITNAME
 
 
-if [[ !  "$GIT_NAME" == "$KGS_GITNAME" ]]; then 
-  /egg_gitflow.sh $@
-else
+if [[ "$GIT_NAME" == "$KGS_GITNAME" ]]; then 
   /kgs_gitflow.sh $@
+else
+ if [[ "$GIT_NAME" == "$WWW_GITNAME" ]]; then
+    /www_gitflow.sh $@
+ else 
+    /egg_gitflow.sh $@
+ fi
 fi
 
