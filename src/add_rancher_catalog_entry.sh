@@ -1,15 +1,18 @@
 #!/bin/bash
 
 set -e
+if [ -z "$GIT_ORG" ] || [ -z "$GIT_TOKEN" ] || [ -z "$RANCHER_CATALOG_PATH" ] || [ -z "$RANCHER_CATALOR_GITNAME" ] || [ -z "$DOCKER_IMAGENAME" ] || [ -z "$DOCKER_IMAGEVERSION" ]; then 
+   echo "Problem with creating rancher catalog entry, missing parameters"
+   exit 1
+fi
 
-RANCHER_CATALOG_PATH=templates/www-plone
-RANCHER_CATALOR_GITNAME=eea.rancher.catalog
+
 RANCHER_CATALOR_GITSRC=https://github.com/${GIT_ORG}/${RANCHER_CATALOR_GITNAME}.git
-DOCKER_IMAGENAME=eeacms/www
 DOCKER_IMAGENAME_ESC=$(echo $DOCKER_IMAGENAME | sed 's/\//\\\//g')
- 
-DOCKER_IMAGEVERSION=14.1
+GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${RANCHER_CATALOR_GITNAME}/git
 
+
+current_dir=$(pwd)
 
 # clone the repo
 git clone $RANCHER_CATALOR_GITSRC
@@ -68,7 +71,6 @@ new_version=$DOCKER_IMAGEVERSION
 
 #get sha from master
 
-GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${RANCHER_CATALOR_GITNAME}/git
 
 valid_curl_get_result ${GITHUBURL}/refs/heads/master sha 
 sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
@@ -109,6 +111,7 @@ fi
 
 sha_master=$sha_new_commit
 
+echo "Finished with prerelease commit - added new entry $RANCHER_CATALOG_PATH/$nextdir"
 # do the changes 
 cp -r $lastdir $nextdir
 cd $nextdir
@@ -154,5 +157,7 @@ if [ $( echo $curl_result | grep -c  "HTTP/1.1 200 OK" ) -eq 0 ]; then
             exit 1
 fi
 
-
-
+echo "Succesfully finished the release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION in catalog"
+#clean-up
+cd $current_dir
+rm -rf $RANCHER_CATALOR_GITNAME
