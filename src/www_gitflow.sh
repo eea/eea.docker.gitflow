@@ -27,6 +27,12 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
  
      echo "New version is $version"
 
+     if [ -z "$version" ]; then
+      echo "Version not calculated!"
+      exit 1
+     fi
+
+
      echo "-------------------------------------------------------------------------------"
      echo "Update devel Dockerfile"
 
@@ -50,7 +56,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
 
       DOCKERHUB_WWWREPO_ESC=$(echo $DOCKERHUB_WWWREPO | sed 's/\//\\\//g')
-      sed -i "s/^FROM $DOCKERHUB_KGSREPO_ESC.*/FROM $DOCKERHUB_KGSREPO_ESC:$version/" Dockerfile
+      sed -i "s/^FROM $DOCKERHUB_WWWREPO_ESC.*/FROM $DOCKERHUB_WWWREPO_ESC:$version/" Dockerfile
 
       result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat Dockerfile | base64))\"}" $githubApiUrl)
 
