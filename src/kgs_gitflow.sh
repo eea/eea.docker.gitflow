@@ -111,7 +111,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      echo "-------------------------------------------------------------------------------"
      echo "Starting the kgs-devel release on dockerhub"
 
-     curl -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/
+     echo "curl -H \"Content-Type: application/json\"  --data  \"{\"source_type\": \"Tag\", \"source_name\": \"$version\"}\" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/"
+
+     curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/
 
 
 

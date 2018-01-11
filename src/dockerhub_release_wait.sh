@@ -23,7 +23,7 @@ fi
      
 
      echo "-------------------------------------------------------------------------------"
-     
+    wait_in_case_of_error=5
     echo "Wait $TIME_TO_WAIT_START *10 seconds for the build $DOCKERHUB_REPO:$DOCKERHUB_NAME to be started on DockerHub"
       while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
@@ -44,6 +44,20 @@ fi
      while [ $TIME_TO_WAIT_RELEASE -ge 1 ]; do
         TIME_TO_WAIT_RELEASE=$(( $TIME_TO_WAIT_RELEASE - 1 ))
         waiting=$(( $waiting + 1 ))
+        buildhistory=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/?page_size=100)
+        dockerhub_down=30
+        while [ $(echo "$buildhistory" | grep -c "dockertag_name" ) -eq 0 ] && [ $dockerhub_down -gt 0 ]; do
+           echo "Received unexpected response from DockerHub"
+           echo "$buildhistory" 
+           buildhistory=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/?page_size=100)
+           sleep 60
+           dockerhub_down=$(( $dockerhub_down - 1 ))
+        done
+
+         if [ $dockerhub_down -eq 0 ]; then
+            echo "DockerHub down more than 30 minutes, exiting"
+            exit 1
+         fi
 
         build_status=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/?page_size=100 | python -c "import sys, json
 data_dict = json.load(sys.stdin)
@@ -53,8 +67,12 @@ for res in data_dict['results']:
         print '%s' % res['status']
         break
 ")
+        if [ $build_status -lt 0 ] && [ $wait_in_case_of_error -gt 0 ]; then
+         echo "Build  $DOCKERHUB_REPO:$DOCKERHUB_NAME failed on DockerHub, will wait $wait_in_case_of_error in case it will be ok"
+         wait_in_case_of_error=$(( $wait_in_case_of_error - 1 )) 
+        fi
 
-        if [ $build_status -lt 0 ]; then
+        if [ $build_status -lt 0 ] && [ $wait_in_case_of_error -eq 0 ]; then
          echo "Build  $DOCKERHUB_REPO:$DOCKERHUB_NAME failed on DockerHub, please check it!!!"
          exit 1
         fi
