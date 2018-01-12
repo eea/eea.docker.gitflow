@@ -61,7 +61,7 @@ if [ -z "$DOCKERHUB_WWWDEVREPO" ]; then
 fi
 
 if [ -z "$DOCKERHUB_KGSDEVREPO" ]; then
-  DOCKERHUB_WWWDEVREPO="eeacms/kgs-devel"
+  DOCKERHUB_KGSDEVREPO="eeacms/kgs-devel"
 fi
 
 
