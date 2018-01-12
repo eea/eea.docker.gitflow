@@ -9,7 +9,13 @@ cd $GIT_NAME
 if [[ "$GIT_BRANCH" == "master" ]]; then
 
         latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-        dockerfile_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | grep -c  "^Dockerfile$" )
+     
+       if [[ $(git merge-base $latestTag  master) == $(git merge-base master master) ]]; then
+          echo "No files changed since last release, $latestTag"
+          exit 0
+       fi
+
+      dockerfile_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | grep -c  "^Dockerfile$" )
         
 
       if [ $dockerfile_changed -eq 0 ]; then
