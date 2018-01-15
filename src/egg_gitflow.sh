@@ -53,7 +53,6 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
                 echo "Passed check: New version is bigger than last released version"
         fi
         echo "Passed all checks"
-        exit 0
 fi
 
 
