@@ -17,7 +17,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
       fi
      echo "-------------------------------------------------------------------------------"
      echo "Found $files_changed files changed since last release ($latestTag)"
-     version=$(date +"%y.%m.%d")
+     version=$(date +"%-y.%-m.%-d")
 
      if [[ "$latestTag" == "$version"* ]]; then
         version=$(echo $version | awk -F "-" '{print $1"-"($2+1)}')
