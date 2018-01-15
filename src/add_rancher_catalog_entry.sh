@@ -10,46 +10,16 @@ fi
 RANCHER_CATALOR_GITSRC=https://github.com/${GIT_ORG}/${RANCHER_CATALOR_GITNAME}.git
 DOCKER_IMAGENAME_ESC=$(echo $DOCKER_IMAGENAME | sed 's/\//\\\//g')
 GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${RANCHER_CATALOR_GITNAME}/git
-
-
 current_dir=$(pwd)
+
+
+source /common_functions
 
 # clone the repo
 git clone $RANCHER_CATALOR_GITSRC
 cd $RANCHER_CATALOR_GITNAME/$RANCHER_CATALOG_PATH
 
 # get latest rancher entry 
-
-valid_curl_get_result()
-{
- url=$1
- check_valid_response=$2
- curl_result=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url)
- 
- if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
-          echo "There was a problem with the GitHub API request:"
-          echo $curl_result
-          exit 1
- fi
-
-}
-
-valid_curl_post_result()
-{
- url=$1
- data=$2
- check_valid_response=$3
- curl_result=$(curl -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "$data" $url)
-
- if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
-          echo "There was a problem with the GitHub API request:"
-          echo $curl_result
-          exit 1
- fi
-
-}
-
-
 
 
 old_version=$(grep version config.yml | awk 'BEGIN{FS="\""}{print $2}')
@@ -104,7 +74,7 @@ sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.lo
 curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/master)
 
 if [ $( echo $curl_result | grep -c  "HTTP/1.1 200 OK" ) -eq 0 ]; then
-            echo "There was a problem with the release"
+            echo "There was a problem with the commit on master"
             echo $curl_result
             exit 1
 fi

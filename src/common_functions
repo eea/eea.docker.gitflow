@@ -1,0 +1,30 @@
+
+valid_curl_get_result()
+{
+ url=$1
+ check_valid_response=$2
+ curl_result=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url)
+
+ if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
+          echo "There was a problem with the GitHub API request:"
+          echo $curl_result
+          exit 1
+ fi
+
+}
+
+valid_curl_post_result()
+{
+ url=$1
+ data=$2
+ check_valid_response=$3
+ curl_result=$(curl -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "$data" $url)
+
+ if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
+          echo "There was a problem with the GitHub API request:"
+          echo $curl_result
+          exit 1
+ fi
+
+}
+

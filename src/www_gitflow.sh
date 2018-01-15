@@ -2,34 +2,35 @@
 
 set -e
 
+DOCKERHUB_KGSREPO_ESC=$(echo $DOCKERHUB_KGSREPO | sed 's/\//\\\//g')
+DOCKERHUB_WWWREPO_ESC=$(echo $DOCKERHUB_WWWREPO | sed 's/\//\\\//g')
+
+source /common_functions
+
+
 git clone $GIT_SRC
 cd $GIT_NAME
 
+
 # WWW release
 if [[ "$GIT_BRANCH" == "master" ]]; then
+       
 
-        latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-     
-       if [[ $(git merge-base $latestTag  master) == $(git merge-base master master) ]]; then
-          echo "No files changed since last release, $latestTag"
-          exit 0
-       fi
-
-      dockerfile_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | grep -c  "^Dockerfile$" )
-        
-
-      if [ $dockerfile_changed -eq 0 ]; then
-       echo "Dockerfile not changed since last release, $latestTag"
-       exit 0
-      fi
-     echo "-------------------------------------------------------------------------------"
-     echo "Found $files_changed files changed since last release ($latestTag)"
-     version=$(grep "FROM $DOCKERHUB_KGSREPO" Dockerfile | awk -F: '{print $2}')
- 
+      valid_curl_get_result https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/releases/latest tag_name
+      version=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['tag_name']")
+  
+      echo "Found KGS latest release - $version"
+      
       if [ $(git tag | grep -c "^$version$" ) -ne 0 ]; then
-         echo "Pipeline aborted due to version $version already released"
-         exit 1
-        fi
+         if [ ! -z "$HOTFIX" ];then
+            echo "HOTFIX parameter received, will generate new version for WWW"
+            version=$(echo $version | awk -F "-" '{print $1"-"($2+1)}')
+         else
+             echo "Version $version already released, skipping"
+             echo "Run with HOTFIX parameter to generate new version"
+             exit 0
+         fi
+      fi
  
      echo "New version is $version"
 
@@ -40,47 +41,54 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
 
      echo "-------------------------------------------------------------------------------"
-     echo "Update devel Dockerfile"
+     echo "Updating Dockerfiles for WWW and WWW-devel"
 
-     githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${WWW_GITNAME}/contents/devel/Dockerfile"
-     curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" $githubApiUrl  > Dockerfile
+     sed -i "s/^FROM $DOCKERHUB_KGSREPO_ESC.*/FROM $DOCKERHUB_KGSREPO_ESC:$version/" Dockerfile
+     sed -i "s/^FROM $DOCKERHUB_WWWREPO_ESC.*/FROM $DOCKERHUB_WWWREPO_ESC:$version/" devel/Dockerfile
 
-     if [ $(grep -c "FROM " Dockerfile) -eq 0 ]; then
-       echo "There was a problem getting the WWW Devel Dockerfile"
-       cat Dockerfile
-       exit 1
+     GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${WWW_GITNAME}/git
+
+     valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat Dockerfile | base64))\",\"encoding\": \"base64\" }" sha
+     sha_dockerfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+     echo "Created blob for Dockerfile -- $sha_dockerfile"
+     valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat devel/Dockerfile | base64))\",\"encoding\": \"base64\" }" sha
+     sha_devdockerfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+     echo "Created blob for devel/Dockerfile -- $sha_devdockerfile"
+
+     
+
+     valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
+     sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+     echo "Sha for master is $sha_master"
+
+
+     valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"Dockerfile\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_dockerfile}\" }, { \"path\": \"devel/Dockerfile\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_devdockerfile}\" }]}" sha
+     sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+   
+     echo "Created a github tree - $sha_newtree"
+     
+     valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Release $version\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
+     sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+     
+      echo "Added a new commit - $sha_new_commit"
+
+     
+     # update master to commit
+     curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/master)
+
+     if [ $( echo $curl_result | grep -c  "HTTP/1.1 200 OK" ) -eq 0 ]; then
+            echo "There was a problem with the Dockerfile and devel/Dockerfile commit"
+            echo $curl_result
+            exit 1
      fi
 
-      curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $githubApiUrl )
-      if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
-          echo "There was a problem with the GitHub API request:"
-          echo $curl_result
-          exit 1
-      fi
-
-      sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
-
-
-      DOCKERHUB_WWWREPO_ESC=$(echo $DOCKERHUB_WWWREPO | sed 's/\//\\\//g')
-      sed -i "s/^FROM $DOCKERHUB_WWWREPO_ESC.*/FROM $DOCKERHUB_WWWREPO_ESC:$version/" Dockerfile
-
-      result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat Dockerfile | base64))\"}" $githubApiUrl)
-
-         if [ $(echo $result | grep -c "HTTP/1.1 200 OK") -eq 1 ]; then
-            echo "WWW Dockerfile updated succesfully"
-         else
-            echo "There was an error updating the WWW Dockerfile, please check the execution"
-            echo $result
-            exit 1
-         fi
-
-
-
+     echo "Dockerfiles commited succesfully to master"    
 
 
      echo "-------------------------------------------------------------------------------"
 
      echo "Starting the release $version"
+     
      curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
      if [ $( echo $curl_result | grep -c  "HTTP/1.1 201 Created" ) -eq 0 ]; then
