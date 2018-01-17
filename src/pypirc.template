@@ -9,7 +9,6 @@ username: EGGREPO_USERNAME
 password: EGGREPO_PASSWORD
 
 [pypi]
-repository: PYPI_URL
 username: PYPI_USERNAME
 password: PYPI_PASSWORD
 

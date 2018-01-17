@@ -109,7 +109,6 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           
           if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
              echo "Starting the release ${GIT_NAME}-${version}.zip on PyPi repo"
-             sed -i "s#PYPI_URL#${PYPI_URL}#g" .pypirc
              sed -i "s#PYPI_USERNAME#${PYPI_USERNAME}#g" .pypirc
              sed -i "s#PYPI_PASSWORD#${PYPI_PASSWORD}#g" .pypirc
              mkrelease -CT -d pypi .
