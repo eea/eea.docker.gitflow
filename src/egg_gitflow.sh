@@ -61,28 +61,65 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         #check if release already exists
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "--------------------------------------------------------------------------------------------------------------------"
+ 
+        echo "Preparing .pypirc file for release"
+        export HOME=$(pwd)
+        mv /pypirc.template .pypirc
+        
         echo "Checking if version is released on EGGREPO"
-        http_code=$(curl -s -o /dev/null -I -w  "%{http_code}" "${EGGREPO_URL}d/${GIT_NAME}/f/${GIT_NAME}-${version}.zip")
+        egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME}/")
 
-        if [ $http_code -ne 200 ]; then
-         echo "Starting the release ${GIT_NAME}-${version}.zip on repo"
-         export HOME=$(pwd)
-         echo "[distutils]
-index-servers =
-   eea
+        
+        if [ $(echo "$egg_releases" | grep -Ec "(HTTP/1.1 200 OK)|(HTTP/1.1 404 NOT FOUND)") -ne 1 ]; then 
+           echo "There was a problem with the EGG repository - HTTP response code not 200 or 404"
+           echo "Please check ${EGGREPO_URL}d/${GIT_NAME}/"
+           echo "$egg_releases"
+           exit 1
+        fi
 
-[eea]
-repository: $EGGREPO_URL
-username: ${EGGREPO_USERNAME}
-password: ${EGGREPO_PASSWORD}" > .pypirc
-
-        mkrelease -CT -d eea .
-
-        else
-         echo "Release ${GIT_NAME}-${version}.zip already exists on repo, skipping"
+        if [ $(echo "$egg_releases" | grep -c "HTTP/1.1 404 NOT FOUND") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
+            echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
+            sed -i "s#EGGREPO_URL#${EGGREPO_URL}#g" .pypirc
+            sed -i "s#EGGREPO_USERNAME#${EGGREPO_USERNAME}#g" .pypirc
+            sed -i "s#EGGREPO_PASSWORD#${EGGREPO_PASSWORD}#g" .pypirc
+            mkrelease -CT -d eea .
+            echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
+        
+       else
+           echo "Release ${GIT_NAME}-${version}.zip already exists on EEA repo, skipping"
         fi
 
         echo "--------------------------------------------------------------------------------------------------------------------"
+
+        echo "Checking if version is released on PyPi"
+    
+        pypi_releases=$(curl -i -s "${PYPI_CHECK_URL}${GIT_NAME}/")
+        
+
+        if [ $(echo "$pypi_releases" | grep -Ec "(HTTP/1.1 200 OK)|(HTTP/1.1 404 NOT FOUND)") -ne 1 ]; then
+           echo "There was a problem with the PIPY repository - HTTP response code not 200 or 404"
+           echo "Please check ${PYPI_CHECK_URL}${GIT_NAME}/"
+           echo "$pypi_releases"
+           exit 1
+        fi
+
+        if [ $(echo "$pypi_releases" | grep -c "HTTP/1.1 404") -eq 1 ]; then 
+          echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
+        else   
+          
+          if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
+             echo "Starting the release ${GIT_NAME}-${version}.zip on PyPi repo"
+             sed -i "s#PYPI_URL#${PYPI_URL}#g" .pypirc
+             sed -i "s#PYPI_USERNAME#${PYPI_USERNAME}#g" .pypirc
+             sed -i "s#PYPI_PASSWORD#${PYPI_PASSWORD}#g" .pypirc
+             mkrelease -CT -d pypi .
+             echo "Release ${GIT_NAME}-${version}.zip  done on ${PYPI_URL}"
+          else
+            echo "Release ${GIT_NAME}-${version}.zip already exists on PyPi repo, skipping"
+          fi
+        fi
+        echo "--------------------------------------------------------------------------------------------------------------------"
+
         #check if tag exiss
         if [ $(git tag | grep -c "^$version$") -eq 0 ]; then
          echo "Starting the creation of the tag $version on master"
