@@ -112,7 +112,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
              sed -i "s#PYPI_USERNAME#${PYPI_USERNAME}#g" .pypirc
              sed -i "s#PYPI_PASSWORD#${PYPI_PASSWORD}#g" .pypirc
              mkrelease -CT -d pypi .
-             echo "Release ${GIT_NAME}-${version}.zip  done on ${PYPI_URL}"
+             echo "Release ${GIT_NAME}-${version}.zip  done on PyPi"
           else
             echo "Release ${GIT_NAME}-${version}.zip already exists on PyPi repo, skipping"
           fi
