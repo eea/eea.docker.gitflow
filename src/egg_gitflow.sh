@@ -70,14 +70,14 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME}/")
 
         
-        if [ $(echo "$egg_releases" | grep -Ec "(HTTP/1.1 200 OK)|(HTTP/1.1 404 NOT FOUND)") -ne 1 ]; then 
+        if [ $(echo "$egg_releases" | grep -Ec "(HTTP/1.1 200)|(HTTP/1.1 404)") -ne 1 ]; then 
            echo "There was a problem with the EGG repository - HTTP response code not 200 or 404"
            echo "Please check ${EGGREPO_URL}d/${GIT_NAME}/"
            echo "$egg_releases"
            exit 1
         fi
 
-        if [ $(echo "$egg_releases" | grep -c "HTTP/1.1 404 NOT FOUND") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
+        if [ $(echo "$egg_releases" | grep -c "HTTP/1.1 404") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
             echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
             sed -i "s#EGGREPO_URL#${EGGREPO_URL}#g" .pypirc
             sed -i "s#EGGREPO_USERNAME#${EGGREPO_USERNAME}#g" .pypirc
@@ -96,7 +96,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         pypi_releases=$(curl -i -s "${PYPI_CHECK_URL}${GIT_NAME}/")
         
 
-        if [ $(echo "$pypi_releases" | grep -Ec "(HTTP/1.1 200 OK)|(HTTP/1.1 404 NOT FOUND)") -ne 1 ]; then
+        if [ $(echo "$pypi_releases" | grep -Ec "(HTTP/1.1 200)|(HTTP/1.1 404)") -ne 1 ]; then
            echo "There was a problem with the PIPY repository - HTTP response code not 200 or 404"
            echo "Please check ${PYPI_CHECK_URL}${GIT_NAME}/"
            echo "$pypi_releases"
@@ -125,7 +125,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
          curl_result=$(curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
         
-         if [ $( echo $curl_result | grep -c  "HTTP/1.1 201 Created" ) -eq 0 ]; then
+         if [ $( echo $curl_result | grep -c  "HTTP/1.1 201" ) -eq 0 ]; then
             echo "There was a problem with the release"
             echo $curl_result
             exit 1
@@ -176,7 +176,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
          result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}")
 
-         if [ $(echo $result | grep -c "HTTP/1.1 200 OK") -eq 1 ]; then
+         if [ $(echo $result | grep -c "HTTP/1.1 200") -eq 1 ]; then
             echo "KGS versions file updated succesfully"
          else
             echo "There was an error updating the KGS file, please check the execution"

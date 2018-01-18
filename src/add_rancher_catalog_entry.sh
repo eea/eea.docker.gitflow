@@ -73,7 +73,7 @@ sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.lo
 # update master to commit
 curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/master)
 
-if [ $( echo $curl_result | grep -c  "HTTP/1.1 200 OK" ) -eq 0 ]; then
+if [ $( echo $curl_result | grep -c  "HTTP/1.1 200" ) -eq 0 ]; then
             echo "There was a problem with the commit on master"
             echo $curl_result
             exit 1
@@ -121,7 +121,7 @@ sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.lo
 # update master to commit
 curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/master)
 
-if [ $( echo $curl_result | grep -c  "HTTP/1.1 200 OK" ) -eq 0 ]; then
+if [ $( echo $curl_result | grep -c  "HTTP/1.1 200" ) -eq 0 ]; then
             echo "There was a problem with the release"
             echo $curl_result
             exit 1
