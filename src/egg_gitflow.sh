@@ -67,12 +67,12 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         mv /pypirc.template .pypirc
         
         echo "Checking if version is released on EGGREPO"
-        egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME}/")
+        egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME,,}/")
 
         
         if [ $(echo "$egg_releases" | grep -Ec "(HTTP/1.1 200)|(HTTP/1.1 404)") -ne 1 ]; then 
            echo "There was a problem with the EGG repository - HTTP response code not 200 or 404"
-           echo "Please check ${EGGREPO_URL}d/${GIT_NAME}/"
+           echo "Please check ${EGGREPO_URL}d/${GIT_NAME,,}/"
            echo "$egg_releases"
            exit 1
         fi
