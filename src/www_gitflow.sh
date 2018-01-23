@@ -116,8 +116,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_WWWDEVREPO/trigger/$TRIGGER_URL/
     
      echo "-------------------------------------------------------------------------------"
- 
-     /dockerhub_release_wait.sh ${DOCKERHUB_WWWDEVREPO} $version
+      
+     /dockerhub_release_wait.sh ${DOCKERHUB_WWWDEVREPO} $version $TRIGGER_URL
 
      echo "-------------------------------------------------------------------------------"
      export RANCHER_CATALOG_PATH=templates/www-eea

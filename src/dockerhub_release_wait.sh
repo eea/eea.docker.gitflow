@@ -16,24 +16,37 @@ fi
 DOCKERHUB_REPO=$1
 DOCKERHUB_NAME=$2
 
+if [ ! -z "$3" ]; then
+   echo "Received trigger parameter, will try to start build if not found"
+   DOCKERHUB_TRIGGER=$3
+fi
+ 
+
 if [ -z "$DOCKERHUB_REPO" ] ||  [ -z "$DOCKERHUB_NAME" ]; then
   echo "Did not receive correct arguments - docker image name and version"
   exit 1
 fi
      
 
-     echo "-------------------------------------------------------------------------------"
-    wait_in_case_of_error=5
+    echo "-------------------------------------------------------------------------------"
+    wait_in_case_of_error=15
     echo "Wait $TIME_TO_WAIT_START *10 seconds for the build $DOCKERHUB_REPO:$DOCKERHUB_NAME to be started on DockerHub"
-      while [ $TIME_TO_WAIT_START  -ge 0 ]; do
+    
+    while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
-        FOUND_BUILD=$(curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/?page_size=100 | grep -c "\"dockertag_name\": \"$DOCKERHUB_NAME\"")
+        FOUND_BUILD=$( curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/?page_size=100 | grep -E "{.*\"status\": [0-9],.*\"dockertag_name\": \"$DOCKERHUB_NAME\".*}" | wc -l )
+
         if [ $FOUND_BUILD -gt 0 ];then
           echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
           break
         fi
-      done
+        if [ ! -z "$DOCKERHUB_TRIGGER" ] && ! (( TIME_TO_WAIT_START % 10 )); then
+            echo "One minute passed, build not starting , will use trigger to re-start build"
+            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$DOCKERHUB_NAME\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_REPO/trigger/$DOCKERHUB_TRIGGER/
+        fi
+    done
+   
      if [ $TIME_TO_WAIT_START  -lt 0 ]; then
        echo "There was a problem in DockerHub, build $DOCKERHUB_REPO:$DOCKERHUB_NAME not started!"
        exit 1
