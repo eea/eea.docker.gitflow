@@ -50,6 +50,7 @@ else
   new_version=$old_version
 fi
 
+DOCKER_COMPOSE=$(ls $lastdir | grep docker-compose.yml)
 # Create new Rancher Catalog entry
 
 if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
@@ -65,13 +66,13 @@ if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
 import sys, json
 data_dict = json.load(sys.stdin)
 for res in data_dict['tree']:
-    if res['path'] == \"$RANCHER_CATALOG_PATH/$lastdir/docker-compose.yml\":
+    if res['path'] == \"$RANCHER_CATALOG_PATH/$lastdir/$DOCKER_COMPOSE\":
         print 'sha_docker_compose="%s";' % res['sha']
     if res['path'] == \"$RANCHER_CATALOG_PATH/$lastdir/rancher-compose.yml\":
         print 'sha_rancher_compose="%s";' % res['sha']
 ")
 
-  valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"$RANCHER_CATALOG_PATH/$nextdir/docker-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_docker_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/$nextdir/rancher-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_rancher_compose}\" }]}" sha
+  valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"$RANCHER_CATALOG_PATH/$nextdir/$DOCKER_COMPOSE\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_docker_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/$nextdir/rancher-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_rancher_compose}\" }]}" sha
 
   sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
@@ -102,7 +103,7 @@ fi
 # Update Rancher Catalog entry
 
 cd $nextdir
-sed -i "/    image: $DOCKER_IMAGENAME_ESC:/c\    image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION"  docker-compose.yml
+sed -i "/    image: $DOCKER_IMAGENAME_ESC:/c\    image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION"  $DOCKER_COMPOSE
 uuid=$(grep uuid: rancher-compose.yml |  awk 'BEGIN{FS="-"}{gsub (" ", "", $0); x=length($0) - length($NF);  print substr($0,index($0,":")+1,x-index($0,":")) }')
 sed -i "/  uuid: /c\  uuid: $uuid$nextdir\"" rancher-compose.yml
 sed -i "/  version: /c\  version: \"$new_version\"" rancher-compose.yml
@@ -115,7 +116,7 @@ sed -i "s/version: \"$old_version\"/version: \"$new_version\"/g" config.yml
 valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat config.yml | base64))\",\"encoding\": \"base64\" }" sha
 sha_config=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
-valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat $nextdir/docker-compose.yml | base64))\",\"encoding\": \"base64\" }" sha
+valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat $nextdir/$DOCKER_COMPOSE | base64))\",\"encoding\": \"base64\" }" sha
 sha_docker_compose=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
 valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat  $nextdir/rancher-compose.yml | base64))\",\"encoding\": \"base64\" }" sha
@@ -123,7 +124,7 @@ sha_rancher_compose=$(echo $curl_result |  python -c "import sys, json; print js
 
 # add in tree copies
 
-valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"$RANCHER_CATALOG_PATH/$nextdir/docker-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_docker_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/$nextdir/rancher-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_rancher_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/config.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_config}\" }]}" sha
+valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"$RANCHER_CATALOG_PATH/$nextdir/$DOCKER_COMPOSE\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_docker_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/$nextdir/rancher-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_rancher_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/config.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_config}\" }]}" sha
 
 sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
