@@ -35,7 +35,7 @@ fi
     while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
-        FOUND_BUILD=$( curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/ | grep -E "{.*\"status\": [0-9]+,.*\"dockertag_name\": \"$DOCKERHUB_NAME\".*}" | wc -l )
+        FOUND_BUILD=$( curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/buildhistory/ | grep -E ".*\"status\": [0-9]+,.*\"dockertag_name\": \"$DOCKERHUB_NAME\".*" | wc -l )
 
         if [ $FOUND_BUILD -gt 0 ];then
           echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
