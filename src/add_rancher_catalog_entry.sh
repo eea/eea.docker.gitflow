@@ -51,12 +51,13 @@ else
 fi
 
 DOCKER_COMPOSE=$(ls $lastdir | grep docker-compose.yml)
-# Create new Rancher Catalog entry
 
+# get sha from master
+valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
+sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+
+# Create new Rancher Catalog entry
 if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
-  #get sha from master
-  valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
-  sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
 
 
   #get docker & rancher config blob sha
