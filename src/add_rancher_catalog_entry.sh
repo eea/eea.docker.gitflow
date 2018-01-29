@@ -1,25 +1,25 @@
 #!/bin/bash
 
 set -e
-if [ -z "$GIT_ORG" ] || [ -z "$GIT_TOKEN" ] || [ -z "$RANCHER_CATALOG_PATH" ] || [ -z "$RANCHER_CATALOR_GITNAME" ] || [ -z "$DOCKER_IMAGENAME" ] || [ -z "$DOCKER_IMAGEVERSION" ]; then 
+if [ -z "$GIT_ORG" ] || [ -z "$GIT_TOKEN" ] || [ -z "$RANCHER_CATALOG_PATH" ] || [ -z "$RANCHER_CATALOG_GITNAME" ] || [ -z "$DOCKER_IMAGENAME" ] || [ -z "$DOCKER_IMAGEVERSION" ]; then
    echo "Problem with creating rancher catalog entry, missing parameters"
    exit 1
 fi
 
 
-RANCHER_CATALOR_GITSRC=https://github.com/${GIT_ORG}/${RANCHER_CATALOR_GITNAME}.git
+RANCHER_CATALOG_GITSRC=https://github.com/${GIT_ORG}/${RANCHER_CATALOG_GITNAME}.git
 DOCKER_IMAGENAME_ESC=$(echo $DOCKER_IMAGENAME | sed 's/\//\\\//g')
-GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${RANCHER_CATALOR_GITNAME}/git
+GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${RANCHER_CATALOG_GITNAME}/git
 current_dir=$(pwd)
 
 
 source /common_functions
 
 # clone the repo
-git clone $RANCHER_CATALOR_GITSRC
-cd $RANCHER_CATALOR_GITNAME/$RANCHER_CATALOG_PATH
+git clone $RANCHER_CATALOG_GITSRC
+cd $RANCHER_CATALOG_GITNAME/$RANCHER_CATALOG_PATH
 
-# get latest rancher entry 
+# get latest rancher entry
 
 
 old_version=$(grep version config.yml | awk 'BEGIN{FS="\""}{print $2}')
@@ -33,23 +33,36 @@ if [[ ! "$lastdir" == "$biggestdirnr" ]]; then
  exit 1
 fi
 
-let nextdir=$lastdir+1
 
-echo "Will create new directory, $nextdir"
+# Auto generate Rancher Catalog next version or use the Docker Image version
+if [ -z "$RANCHER_CATALOG_NEXT_VERSION" ]; then
+  new_version=$DOCKER_IMAGEVERSION
+else
+  new_version=$(echo $old_version + 0.1 | bc)
+fi
 
-new_version=$DOCKER_IMAGEVERSION
+# Modify the same latest Rancher Catalog entry or generate new one?
+if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
+  let nextdir=$lastdir+1
+  echo "Will create new directory, $nextdir"
+else
+  let nextdir=$lastdir
+  new_version=$old_version
+fi
 
-#get sha from master
+# Create new Rancher Catalog entry
+
+if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
+  #get sha from master
+  valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
+  sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
 
 
-valid_curl_get_result ${GITHUBURL}/refs/heads/master sha 
-sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+  #get docker & rancher config blob sha
+  valid_curl_get_result ${GITHUBURL}/trees/${sha_master}?recursive=1 tree
 
-
-#get docker & rancher config blob sha
-valid_curl_get_result ${GITHUBURL}/trees/${sha_master}?recursive=1 tree
-
-eval $(echo $curl_result | python -c "import sys, json
+  eval $(echo $curl_result | python -c "
+import sys, json
 data_dict = json.load(sys.stdin)
 for res in data_dict['tree']:
     if res['path'] == \"$RANCHER_CATALOG_PATH/$lastdir/docker-compose.yml\":
@@ -58,34 +71,38 @@ for res in data_dict['tree']:
         print 'sha_rancher_compose="%s";' % res['sha']
 ")
 
-valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"$RANCHER_CATALOG_PATH/$nextdir/docker-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_docker_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/$nextdir/rancher-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_rancher_compose}\" }]}" sha
+  valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"$RANCHER_CATALOG_PATH/$nextdir/docker-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_docker_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/$nextdir/rancher-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_rancher_compose}\" }]}" sha
 
-sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
-
-
-# create commit
-
-valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Prepare for release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
-
-sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+  sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
 
-# update master to commit
-curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/master)
+  # create commit
 
-if [ $( echo $curl_result | grep -c  "HTTP/1.1 200" ) -eq 0 ]; then
-            echo "There was a problem with the commit on master"
-            echo $curl_result
-            exit 1
+  valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Prepare for release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
+
+  sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+
+
+  # update master to commit
+  curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/master)
+
+  if [ $( echo $curl_result | grep -c  "HTTP/1.1 200" ) -eq 0 ]; then
+              echo "There was a problem with the commit on master"
+              echo $curl_result
+              exit 1
+  fi
+
+  sha_master=$sha_new_commit
+
+  echo "Finished with prerelease commit - added new entry $RANCHER_CATALOG_PATH/$nextdir"
+  # do the changes
+  cp -r $lastdir $nextdir
 fi
 
-sha_master=$sha_new_commit
+# Update Rancher Catalog entry
 
-echo "Finished with prerelease commit - added new entry $RANCHER_CATALOG_PATH/$nextdir"
-# do the changes 
-cp -r $lastdir $nextdir
 cd $nextdir
-sed -i "/    image: $DOCKER_IMAGENAME_ESC:/c\    image: $DOCKER_IMAGENAME_ESC:$new_version"  docker-compose.yml
+sed -i "/    image: $DOCKER_IMAGENAME_ESC:/c\    image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION"  docker-compose.yml
 uuid=$(grep uuid: rancher-compose.yml |  awk 'BEGIN{FS="-"}{gsub (" ", "", $0); x=length($0) - length($NF);  print substr($0,index($0,":")+1,x-index($0,":")) }')
 sed -i "/  uuid: /c\  uuid: $uuid$nextdir\"" rancher-compose.yml
 sed -i "/  version: /c\  version: \"$new_version\"" rancher-compose.yml
@@ -130,4 +147,4 @@ fi
 echo "Succesfully finished the release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION in catalog"
 #clean-up
 cd $current_dir
-rm -rf $RANCHER_CATALOR_GITNAME
+rm -rf $RANCHER_CATALOG_GITNAME

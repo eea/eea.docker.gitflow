@@ -48,6 +48,14 @@ if [ -z "$WWW_GITNAME" ]; then
   WWW_GITNAME=eea.docker.plone-eea-www
 fi
 
+if [ -z "$APACHE_GITNAME" ]; then
+  APACHE_GITNAME=eea.docker.apache-eea-www
+fi
+
+if [ -z "$VARNISH_GITNAME" ]; then
+  VARNISH_GITNAME=eea.docker.varnish-eea-www
+fi
+
 if [ -z "$KGS_VERSIONS_PATH" ]; then
   KGS_VERSIONS_PATH=src/plone/versions.cfg
 fi
@@ -68,6 +76,13 @@ if [ -z "$DOCKERHUB_KGSDEVREPO" ]; then
   DOCKERHUB_KGSDEVREPO="eeacms/kgs-devel"
 fi
 
+if [ -z "$DOCKERHUB_APACHEREPO" ]; then
+  DOCKERHUB_APACHEREPO="eeacms/apache-eea-www"
+fi
+
+if [ -z "$DOCKERHUB_VARNISHREPO" ]; then
+  DOCKERHUB_VARNISHREPO="eeacms/varnish-eea-www"
+fi
 
 if [ -z "$TIME_TO_WAIT_RELEASE" ]; then
   TIME_TO_WAIT_RELEASE=240
@@ -77,11 +92,11 @@ if [ -z "$TIME_TO_WAIT_START" ]; then
   TIME_TO_WAIT_START=30
 fi
 
-if [ -z "$RANCHER_CATALOR_GITNAME" ]; then
-  RANCHER_CATALOR_GITNAME=eea.rancher.catalog
+if [ -z "$RANCHER_CATALOG_GITNAME" ]; then
+  RANCHER_CATALOG_GITNAME=eea.rancher.catalog
 fi
 
-export GIT_ORG GIT_SRC GIT_VERSIONFILE GIT_HISTORYFILE GIT_USERNAME GIT_EMAIL EGGREPO_URL KGS_GITNAME KGS_VERSIONS_PATH DOCKERHUB_KGSREPO TIME_TO_WAIT_RELEASE TIME_TO_WAIT_START DOCKERHUB_WWWREPO DOCKERHUB_WWWDEVREPO DOCKERHUB_KGSDEVREPO WWW_GITNAME RANCHER_CATALOR_GITNAME PYPI_CHECK_URL
+export GIT_ORG GIT_SRC GIT_VERSIONFILE GIT_HISTORYFILE GIT_USERNAME GIT_EMAIL EGGREPO_URL KGS_GITNAME KGS_VERSIONS_PATH DOCKERHUB_KGSREPO TIME_TO_WAIT_RELEASE TIME_TO_WAIT_START DOCKERHUB_WWWREPO DOCKERHUB_WWWDEVREPO DOCKERHUB_KGSDEVREPO WWW_GITNAME RANCHER_CATALOG_GITNAME PYPI_CHECK_URL
 
 export HOTFIX
 
@@ -92,6 +107,14 @@ fi
 
 if [[ "$GIT_NAME" == "$WWW_GITNAME" ]]; then
   exec /www_gitflow.sh $@
+fi
+
+if [[ "$GIT_NAME" == "$APACHE_GITNAME" ]]; then
+  exec /apache_gitflow.sh $@
+fi
+
+if [[ "$GIT_NAME" == "$VARNISH_GITNAME" ]]; then
+  exec /varnish_gitflow.sh $@
 fi
 
 exec /egg_gitflow.sh $@
