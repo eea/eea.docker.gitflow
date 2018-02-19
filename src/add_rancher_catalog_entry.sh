@@ -48,9 +48,23 @@ if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
 else
   let nextdir=$lastdir
   new_version=$old_version
+  echo "will use same directory for update, $nextdir"
 fi
 
 DOCKER_COMPOSE=$(ls $lastdir | grep docker-compose.yml)
+
+echo "--------------------------------------------------------"
+if [ $(grep -c "image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION$"  $lastdir/$DOCKER_COMPOSE ) -gt 0 ]; then
+  echo "Found in latest $DOCKER_COMPOSE images with $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION"
+  echo "Will skip the creation of new version of rancher catalog!"
+  exit 0
+fi
+
+echo "Checked latest $DOCKER_COMPOSE ($lastdir/$DOCKER_COMPOSE), $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION is not present, will go on with creating the new rancher catalog version!"
+
+echo "--------------------------------------------------------"
+
+
 
 # get sha from master
 valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
