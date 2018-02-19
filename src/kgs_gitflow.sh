@@ -89,6 +89,25 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/
 
 
+     echo "-------------------------------------------------------------------------------"
+     TIME_TO_WAIT_START=60
+     echo "Wait $TIME_TO_WAIT_START *10 seconds for the build $DOCKERHUB_KGSDEVREPO:$version to be started on DockerHub"
+
+     while [ $TIME_TO_WAIT_START  -ge 0 ]; do
+        sleep 10
+        TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
+        FOUND_BUILD=$( curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_KGSDEVREPO}/buildhistory/ | grep -E "\{.*\"status\": [0-9]+,[^\{]*\"dockertag_name\": \"$version\".*\}" | wc -l )
+
+        if [ $FOUND_BUILD -gt 0 ];then
+          echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
+          break
+        fi
+        if [ ! -z "$DOCKERHUB_TRIGGER" ] && ! (( TIME_TO_WAIT_START % 10 )); then
+            echo "One minute passed, build not starting , will use trigger to re-start build"
+            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/
+        fi
+    done
+
 
 
 
