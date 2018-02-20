@@ -90,7 +90,7 @@ for res in data_dict['results']:
          exit 1
         fi
         if [ $build_status -eq 10 ]; then
-         echo "Build  $DOCKERHUB_REPO:$DOCKERHUB_NAME done succesfully on DockerHub"
+         echo "Build  $DOCKERHUB_REPO:$DOCKERHUB_NAME done successfully on DockerHub"
          break
         fi
         if ! (( waiting % 5 )); then
