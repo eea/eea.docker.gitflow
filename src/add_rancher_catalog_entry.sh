@@ -57,6 +57,9 @@ echo "--------------------------------------------------------"
 if [ $(grep -c "image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION$"  $lastdir/$DOCKER_COMPOSE ) -gt 0 ]; then
   echo "Found in latest $DOCKER_COMPOSE images with $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION"
   echo "Will skip the creation of new version of rancher catalog!"
+  #clean-up
+  cd $current_dir
+  rm -rf $RANCHER_CATALOG_GITNAME
   exit 0
 fi
 
