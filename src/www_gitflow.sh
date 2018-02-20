@@ -83,7 +83,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             exit 1
       fi
 
-      echo "Dockerfiles commited succesfully to master"    
+      echo "Dockerfiles commited successfully to master"    
 
 
       echo "-------------------------------------------------------------------------------"
@@ -103,7 +103,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      echo "-------------------------------------------------------------------------------"
    
      if [ $( curl  -s https://hub.docker.com/v2/repositories/${DOCKERHUB_WWWREPO}/buildhistory/ | grep -E "\{.*\"status\": 10,[^\{]*\"dockertag_name\": \"$version\".*\}" | wc -l ) -gt 0 ]; then
-       echo "Found succesfull release on DOCKERHUB - ${DOCKERHUB_WWWREPO}:$version" 
+       echo "Found successfull release on DOCKERHUB - ${DOCKERHUB_WWWREPO}:$version" 
      else 
       /dockerhub_release_wait.sh ${DOCKERHUB_WWWREPO} $version $TRIGGER_MAIN_URL
      fi
@@ -120,7 +120,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      echo "-------------------------------------------------------------------------------"
      
      if [ $( curl  -s https://hub.docker.com/v2/repositories/${DOCKERHUB_WWWDEVREPO}/buildhistory/ | grep -E "\{.*\"status\": 10,[^\{]*\"dockertag_name\": \"$version\".*\}" | wc -l ) -gt 0 ]; then
-       echo "Found succesfull release on DOCKERHUB - ${DOCKERHUB_WWWDEVREPO}:$version"
+       echo "Found successfull release on DOCKERHUB - ${DOCKERHUB_WWWDEVREPO}:$version"
      else
        /dockerhub_release_wait.sh ${DOCKERHUB_WWWDEVREPO} $version $TRIGGER_URL
      fi
