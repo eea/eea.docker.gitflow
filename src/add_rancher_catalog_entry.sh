@@ -160,7 +160,7 @@ if [ $( echo $curl_result | grep -c  "HTTP/1.1 200" ) -eq 0 ]; then
             exit 1
 fi
 
-echo "Succesfully finished the release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION in catalog"
+echo "Successfully finished the release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION in catalog"
 #clean-up
 cd $current_dir
 rm -rf $RANCHER_CATALOG_GITNAME
