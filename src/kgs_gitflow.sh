@@ -58,7 +58,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
       result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat Dockerfile | base64))\"}" $githubApiUrl)
 
          if [ $(echo $result | grep -c "HTTP/1.1 200") -eq 1 ]; then
-            echo "Dockerfile updated succesfully"
+            echo "Dockerfile updated successfully"
          else
             echo "There was an error updating the Dockerfile, please check the execution"
             echo $result
