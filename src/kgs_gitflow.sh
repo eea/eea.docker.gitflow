@@ -99,10 +99,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         FOUND_BUILD=$( curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_KGSDEVREPO}/buildhistory/ | grep -E "\{.*\"status\": [0-9]+,[^\{]*\"dockertag_name\": \"$version\".*\}" | wc -l )
 
         if [ $FOUND_BUILD -gt 0 ];then
-          echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
+          echo "DockerHub started the $DOCKERHUB_KGSDEVREPO:$version release"
           break
         fi
-        if [ ! -z "$DOCKERHUB_TRIGGER" ] && ! (( TIME_TO_WAIT_START % 10 )); then
+        if [ ! -z "$TRIGGER_URL" ] && ! (( TIME_TO_WAIT_START % 10 )); then
             echo "One minute passed, build not starting , will use trigger to re-start build"
             curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/
         fi
