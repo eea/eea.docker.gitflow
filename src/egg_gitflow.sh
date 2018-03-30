@@ -10,11 +10,6 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         git fetch origin pull/$GIT_CHANGE_ID/head:$GIT_BRANCH
         files_changed=$(git --no-pager diff --name-only $GIT_BRANCH $(git merge-base $GIT_BRANCH master))
 
-        if [ $(echo $files_changed | grep $GIT_HISTORYFILE | wc -l) -eq 0 ]; then
-             echo "Pipeline aborted due to no history file changed"
-             exit 1
-        fi
-        echo "Passed check: History file updated"
 
         git checkout $GIT_BRANCH
 
@@ -51,6 +46,12 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         fi
         
         echo "Passed check: Version file updated"
+
+        if [ $(echo $files_changed | grep $GIT_HISTORYFILE | wc -l) -eq 0 ]; then
+             echo "Pipeline aborted due to no history file changed"
+             exit 1
+        fi
+        echo "Passed check: History file updated"
 
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "Version is $version"
