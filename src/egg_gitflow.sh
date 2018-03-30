@@ -20,7 +20,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
              version=$(date +"%-y.%-m.%-d")
              echo $version > $GIT_VERSIONFILE
              
-             githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/$GIT_VERSIONFILE?ref=${GIT_CHANGE_BRANCH}"
+             githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/$GIT_VERSIONFILE"
 
              curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $githubApiUrl )
              if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
@@ -32,7 +32,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
              sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
 
-             result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Updated version to  $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat $GIT_VERSIONFILE | base64))\"}" $githubApiUrl)
+             result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Updated version to  $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"branch\": \"${GIT_CHANGE_BRANCH}\", \"content\": \"$(printf '%s' $(cat $GIT_VERSIONFILE | base64))\"}" $githubApiUrl)
 
             if [ $(echo $result | grep -c "HTTP/1.1 200") -eq 1 ]; then
                 echo "version file updated successfully"
