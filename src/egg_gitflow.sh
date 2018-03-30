@@ -16,13 +16,42 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         fi
         echo "Passed check: History file updated"
 
+        git checkout $GIT_BRANCH
+
+
+
         if [ $(echo $files_changed | grep $GIT_VERSIONFILE | wc -l) -eq 0 ]; then
-             echo "Pipeline aborted due to no version file changed"
-             exit 1
+             
+             version=$(date +"%-y.%-m.%-d")
+             echo $version > $GIT_VERSIONFILE
+             
+             githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/$GIT_VERSIONFILE?ref=${GIT_CHANGE_BRANCH}"
+
+             curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $githubApiUrl )
+             if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
+                echo "There was a problem with the GitHub API request:"
+                echo $curl_result
+                exit 1
+             fi
+
+             sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+
+
+             result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Updated version to  $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat $GIT_VERSIONFILE | base64))\"}" $githubApiUrl)
+
+            if [ $(echo $result | grep -c "HTTP/1.1 200") -eq 1 ]; then
+                echo "version file updated successfully"
+            else
+               echo "There was an error updating version, please check the execution"
+               echo $result
+                exit 1
+            fi
+            echo "Version file updated, will stop execution "
+            exit 0
         fi
+        
         echo "Passed check: Version file updated"
 
-        git checkout $GIT_BRANCH
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "Version is $version"
 
