@@ -67,7 +67,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         git fetch --tags
         if [ $(git tag | grep -c "^$version$" ) -ne 0 ]; then
          echo "Version already present in tags, so will set it to default value - last release + 0.1"
-         last_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+         lastTag=$(git describe --tags `git rev-list --tags --max-count=1`)
          update_versionfile $lastTag
          exit 0
         fi
@@ -76,7 +76,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
         if [[ ! $version  =~ ^[0-9]+\.[0-9]+$ ]] ; then
          echo "Version ${version} does not respect format: \"number.number\", so will set it to default value - last release + 0.1"
-         last_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+         lastTag=$(git describe --tags `git rev-list --tags --max-count=1`)
          update_versionfile $lastTag
          exit 0 
         fi
@@ -100,11 +100,11 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
 
         if [ $(echo $files_changed | grep $GIT_HISTORYFILE | wc -l) -eq 0 ]; then
-
+             echo "Changelog not updated, will populate it with default values"
              echo "Changelog
 =========
 
-$version - ($(date +"%y-%m-%d"))
+$version - ($(date +"%yyyy-%m-%d"))
 ---------------------
 * Change: <$GIT_CHANGE_TITLE> [$GIT_CHANGE_AUTHOR]
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
