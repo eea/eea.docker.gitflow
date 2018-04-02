@@ -107,7 +107,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
 $version - ($(date +"%Y-%m-%d"))
 ---------------------
-* Change: <$GIT_CHANGE_TITLE> [$GIT_CHANGE_AUTHOR]
+* Change: $GIT_CHANGE_TITLE [$GIT_CHANGE_AUTHOR]
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
             update_file $GIT_HISTORYFILE "Updated changelog - needs review"
