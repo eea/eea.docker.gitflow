@@ -105,7 +105,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
              echo "Changelog
 =========
 
-$version - ($(date +"%yyyy-%m-%d"))
+$version - ($(date +"%Y-%m-%d"))
 ---------------------
 * Change: <$GIT_CHANGE_TITLE> [$GIT_CHANGE_AUTHOR]
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
