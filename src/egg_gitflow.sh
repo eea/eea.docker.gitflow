@@ -14,7 +14,7 @@ update_file()
  message=$2
  url="$githubApiUrl/contents/$location"; 
   
- curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url )
+ curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url?ref=${GIT_CHANGE_BRANCH} )
  if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
       echo "There was a problem with the GitHub API request for $location:"
       echo $curl_result
@@ -22,6 +22,7 @@ update_file()
  fi
 
  sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+ 
  result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"${message}\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"branch\": \"${GIT_CHANGE_BRANCH}\", \"content\": \"$(printf '%s' $(cat $location | base64))\"}" $url)
  if [ $(echo $result | grep -c "HTTP/1.1 200") -eq 1 ]; then
           echo "$location updated successfully"
