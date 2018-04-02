@@ -6,14 +6,14 @@ git clone $GIT_SRC
 cd $GIT_NAME
 
 
-githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/"
+githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}"
 
 update_file()
 {
  location=$1
  message=$2
- url=$githubApiUrl$location;
- 
+ url="$githubApiUrl/contents/$location"; 
+  
  curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url )
  if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
       echo "There was a problem with the GitHub API request for $location:"
