@@ -249,7 +249,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
         curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_HISTORYFILE}?ref=develop"  > ${GIT_HISTORYFILE}
 
-        next_version=$( echo "$($version + 0.1 | bc)-dev0")
+        next_version=$( echo "$(echo $version + 0.1 | bc)-dev0")
         echo $next_version  > $GIT_VERSIONFILE
         echo "Changelog
 =========
