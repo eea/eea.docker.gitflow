@@ -79,7 +79,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
          if [[  $version  =~ ^[0-9]+\.[0-9]+\.dev[0-9]*$ ]] ; then
              version=$(echo $version | cut -d. -f1,2)
-             update_versionfile $lastTag
+             update_versionfile $version
              echo "Removed dev from version file"
              exit 0
          fi
@@ -123,22 +123,24 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
             echo "History file updated with default lines ( version, date and PR title  and user )"
             exit 0 
         fi
-
+        update_changelog=0
         if [ $(grep -c "(unreleased)"  $GIT_HISTORYFILE) -gt 0 ]; then
           sed -i "s/(unreleased)/($(date +"%Y-%m-%d"))/g" $GIT_HISTORYFILE
-          update_file $GIT_HISTORYFILE "Updated changelog - removed unreleased, set current date"
           echo "History file updated - replaced unreleased with date"
-          exit 0
+          update_changelog=1
         fi
 
         if [ $(grep -cE "^[0-9]+\.[0-9]+\.dev[0-9]*" $GIT_HISTORYFILE) -gt 0 ]; then
            sed -i -r "s/(^[0-9]+\.[0-9]+)\.dev[0-9]*/\1/" $GIT_HISTORYFILE
-           update_file $GIT_HISTORYFILE "Updated changelog - removed dev version"
            echo "History file updated -  removed dev version"
-           exit 0
+           update_changelog=1
         fi
 
-
+        if [ $update_changelog -eq 1]; then
+           update_file $GIT_HISTORYFILE "Updated changelog - removed develop information"
+           echo "History file updated -  removed dev version"
+           exit 0
+        fi 
 
         echo "Passed check: History file updated"
 
