@@ -33,14 +33,18 @@ update_file()
  fi
 }
 
-update_versionfile()
+update_versionfile_withvalue()
 {
- old_version=$1
- version=$(echo $old_version + 0.1 | bc)
+ version=$1
  echo $version > $GIT_VERSIONFILE
  update_file $GIT_VERSIONFILE "Updated version to $version"
  echo "Version file updated to  $version"
+}
 
+
+update_versionfile()
+{
+ update_versionfile_withvalue $(echo $1 + 0.1 | bc)
 }
 
 if [ ! -z "$GIT_CHANGE_ID" ]; then
@@ -79,7 +83,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
          if [[  $version  =~ ^[0-9]+\.[0-9]+\.dev[0-9]*$ ]] ; then
              new_version=$(echo $version | cut -d. -f1,2)
-             update_versionfile $new_version
+             update_versionfile_withvalue $new_version
              echo "Removed dev from version file"
              exit 0
          fi
