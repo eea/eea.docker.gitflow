@@ -78,8 +78,8 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         if [[ ! $version  =~ ^[0-9]+\.[0-9]+$ ]] ; then
 
          if [[  $version  =~ ^[0-9]+\.[0-9]+\.dev[0-9]*$ ]] ; then
-             version=$(echo $version | cut -d. -f1,2)
-             update_versionfile $version
+             new_version=$(echo $version | cut -d. -f1,2)
+             update_versionfile $new_version
              echo "Removed dev from version file"
              exit 0
          fi
@@ -136,7 +136,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
            update_changelog=1
         fi
 
-        if [ $update_changelog -eq 1]; then
+        if [ $update_changelog -eq 1 ]; then
            update_file $GIT_HISTORYFILE "Updated changelog - removed develop information"
            echo "History file updated -  removed dev version"
            exit 0
