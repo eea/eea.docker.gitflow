@@ -244,7 +244,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
  
         curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_VERSIONFILE}?ref=develop"  > ${GIT_VERSIONFILE}
 
-        if [ $(grep -c ^$version$ ${GIT_VERSIONFILE}) -eq 1]; then
+        if [ $(grep -c ^$version$ ${GIT_VERSIONFILE}) -eq 1 ]; then
         echo "Found same version on develop as just released, will update it"
 
         curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_HISTORYFILE}?ref=develop"  > ${GIT_HISTORYFILE}
