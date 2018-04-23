@@ -138,8 +138,8 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
           update_changelog=1
         fi
 
-        if [ $(grep -cE "^[0-9]+\.[0-9]+\.dev[0-9]*" $GIT_HISTORYFILE) -gt 0 ]; then
-           sed -i -r "s/(^[0-9]+\.[0-9]+)\.dev[0-9]*/\1/" $GIT_HISTORYFILE
+        if [ $(grep -cE "^[0-9]+\.[0-9]+.dev[0-9]*" $GIT_HISTORYFILE) -gt 0 ]; then
+           sed -i -r "s/(^[0-9]+\.[0-9]+).dev[0-9]*/\1/" $GIT_HISTORYFILE
            echo "History file updated -  removed dev version"
            update_changelog=1
         fi
