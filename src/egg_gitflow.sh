@@ -15,8 +15,8 @@ update_file()
 {
  location=$1
  message=$2
- url="$githubApiUrl/contents/$location"; 
-  
+ url="$githubApiUrl/contents/$location";
+
  curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url?ref=${GIT_CHANGE_BRANCH} )
  if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
       echo "There was a problem with the GitHub API request for $location:"
@@ -60,14 +60,14 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         git checkout $GIT_BRANCH
 
         if [ $(echo $files_changed | grep $GIT_VERSIONFILE | wc -l) -eq 0 ]; then
-            
+
              old_version=$(printf '%s' $(cat $GIT_VERSIONFILE))
-             
-             update_versionfile $old_version 
+
+             update_versionfile $old_version
              echo "Version file updated to default value ( last release +0.1), will stop execution "
              exit 0
         fi
-        
+
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "Version is $version"
         echo "Passed check: Version file updated"
@@ -95,7 +95,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
          echo "Version ${version} does not respect format: \"number.number\", so will set it to default value - last release + 0.1"
          lastTag=$(git describe --tags `git rev-list --tags --max-count=1`)
          update_versionfile $lastTag
-         exit 0 
+         exit 0
         fi
         echo "Passed check: Version format is number.number"
 
@@ -127,9 +127,9 @@ $version - ($(date +"%Y-%m-%d"))
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
             update_file $GIT_HISTORYFILE "Updated changelog - needs review"
-            
+
             echo "History file updated with default lines ( version, date and PR title  and user )"
-            exit 0 
+            exit 0
         fi
         update_changelog=0
         if [ $(grep -c "(unreleased)"  $GIT_HISTORYFILE) -gt 0 ]; then
@@ -148,7 +148,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
            update_file $GIT_HISTORYFILE "Updated changelog - removed develop information"
            echo "History file updated -  removed dev version"
            exit 0
-        fi 
+        fi
 
         echo "Passed check: History file updated"
 
@@ -162,16 +162,16 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         #check if release already exists
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "--------------------------------------------------------------------------------------------------------------------"
- 
+
         echo "Preparing .pypirc file for release"
         export HOME=$(pwd)
         mv /pypirc.template .pypirc
-        
+
         echo "Checking if version is released on EGGREPO"
         egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME,,}/")
 
-        
-        if [ $(echo "$egg_releases" | grep -Ec "(HTTP/1.1 200)|(HTTP/1.1 404)") -ne 1 ]; then 
+
+        if [ $(echo "$egg_releases" | grep -Ec "(HTTP/1.1 200)|(HTTP/1.1 404)") -ne 1 ]; then
            echo "There was a problem with the EGG repository - HTTP response code not 200 or 404"
            echo "Please check ${EGGREPO_URL}d/${GIT_NAME,,}/"
            echo "$egg_releases"
@@ -185,7 +185,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             sed -i "s#EGGREPO_PASSWORD#${EGGREPO_PASSWORD}#g" .pypirc
             mkrelease -CT -d eea .
             echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
-        
+
        else
            echo "Release ${GIT_NAME}-${version}.zip already exists on EEA repo, skipping"
         fi
@@ -193,9 +193,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         echo "--------------------------------------------------------------------------------------------------------------------"
 
         echo "Checking if version is released on PyPi"
-    
-        pypi_releases=$(curl -i -s "${PYPI_CHECK_URL}${GIT_NAME}/")
-        
+
+        pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${GIT_NAME}/")
+
 
         if [ $(echo "$pypi_releases" | grep -Ec "(HTTP/1.1 200)|(HTTP/1.1 404)") -ne 1 ]; then
            echo "There was a problem with the PIPY repository - HTTP response code not 200 or 404"
@@ -204,10 +204,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
            exit 1
         fi
 
-        if [ $(echo "$pypi_releases" | grep -c "HTTP/1.1 404") -eq 1 ]; then 
+        if [ $(echo "$pypi_releases" | grep -c "HTTP/1.1 404") -eq 1 ]; then
           echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
-        else   
-          
+        else
+
           if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
              echo "Starting the release ${GIT_NAME}-${version}.zip on PyPi repo"
              sed -i "s#PYPI_USERNAME#${PYPI_USERNAME}#g" .pypirc
@@ -225,7 +225,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
          echo "Starting the creation of the tag $version on master"
 
          curl_result=$(curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
-        
+
          if [ $( echo $curl_result | grep -c  "HTTP/1.1 201" ) -eq 0 ]; then
             echo "There was a problem with the release"
             echo $curl_result
@@ -241,8 +241,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         echo "--------------------------------------------------------------------------------------------------------------------"
 
 
-        GITHUBURL=${githubApiUrl}/git      
- 
+        GITHUBURL=${githubApiUrl}/git
+
         curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_VERSIONFILE}?ref=develop"  > ${GIT_VERSIONFILE}
 
         if [ $(grep -c ^$version$ ${GIT_VERSIONFILE}) -eq 1 ]; then
@@ -272,7 +272,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
        valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_develop}\",\"tree\": [{\"path\": \"${GIT_VERSIONFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_version}\" }, { \"path\": \"${GIT_HISTORYFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_history}\" }]}" sha
 
        sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
- 
+
        # create commit
 
        valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Back to devel\", \"parents\": [\"${sha_develop}\"], \"tree\": \"${sha_newtree}\"}"  sha
@@ -292,7 +292,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       else
        echo "Version file already changed on develop"
       fi
-  
+
 
         echo "--------------------------------------------------------------------------------------------------------------------"
       # Updating versions.cfg
