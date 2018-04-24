@@ -58,6 +58,9 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
 
         git checkout $GIT_BRANCH
+        if [ ! -f $GIT_VERSIONFILE ]; then
+            GIT_VERSIONFILE="src/$GIT_VERSIONFILE"
+        fi
 
         if [ $(echo $files_changed | grep $GIT_VERSIONFILE | wc -l) -eq 0 ]; then
 
