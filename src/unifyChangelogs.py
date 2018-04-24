@@ -173,7 +173,7 @@ def main():
                     text = text.replace("\n","\n" + " "*len(bullet))
                     print("* {text}".format(text=text), file=out)
         else:
-            print("* https://pypi.python.org/pypi/{package}#changelog".format(package=package), file=out)
+            print("* https://pypi.org/project/{package}#changelog".format(package=package), file=out)
 
     if format == 'json':
         out.seek(0)

@@ -37,7 +37,7 @@ if [ -z "$EGGREPO_URL" ]; then
 fi
 
 if [  -z "$PYPI_CHECK_URL" ]; then
- PYPI_CHECK_URL=https://pypi.python.org/simple/
+ PYPI_CHECK_URL=https://pypi.org/simple/
 fi
 
 if [ -z "$KGS_GITNAME" ]; then
