@@ -163,6 +163,9 @@ fi
 if [[ "$GIT_BRANCH" == "master" ]]; then
 
         #check if release already exists
+        if [ ! -f $GIT_VERSIONFILE ]; then
+            GIT_VERSIONFILE="src/$GIT_VERSIONFILE"
+        fi
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "--------------------------------------------------------------------------------------------------------------------"
 
