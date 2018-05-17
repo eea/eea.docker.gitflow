@@ -156,7 +156,7 @@ def main():
             if x.tagname == "section":
                 try:
                     logVersion = StrictVersion(x['names'][0].split()[0])
-                except ValueError:
+                except Exception:
                     pass
                 else:
                     return logVersion > previous and logVersion <= version
