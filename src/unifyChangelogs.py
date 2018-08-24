@@ -48,6 +48,8 @@ def pullVersions(url):
             package, version = line.split('=', 1)
             package = package.strip()
             version = version.strip()
+            if not version:
+                continue
 
             try:
                 version = StrictVersion(version)
