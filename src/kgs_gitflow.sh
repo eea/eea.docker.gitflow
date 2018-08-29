@@ -57,7 +57,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
       result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat Dockerfile | base64))\"}" $githubApiUrl)
 
-         if [ $(echo $result | grep -c "HTTP/1.1 200") -eq 1 ]; then
+         if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 1 ]; then
             echo "Dockerfile updated successfully"
          else
             echo "There was an error updating the Dockerfile, please check the execution"
@@ -72,7 +72,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      echo "Starting the release $version"
      curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  $change_log, \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
-     if [ $( echo $curl_result | grep -c  "HTTP/1.1 201" ) -eq 0 ]; then
+     if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
             echo "There was a problem with the release"
             echo $curl_result
             exit 1

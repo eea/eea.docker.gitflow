@@ -77,7 +77,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
       # update master to commit
       curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/master)
 
-      if [ $( echo $curl_result | grep -c  "HTTP/1.1 200" ) -eq 0 ]; then
+      if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 200" ) -eq 0 ]; then
             echo "There was a problem with the Dockerfile and devel/Dockerfile commit"
             echo $curl_result
             exit 1
@@ -92,7 +92,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      
       curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
-      if [ $( echo $curl_result | grep -c  "HTTP/1.1 201" ) -eq 0 ]; then
+      if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
             echo "There was a problem with the release"
             echo $curl_result
             exit 1
