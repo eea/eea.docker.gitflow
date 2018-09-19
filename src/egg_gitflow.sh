@@ -79,8 +79,8 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         git fetch --tags
         if [ $(git tag | grep -c "^$version$" ) -ne 0 ]; then
          echo "Version already present in tags, so will set it to default value - last release + 0.1"
-         lastTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-         update_versionfile $lastTag
+         get_last_tag
+         update_versionfile $latestTag
          exit 0
         fi
 
@@ -88,16 +88,17 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
         if [[ ! $version  =~ ^[0-9]+\.[0-9]+$ ]] ; then
 
-         if [[  $version  =~ ^[0-9]+\.[0-9]+\.dev[0-9]*$ ]] ; then
-             new_version=$(echo $version | cut -d. -f1,2)
+         if [[  $version  =~ ^[0-9]+\.[0-9]+[\.|-]dev[0-9]*$ ]] ; then
+             new_version=$(echo $version | cut -d. -f1,2 | cut -d- -f1,1 )
              update_versionfile_withvalue $new_version
              echo "Removed dev from version file"
              exit 0
          fi
 
+
          echo "Version ${version} does not respect format: \"number.number\", so will set it to default value - last release + 0.1"
-         lastTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-         update_versionfile $lastTag
+         get_last_tag
+         update_versionfile $latestTag
          exit 0
         fi
         echo "Passed check: Version format is number.number"
@@ -106,7 +107,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         if [ $(git tag | wc -l) -eq 0 ]; then
              echo "Passed check: New version is bigger than last released version (no versions released yet)"
         else
-                latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+                get_last_tag
                 check_version_bigger=$(echo $version"."$latestTag | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
 
                 if [[ ! $check_version_bigger == "OK" ]]; then

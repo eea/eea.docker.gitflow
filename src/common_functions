@@ -29,3 +29,13 @@ valid_curl_post_result()
 
 }
 
+get_last_tag()
+{
+if [ $(git tag | wc -l) -gt 0 ]; then
+   latestTag=`git describe --tags`
+else
+   latestTag=0.1
+fi
+}
+
+
