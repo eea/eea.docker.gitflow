@@ -8,7 +8,7 @@ cd $GIT_NAME
 # KGS release
 if [[ "$GIT_BRANCH" == "master" ]]; then
 
-        latestTag=$(git describe --tags)
+        latestTag=$(git describe --abbrev=0 --tags)
         files_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | wc -l )
 
       if [ $files_changed -eq 0 ]; then
