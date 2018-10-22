@@ -78,3 +78,15 @@ To run from jenkins:
 1. GIT_TOKEN - Mandatory, the token used for GitHub API
 
 
+## Apache/Varnish release on commit to master
+
+To run from jenkins:
+
+> $docker run -i --name="$BUILD_TAG-gitflow-master" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_NAME=eea.docker.apache-eea-www  -e GIT_TOKEN="$GITHUB_TOKEN" eeacms/gitflow
+
+and
+
+> $docker run -i --name="$BUILD_TAG-gitflow-master" -e GIT_BRANCH="$BRANCH_NAME" -e GIT_NAME=eea.docker.varnish-eea-www  -e GIT_TOKEN="$GITHUB_TOKEN" eeacms/gitflow
+
+
+
