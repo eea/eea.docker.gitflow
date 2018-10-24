@@ -4,7 +4,7 @@ LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
 RUN apk add --no-cache --virtual .run-deps git bash curl coreutils bc \
  && pip install --upgrade pip \
- && pip install jarn.mkrelease docutils wheel
+ && pip install jarn.mkrelease docutils setuptools
 
 COPY src/* /
 
