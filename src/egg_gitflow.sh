@@ -171,63 +171,63 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         echo "--------------------------------------------------------------------------------------------------------------------"
 
         if [ ! -z "$EGGREPO_PASSWORD" ]; then
-        echo "Preparing .pypirc file for release"
-        export HOME=$(pwd)
-        mv /pypirc.template .pypirc
+          echo "Preparing .pypirc file for release"
+          export HOME=$(pwd)
+          mv /pypirc.template .pypirc
 
-        echo "Checking if version is released on EGGREPO"
-        egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME,,}/")
+          echo "Checking if version is released on EGGREPO"
+          egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME,,}/")
 
 
-        if [ $(echo "$egg_releases" | grep -Ec "HTTP/[0-9\.]* (200|404)") -eq 0 ]; then
-           echo "There was a problem with the EGG repository - HTTP response code not 200 or 404"
-           echo "Please check ${EGGREPO_URL}d/${GIT_NAME,,}/"
-           echo "$egg_releases"
-           exit 1
-        fi
+          if [ $(echo "$egg_releases" | grep -Ec "HTTP/[0-9\.]* (200|404)") -eq 0 ]; then
+             echo "There was a problem with the EGG repository - HTTP response code not 200 or 404"
+             echo "Please check ${EGGREPO_URL}d/${GIT_NAME,,}/"
+             echo "$egg_releases"
+             exit 1
+          fi
 
-        if [ $(echo "$egg_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
-            echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
-            sed -i "s#EGGREPO_URL#${EGGREPO_URL}#g" .pypirc
-            sed -i "s#EGGREPO_USERNAME#${EGGREPO_USERNAME}#g" .pypirc
-            sed -i "s#EGGREPO_PASSWORD#${EGGREPO_PASSWORD}#g" .pypirc
-            mkrelease -CT -d eea .
-            echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
+          if [ $(echo "$egg_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
+              echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
+              sed -i "s#EGGREPO_URL#${EGGREPO_URL}#g" .pypirc
+              sed -i "s#EGGREPO_USERNAME#${EGGREPO_USERNAME}#g" .pypirc
+              sed -i "s#EGGREPO_PASSWORD#${EGGREPO_PASSWORD}#g" .pypirc
+              mkrelease -CT -d eea .
+              echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
 
-       else
-           echo "Release ${GIT_NAME}-${version}.zip already exists on EEA repo, skipping"
-        fi
-        echo "--------------------------------------------------------------------------------------------------------------------"
+         else
+             echo "Release ${GIT_NAME}-${version}.zip already exists on EEA repo, skipping"
+          fi
+          echo "--------------------------------------------------------------------------------------------------------------------"
         fi
 
         if [ ! -z "$PYPI_PASSWORD" ]; then
-        echo "Checking if version is released on PyPi"
+          echo "Checking if version is released on PyPi"
 
-        pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${GIT_NAME}/")
+          pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${GIT_NAME}/")
 
 
-        if [ $(echo "$pypi_releases" | grep -Ec "HTTP/[0-9\.]* (200|404)") -eq 0 ]; then
-           echo "There was a problem with the PIPY repository - HTTP response code not 200 or 404"
-           echo "Please check ${PYPI_CHECK_URL}${GIT_NAME}/"
-           echo "$pypi_releases"
-           exit 1
-        fi
-
-        if [ $(echo "$pypi_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ]; then
-          echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
-        else
-
-          if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
-             echo "Starting the release ${GIT_NAME}-${version}.zip on PyPi repo"
-             sed -i "s#PYPI_USERNAME#${PYPI_USERNAME}#g" .pypirc
-             sed -i "s#PYPI_PASSWORD#${PYPI_PASSWORD}#g" .pypirc
-             mkrelease -CT -d pypi .
-             echo "Release ${GIT_NAME}-${version}.zip  done on PyPi"
-          else
-            echo "Release ${GIT_NAME}-${version}.zip already exists on PyPi repo, skipping"
+          if [ $(echo "$pypi_releases" | grep -Ec "HTTP/[0-9\.]* (200|404)") -eq 0 ]; then
+             echo "There was a problem with the PIPY repository - HTTP response code not 200 or 404"
+             echo "Please check ${PYPI_CHECK_URL}${GIT_NAME}/"
+             echo "$pypi_releases"
+             exit 1
           fi
-        fi
-        echo "--------------------------------------------------------------------------------------------------------------------"
+
+          if [ $(echo "$pypi_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ]; then
+            echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
+          else
+
+            if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
+               echo "Starting the release ${GIT_NAME}-${version}.zip on PyPi repo"
+               sed -i "s#PYPI_USERNAME#${PYPI_USERNAME}#g" .pypirc
+               sed -i "s#PYPI_PASSWORD#${PYPI_PASSWORD}#g" .pypirc
+               mkrelease -CT -d pypi .
+               echo "Release ${GIT_NAME}-${version}.zip  done on PyPi"
+            else
+              echo "Release ${GIT_NAME}-${version}.zip already exists on PyPi repo, skipping"
+            fi
+          fi
+          echo "--------------------------------------------------------------------------------------------------------------------"
         fi
 
         #check if tag exiss
@@ -307,53 +307,53 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
         echo "--------------------------------------------------------------------------------------------------------------------"
 
     if [ ! -z "$EGGREPO_PASSWORD" || ! -z "$PYPI_PASSWORD" ]; then
-    # Updating versions.cfg
-     echo "Starting the update of KGS versions.cfg"
-     curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  > versions.cfg
+      # Updating versions.cfg
+      echo "Starting the update of KGS versions.cfg"
+      curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  > versions.cfg
 
-     if [ $(grep -c "\[versions\]" versions.cfg) -eq 0 ]; then
-       echo "There was a problem getting the versions file"
-       cat versions.cfg
-       exit 1
-     fi
-
-     if [ $(grep -c "^${GIT_NAME} = $version$" versions.cfg) -eq 1 ]; then
-         echo "KGS versions file already updated, skipping"
-     else
-       old_version=$( grep  "^${GIT_NAME} =" versions.cfg | awk '{print $3}')
-
-       check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
-
-       if [[ ! $check_version_bigger == "OK" ]]; then
-         echo "${version} is smaller than the version from ${KGS_GITNAME} - ${old_version}, skipping"
-       else
-
-         echo "Updating KGS versions file with released version"
-
-         curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}" )
-
-         if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
-            echo "There was a problem with the GitHub API request:"
-            echo $curl_result
-            exit 1
-         fi
-
-
-         sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
-
-         grep -q "^${GIT_NAME} =" versions.cfg  && sed -i "s/^${GIT_NAME} =.*/${GIT_NAME} = $version/" versions.cfg || sed -i "/# automatically set /a ${GIT_NAME} = $version" versions.cfg
-
-         result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}")
-
-         if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 1 ]; then
-            echo "KGS versions file updated succesfully"
-         else
-            echo "There was an error updating the KGS file, please check the execution"
-            echo $result
-            exit 1
-         fi
+      if [ $(grep -c "\[versions\]" versions.cfg) -eq 0 ]; then
+        echo "There was a problem getting the versions file"
+        cat versions.cfg
+        exit 1
       fi
-i   fi
+
+      if [ $(grep -c "^${GIT_NAME} = $version$" versions.cfg) -eq 1 ]; then
+          echo "KGS versions file already updated, skipping"
+      else
+        old_version=$( grep  "^${GIT_NAME} =" versions.cfg | awk '{print $3}')
+
+        check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
+
+        if [[ ! $check_version_bigger == "OK" ]]; then
+          echo "${version} is smaller than the version from ${KGS_GITNAME} - ${old_version}, skipping"
+        else
+
+          echo "Updating KGS versions file with released version"
+
+          curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}" )
+
+          if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
+             echo "There was a problem with the GitHub API request:"
+             echo $curl_result
+             exit 1
+          fi
+
+
+          sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+
+          grep -q "^${GIT_NAME} =" versions.cfg  && sed -i "s/^${GIT_NAME} =.*/${GIT_NAME} = $version/" versions.cfg || sed -i "/# automatically set /a ${GIT_NAME} = $version" versions.cfg
+
+          result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}")
+
+          if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 1 ]; then
+             echo "KGS versions file updated succesfully"
+          else
+             echo "There was an error updating the KGS file, please check the execution"
+             echo $result
+             exit 1
+          fi
+       fi
+    fi
  fi
 
 fi
