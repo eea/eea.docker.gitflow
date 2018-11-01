@@ -170,6 +170,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
         echo "--------------------------------------------------------------------------------------------------------------------"
 
+        if [ ! -z "$EGGREPO_PASSWORD" ]; then
         echo "Preparing .pypirc file for release"
         export HOME=$(pwd)
         mv /pypirc.template .pypirc
@@ -196,9 +197,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
        else
            echo "Release ${GIT_NAME}-${version}.zip already exists on EEA repo, skipping"
         fi
-
         echo "--------------------------------------------------------------------------------------------------------------------"
+        fi
 
+        if [ ! -z "$PYPI_PASSWORD" ]; then
         echo "Checking if version is released on PyPi"
 
         pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${GIT_NAME}/")
@@ -226,6 +228,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           fi
         fi
         echo "--------------------------------------------------------------------------------------------------------------------"
+        fi
 
         #check if tag exiss
         if [ $(git tag | grep -c "^$version$") -eq 0 ]; then
@@ -302,7 +305,9 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
 
         echo "--------------------------------------------------------------------------------------------------------------------"
-      # Updating versions.cfg
+
+    if [ ! -z "$EGGREPO_PASSWORD" || ! -z "$PYPI_PASSWORD" ]; then
+    # Updating versions.cfg
      echo "Starting the update of KGS versions.cfg"
      curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  > versions.cfg
 
@@ -348,6 +353,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
             exit 1
          fi
       fi
+i   fi
  fi
 
 fi
