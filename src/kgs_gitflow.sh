@@ -84,9 +84,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      echo "-------------------------------------------------------------------------------"
      echo "Starting the kgs-devel release on dockerhub"
 
-     echo "curl -H \"Content-Type: application/json\"  --data  \"{\"source_type\": \"Tag\", \"source_name\": \"$version\"}\" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/"
+     echo "curl -H \"Content-Type: application/json\"  --data  \"{\"source_type\": \"Tag\", \"source_name\": \"$version\"}\" -X POST https://cloud.docker.com/api/build/v1/source/$TRIGGER_URL"
 
-     curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/
+     curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://cloud.docker.com/api/build/v1/source/$TRIGGER_URL
 
 
      echo "-------------------------------------------------------------------------------"
@@ -96,7 +96,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
-        FOUND_BUILD=$( curl -s https://hub.docker.com/v2/repositories/${DOCKERHUB_KGSDEVREPO}/buildhistory/ | grep -E "\{.*\"status\": [0-9]+,[^\{]*\"dockertag_name\": \"$version\".*\}" | wc -l )
+	FOUND_BUILD=$(  curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_KGSDEVREPO}/" |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"(Pending|In progress)\".*\}"  | wc -l )
+	
 
         if [ $FOUND_BUILD -gt 0 ];then
           echo "DockerHub started the $DOCKERHUB_KGSDEVREPO:$version release"
@@ -104,7 +105,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         fi
         if [ ! -z "$TRIGGER_URL" ] && ! (( TIME_TO_WAIT_START % 10 )); then
             echo "One minute passed, build not starting , will use trigger to re-start build"
-            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://registry.hub.docker.com/u/$DOCKERHUB_KGSDEVREPO/trigger/$TRIGGER_URL/
+            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://cloud.docker.com/api/build/v1/source/$TRIGGER_URL
         fi
     done
 
