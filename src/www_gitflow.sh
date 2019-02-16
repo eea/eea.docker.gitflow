@@ -120,7 +120,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
      echo "-------------------------------------------------------------------------------"
      
-     i if [ $( curl  -s  -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_WWWDEVREPO}/" |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"Success\".*\}"  | wc -l  ) -gt 0 ]; then
+     if [ $( curl  -s  -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_WWWDEVREPO}/" |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"Success\".*\}"  | wc -l  ) -gt 0 ]; then
        echo "Found successfull release on DOCKERHUB - ${DOCKERHUB_WWWDEVREPO}:$version"
      else
        /dockerhub_release_wait.sh ${DOCKERHUB_WWWDEVREPO} $version $TRIGGER_URL
