@@ -3,7 +3,7 @@
 
 Usage:
 
-  $ /unifyChnagelogs.py <VERSION_OR_URL_TO_PREVIOUS_VERSIONS.CFG>  <VERSION_OR_URL_TO_LATEST_VERSIONS.CFG> [json] 2> /dev/null
+  $ /unifyChangelogs.py <VERSION_OR_URL_TO_PREVIOUS_VERSIONS.CFG>  <VERSION_OR_URL_TO_LATEST_VERSIONS.CFG> [json] 2> /dev/null
 
 
 Example:
