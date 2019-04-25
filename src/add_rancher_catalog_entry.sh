@@ -122,8 +122,6 @@ fi
 
 cd $nextdir
 sed -i "/    image: $DOCKER_IMAGENAME_ESC:/c\    image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION"  $DOCKER_COMPOSE
-uuid=$(grep uuid: rancher-compose.yml |  awk 'BEGIN{FS="-"}{gsub (" ", "", $0); x=length($0) - length($NF);  print substr($0,index($0,":")+1,x-index($0,":")) }')
-sed -i "/  uuid: /c\  uuid: $uuid$nextdir\"" rancher-compose.yml
 sed -i "/  version: /c\  version: \"$new_version\"" rancher-compose.yml
 cd ..
 sed -i "s/version: \"$old_version\"/version: \"$new_version\"/g" config.yml
