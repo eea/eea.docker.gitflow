@@ -171,9 +171,6 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         echo "--------------------------------------------------------------------------------------------------------------------"
 
         if [ ! -z "$EGGREPO_USERNAME$EGGREPO_PASSWORD" ]; then
-          echo "Preparing .pypirc file for release"
-          export HOME=$(pwd)
-          mv /pypirc.template .pypirc
 
           echo "Checking if version is released on EGGREPO"
           egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME,,}/")
@@ -187,11 +184,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           fi
 
           if [ $(echo "$egg_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
+              
               echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
-              sed -i "s#EGGREPO_URL#${EGGREPO_URL}#g" .pypirc
-              sed -i "s#EGGREPO_USERNAME#${EGGREPO_USERNAME}#g" .pypirc
-              sed -i "s#EGGREPO_PASSWORD#${EGGREPO_PASSWORD}#g" .pypirc
-              mkrelease -CT -d eea .
+              python setup.py sdist --formats=zip
+              twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
 
          else
