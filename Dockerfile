@@ -3,7 +3,7 @@ LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
 
 RUN apk add --no-cache --virtual .run-deps git bash curl coreutils bc \
- && pip install docutils twine \
+ && pip install docutils twine rstcheck \
  && pip install -I wheel==0.31.0 
 
 COPY src/* /

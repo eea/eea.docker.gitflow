@@ -118,6 +118,29 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
                 echo "Passed check: New version is bigger than last released version"
         fi
 
+        echo "Check if long_description_content_type exists in setup.py"
+
+        if [ $(grep -c long_description_content_type setup.py) -eq 0 ]; then
+                echo "Did not find long_description_content_type in setup.py, will add it to the default - RST"
+                if [ -f README.rst ]; then
+                        sed -i '/^      long_description=.*/i\      long_description_content_type='text/x-rst',' setup.py
+                        update_file setup.py "Updated setup.py, added long_description_content_type - needs review"
+                else
+                        echo "Please add a long_description_content_type to setup.py, README.rst was not found"
+                fi
+        fi
+
+        if [ $(grep -c "long_description_content_type=text/x-rst" setup.py) -eq 1 ]; then
+                echo "Check HISTORYFILE rst format"
+                if [ -f "$GIT_HISTORYFILE" ]; then
+                        rstcheck $GIT_HISTORYFILE
+                fi
+                if [ -f "README.rst" ]; then
+                        echo "Check README.rst format"
+                        rstcheck README.rst
+                fi
+        fi
+
 
 
         if [ $(echo $files_changed | grep $GIT_HISTORYFILE | wc -l) -eq 0 ]; then
@@ -188,6 +211,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
               echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
               python setup.py sdist --formats=zip
               twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
+              twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
 
          else
@@ -215,7 +239,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
             if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
                echo "Starting the release ${GIT_NAME}-${version}.zip on PyPi repo"
-               python setup.py sdist --formats=zip
+               if [ ! -f dist/${GIT_NAME}-${version}.zip ];then
+		       python setup.py sdist --formats=zip
+	       fi
 	       twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
                echo "Release ${GIT_NAME}-${version}.zip  done on PyPi"
             else
