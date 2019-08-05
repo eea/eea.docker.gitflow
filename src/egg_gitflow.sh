@@ -139,7 +139,26 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
                         echo "Check README.rst format"
                         rstcheck README.rst
                 fi
-        fi
+                echo "Passed check: README.rst and $GIT_HISTORYFILE have correct RST format"
+	fi
+
+	if [ -f MANIFEST.in ]; then
+          	echo "Checking MANIFEST.in file and fixing it"
+		if [ $( grep -c "include.*txt.*"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft docs"   MANIFEST.in ) -eq 0 ]; then
+			echo "Did not find correct MANIFEST.in file, will re-set it to default value"
+			echo "include *.md *.rst *.txt
+graft docs
+graft eea
+global-exclude *pyc
+global-exclude *~
+global-exclude *.un~
+global-include *.mo" > MANIFEST.in
+                       update_file MANIFEST.in "Updated MANIFEST.in, recreated it from template - needs review"
+		fi
+                echo "Passed check: MANIFEST.in contains docs and files"
+	fi
+
+
 
 
 
@@ -149,7 +168,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 =========
 
 $version - ($(date +"%Y-%m-%d"))
----------------------
+---------------------------
 * Change: $GIT_CHANGE_TITLE [$GIT_CHANGE_AUTHOR]
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
@@ -158,8 +177,19 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
             echo "History file updated with default lines ( version, date and PR title  and user )"
             exit 0
         fi
+
+
         update_changelog=0
-        if [ $(grep -c "(unreleased)"  $GIT_HISTORYFILE) -gt 0 ]; then
+        
+	if [ $( awk '/unreleased/,/\*/' $GIT_HISTORYFILE | grep -c '^--*$') -eq 2 ]; then
+          line_nr=$(grep -n unreleased $GIT_HISTORYFILE | head -n 1 | awk -F':' '{print $1}')
+          let line_nr=line_nr+2
+	  sed -i "${line_nr}i* Change: $GIT_CHANGE_TITLE [$GIT_CHANGE_AUTHOR]"  $GIT_HISTORYFILE
+          echo "History file updated - added Pull request title and author after unreleased"
+	  update_changelog=1
+        fi
+
+	if [ $(grep -c "(unreleased)"  $GIT_HISTORYFILE) -gt 0 ]; then
           sed -i "s/(unreleased)/($(date +"%Y-%m-%d"))/g" $GIT_HISTORYFILE
           echo "History file updated - replaced unreleased with date"
           update_changelog=1
@@ -287,7 +317,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 =========
 
 $next_version - (unreleased)
----------------------
+---------------------------
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
        valid_curl_get_result ${GITHUBURL}/refs/heads/develop sha
