@@ -130,7 +130,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
                 fi
         fi
 
-        if [ $(grep -c 'long_description_content_type="text/x-rst"' setup.py) -eq 1 ]; then
+        if [ $(grep -c 'long_description_content_type=.*text/x-rst.*' setup.py) -eq 1 ]; then
                 echo "Check HISTORYFILE rst format"
                 if [ -f "$GIT_HISTORYFILE" ]; then
                         rstcheck $GIT_HISTORYFILE
@@ -184,7 +184,10 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 	if [ $( awk '/unreleased/,/\*/' $GIT_HISTORYFILE | grep -c '^--*$') -eq 2 ]; then
           line_nr=$(grep -n unreleased $GIT_HISTORYFILE | head -n 1 | awk -F':' '{print $1}')
           let line_nr=line_nr+2
-	  sed -i "${line_nr}i* Change: $GIT_CHANGE_TITLE [$GIT_CHANGE_AUTHOR]"  $GIT_HISTORYFILE
+	  sed -i "${line_nr}i* Change: $GIT_CHANGE_TITLE"  $GIT_HISTORYFILE
+          let line_nr=line_nr+1	  
+	  sed -i "${line_nr}i\  [$GIT_CHANGE_AUTHOR]"  $GIT_HISTORYFILE
+	  
           echo "History file updated - added Pull request title and author after unreleased"
 	  update_changelog=1
         fi
