@@ -104,6 +104,8 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         echo "Passed check: Version format is number.number"
 
 
+	
+
         if [ $(git tag | wc -l) -eq 0 ]; then
              echo "Passed check: New version is bigger than last released version (no versions released yet)"
         else
@@ -130,9 +132,21 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
                 fi
         fi
 
+   
+
         if [ $(grep -c 'long_description_content_type=.*text/x-rst.*' setup.py) -eq 1 ]; then
                 echo "Check HISTORYFILE rst format"
                 if [ -f "$GIT_HISTORYFILE" ]; then
+                        # fix "Title underline too short" 
+			if [ $( grep -c "^---------------------$"  "$GIT_HISTORYFILE" ) -gt 0 ]; then
+				sed -i "s/^---------------------$/--------------------------/g" "$GIT_HISTORYFILE" 
+				echo "Fixed short title underlines"
+                                update_file $GIT_HISTORYFILE "Fixed short title underlines in changelog"
+				exit 0
+			fi
+
+
+
                         rstcheck $GIT_HISTORYFILE
                 fi
                 if [ -f "README.rst" ]; then
