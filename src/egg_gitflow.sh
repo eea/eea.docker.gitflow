@@ -158,16 +158,21 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
 	if [ -f MANIFEST.in ]; then
           	echo "Checking MANIFEST.in file and fixing it"
-		if [ $( grep -c "include.*txt.*"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft docs"   MANIFEST.in ) -eq 0 ]; then
+
+		namespace=$(echo $GIT_VERSIONFILE |  cut -d'/' -f1)
+
+		
+
+		if [ $( grep -c "include.*txt.*"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft docs"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft $namespace"   MANIFEST.in ) -eq 0 ]; then
 			echo "Did not find correct MANIFEST.in file, will re-set it to default value"
 			echo "include *.md *.rst *.txt
 graft docs
-graft eea
+graft ${namespace}
 global-exclude *pyc
 global-exclude *~
 global-exclude *.un~
 global-include *.mo" > MANIFEST.in
-                       update_file MANIFEST.in "Updated MANIFEST.in, recreated it from template - needs review"
+                       update_file MANIFEST.in "Updated MANIFEST.in, recreated it from template using $namespace - needs review"
 		fi
                 echo "Passed check: MANIFEST.in contains docs and files"
 	fi
