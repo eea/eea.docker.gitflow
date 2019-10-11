@@ -125,7 +125,8 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         if [ $(grep -c long_description_content_type setup.py) -eq 0 ]; then
                 echo "Did not find long_description_content_type in setup.py, will add it to the default - RST"
                 if [ -f README.rst ]; then
-                        sed -i '/^ *long_description=.*/i\      long_description_content_type="text/x-rst",' setup.py
+                        new_line=$(grep '^ *long_description=.*' setup.py | sed 's#long_description=.*#long_description_content_type="text/x-rst",#')
+                        sed -i "/^ *long_description=.*/i\\${new_line}" setup.py
                         update_file setup.py "Updated setup.py, added long_description_content_type - needs review"
                 else
                         echo "Please add a long_description_content_type to setup.py, README.rst was not found"
