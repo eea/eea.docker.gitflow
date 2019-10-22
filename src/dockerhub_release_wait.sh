@@ -80,12 +80,15 @@ fi
          fi
 
         build_status=$(curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/" | python -c "import sys, json
-data_dict = json.load(sys.stdin)
-build_tag = '$DOCKERHUB_NAME'
-for res in data_dict['objects']:
+try:
+  data_dict = json.load(sys.stdin)
+  build_tag = '$DOCKERHUB_NAME'
+  for res in data_dict['objects']:
     if res['build_tag'] == build_tag:
-        print '%s' % res['state']
-        break
+      print '%s' % res['state']
+      break
+except:
+  print 'Error parsing DockerHub API response %s' % sys.stdin
 ")
         if [[ ! $build_status == "Pending" ]] && [[ ! $build_status == "In progress" ]] && [[ ! $build_status == "Success" ]] && [ $wait_in_case_of_error -gt 0 ]; then
 		echo "Build  $DOCKERHUB_REPO:$DOCKERHUB_NAME failed on DockerHub ( status $build_status), will wait $wait_in_case_of_error in case it will be ok"
