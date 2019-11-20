@@ -120,11 +120,18 @@ if [[ "$GIT_NAME" == "$WWW_GITNAME" ]]; then
 fi
 
 if [[ "$GIT_NAME" == "$APACHE_GITNAME" ]]; then
-  exec /apache_gitflow.sh $@
+
+    export DOCKERHUB_REPO=$DOCKERHUB_APACHEREPO    
+    export RANCHER_CATALOG_PATHS="templates/www-frontend templates/www-eea"
+    export RANCHER_CATALOG_SAME_VERSION=true
+    exec /gitflow.sh $@
 fi
 
 if [[ "$GIT_NAME" == "$VARNISH_GITNAME" ]]; then
-  exec /varnish_gitflow.sh $@
+    export DOCKERHUB_REPO=$DOCKERHUB_VARNISHREPO
+    export RANCHER_CATALOG_PATHS="templates/www-frontend templates/www-eea"
+    export RANCHER_CATALOG_SAME_VERSION=true
+    exec /gitflow.sh $@
 fi
 
 exec /egg_gitflow.sh $@

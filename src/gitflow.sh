@@ -2,13 +2,34 @@
 
 set -e
 
+if [ -z "$GIT_TOKEN" ]; then
+   echo "Need GIT_TOKEN environment variable to create releases"
+   exit 1
+fi
+
+if [ -f /common_functions ]; then
+    source /common_functions
+elif [ -f ./common_functions ]; then
+    source ./common_functions
+fi
+
+
+if [ -z "$DOCKERHUB_REPO" ] || [ -z "$GIT_NAME" ]; then
+   echo "You need to provide the GIT_NAME and DOCKERHUB_REPO environment variables to create releases"
+   exit 1
+fi
+
+
+
 git clone $GIT_SRC
 cd $GIT_NAME
 
 # Image release on DockerHub
 if [[ "$GIT_BRANCH" == "master" ]]; then
 
-    latestTag=$(git describe --abbrev=0 --tags)
+    git fetch --tags
+    get_last_tag
+
     files_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | wc -l )
 
     if [ $files_changed -eq 0 ]; then
@@ -33,24 +54,16 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
     fi
     echo "-------------------------------------------------------------------------------"
 
-    /dockerhub_release_wait.sh ${DOCKERHUB_APACHEREPO} $version
+    /dockerhub_release_wait.sh ${DOCKERHUB_REPO} $version
 
 
     echo "-------------------------------------------------------------------------------"
     echo "Starting the Rancher catalog release"
 
-    export RANCHER_CATALOG_PATH=templates/www-frontend
-    export DOCKER_IMAGENAME=$DOCKERHUB_APACHEREPO
-    export DOCKER_IMAGEVERSION=$version
-    export RANCHER_CATALOG_NEXT_VERSION=true
-    /add_rancher_catalog_entry.sh
-
-    echo "-------------------------------------------------------------------------------"
-    export RANCHER_CATALOG_PATH=templates/www-eea
-    export DOCKER_IMAGENAME=$DOCKERHUB_APACHEREPO
-    export DOCKER_IMAGEVERSION=$version
-    export RANCHER_CATALOG_SAME_VERSION=true
-    /add_rancher_catalog_entry.sh
+  
+    for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
+ 	/add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH $DOCKERHUB_REPO $version $RANCHER_CATALOG_SAME_VERSION 
+    done
 
 fi
 

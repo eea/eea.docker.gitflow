@@ -1,21 +1,45 @@
 #!/bin/bash
 
 set -e
-if [ -z "$GIT_ORG" ] || [ -z "$GIT_TOKEN" ] || [ -z "$RANCHER_CATALOG_PATH" ] || [ -z "$RANCHER_CATALOG_GITNAME" ] || [ -z "$DOCKER_IMAGENAME" ] || [ -z "$DOCKER_IMAGEVERSION" ]; then
-   echo "Problem with creating rancher catalog entry, missing parameters"
+
+GIT_ORG=${GIT_ORG:-'eea'}
+RANCHER_CATALOG_GITNAME=${RANCHER_CATALOG_GITNAME:-'eea.rancher.catalog'}
+
+if [ -z "$GIT_TOKEN" ]; then
+   echo "Need GIT_TOKEN environment variable to create releases"
    exit 1
 fi
 
+if [ -z "$RANCHER_CATALOG_PATH" ] || [ -z "$DOCKER_IMAGENAME" ] || [ -z "$DOCKER_IMAGEVERSION" ]; then
+   if [ "$#" -ge 3 ]; then
+       echo "Did not receive parameters from environment, will try to parse them from arguments"
+       RANCHER_CATALOG_PATH=$1
+       DOCKER_IMAGENAME=$2
+       DOCKER_IMAGEVERSION=$3
+       if [ -n $4 ]; then
+           RANCHER_CATALOG_SAME_VERSION=$4
+       fi	   
+   else
+       echo "Problem with creating rancher catalog entry, missing parameters"
+       exit 1
+   fi
+fi
+
+echo "Checked parameters, will start creating catalog entry on ${GIT_ORG}/${RANCHER_CATALOG_GITNAME} on path ${RANCHER_CATALOG_PATH}, for ${DOCKER_IMAGENAME}:${DOCKER_IMAGEVERSION}, with keeping same version = ${RANCHER_CATALOG_SAME_VERSION}"
 
 RANCHER_CATALOG_GITSRC=https://github.com/${GIT_ORG}/${RANCHER_CATALOG_GITNAME}.git
 DOCKER_IMAGENAME_ESC=$(echo $DOCKER_IMAGENAME | sed 's/\//\\\//g')
 GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${RANCHER_CATALOG_GITNAME}/git
 current_dir=$(pwd)
 
-
-source /common_functions
+if [ -f /common_functions ]; then
+    source /common_functions
+elif [ -f ./common_functions ]; then
+    source ./common_functions
+fi
 
 # clone the repo
+rm -rf $RANCHER_CATALOG_GITNAME
 git clone $RANCHER_CATALOG_GITSRC
 cd $RANCHER_CATALOG_GITNAME/$RANCHER_CATALOG_PATH
 
@@ -117,6 +141,7 @@ for res in data_dict['tree']:
   # do the changes
   cp -r $lastdir $nextdir
 fi
+
 
 # Update Rancher Catalog entry
 
