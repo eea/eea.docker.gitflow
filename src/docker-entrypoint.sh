@@ -96,8 +96,6 @@ if [ -z "$RANCHER_CATALOG_GITNAME" ]; then
   RANCHER_CATALOG_GITNAME=eea.rancher.catalog
 fi
 
-
-
 if [ -z "$DOCKERHUB_USER" ]; then
   DOCKERHUB_USER=eeajenkins
 fi
@@ -120,19 +118,19 @@ if [[ "$GIT_NAME" == "$WWW_GITNAME" ]]; then
 fi
 
 if [[ "$GIT_NAME" == "$APACHE_GITNAME" ]]; then
-
     export DOCKERHUB_REPO=$DOCKERHUB_APACHEREPO    
-    export RANCHER_CATALOG_PATHS="templates/www-frontend templates/www-eea"
     export RANCHER_CATALOG_SAME_VERSION=true
     exec /gitflow.sh $@
 fi
 
 if [[ "$GIT_NAME" == "$VARNISH_GITNAME" ]]; then
     export DOCKERHUB_REPO=$DOCKERHUB_VARNISHREPO
-    export RANCHER_CATALOG_PATHS="templates/www-frontend templates/www-eea"
     export RANCHER_CATALOG_SAME_VERSION=true
     exec /gitflow.sh $@
 fi
 
-exec /egg_gitflow.sh $@
-
+if [ -n "$GITFLOW" ]; then
+    exec /gitflow.sh $@
+else
+    exec /egg_gitflow.sh $@
+fi

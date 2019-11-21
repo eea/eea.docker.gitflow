@@ -60,7 +60,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
     echo "-------------------------------------------------------------------------------"
     echo "Starting the Rancher catalog release"
 
-  
+    if [ -z "$RANCHER_CATALOG_PATHS" ]; then
+         RANCHER_CATALOG_PATHS=$(for i in $(grep -R ${DOCKERHUB_REPO}: * | awk -F'[ /]' '{print $1"/"$2}' | uniq); do grep -l ${DOCKERHUB_REPO}: $i"/"$(find $i  -maxdepth 1 -type d  | awk  'BEGIN{FS="/"}{print $3}' | sort -n | tail -n 1)/docker-compose*; done | awk -F'/' '{print $1"/"$2}') 
+    fi
+
     for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
  	/add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH $DOCKERHUB_REPO $version $RANCHER_CATALOG_SAME_VERSION 
     done
