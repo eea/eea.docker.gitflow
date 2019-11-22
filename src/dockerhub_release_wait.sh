@@ -42,7 +42,7 @@ fi
     while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
-        FOUND_BUILD=$(  curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/" |  grep -E "\{.*\"build_tag\": \"$DOCKERHUB_NAME\",[^\{]*\"state\": \"(Pending|In progress)\".*\}"  | wc -l )
+        FOUND_BUILD=$(  curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/" |  grep -E "\{.*\"build_tag\": \"$DOCKERHUB_NAME\",[^\{]*\"state\": \"(Success|Pending|In progress)\".*\}"  | wc -l )
 
         if [ $FOUND_BUILD -gt 0 ];then
           echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
