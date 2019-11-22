@@ -65,7 +65,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
     if [ -z "$RANCHER_CATALOG_PATHS" ]; then
          cd /
          git clone https://github.com/${GIT_ORG}/${RANCHER_CATALOG_GITNAME}.git
-         RANCHER_CATALOG_PATHS=$(for i in $(grep ${DOCKERHUB_REPO}: ${RANCHER_CATALOG_GITNAME}/*/*/*/docker-compose* | awk -F'[ /]' '{print $1"/"$2}' | uniq); do grep -l ${DOCKERHUB_REPO}: $i"/"$(find $i  -maxdepth 1 -type d  | awk  'BEGIN{FS="/"}{print $3}' | sort -n | tail -n 1)/docker-compose*; done | awk -F'/' '{print $1"/"$2}') 
+         cd ${RANCHER_CATALOG_GITNAME}
+         RANCHER_CATALOG_PATHS=$(for i in $(grep ${DOCKERHUB_REPO}: */*/*/docker-compose* | awk -F'[ /]' '{print $1"/"$2}' | uniq); do grep -l ${DOCKERHUB_REPO}: $i"/"$(find $i  -maxdepth 1 -type d  | awk  'BEGIN{FS="/"}{print $3}' | sort -n | tail -n 1)/docker-compose*; done | awk -F'/' '{print $1"/"$2}') 
+         cd /
          rm -rf ${RANCHER_CATALOG_GITNAME}
     fi
     
