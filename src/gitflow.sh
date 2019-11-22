@@ -34,24 +34,26 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
     if [ $files_changed -eq 0 ]; then
       echo "No files changed since last release, $latestTag"
-      exit 0
+      echo "Will continue without the release on github"
+      version=$latestTag
+    else
+      echo "-------------------------------------------------------------------------------"
+      echo "Found $files_changed files changed since last release ($latestTag)"
+      version=$(echo $latestTag + 0.1 | bc)
+
+      echo "Version is $version"
+
+      echo "-------------------------------------------------------------------------------"
+      echo "Starting the release $version"
+      curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
+
+      if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
+        echo "There was a problem with the release"
+        echo $curl_result
+        exit 1
+      fi
     fi
 
-    echo "-------------------------------------------------------------------------------"
-    echo "Found $files_changed files changed since last release ($latestTag)"
-    version=$(echo $latestTag + 0.1 | bc)
-
-    echo "Version is $version"
-
-    echo "-------------------------------------------------------------------------------"
-    echo "Starting the release $version"
-    curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
-
-    if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
-      echo "There was a problem with the release"
-      echo $curl_result
-      exit 1
-    fi
     echo "-------------------------------------------------------------------------------"
 
     /dockerhub_release_wait.sh ${DOCKERHUB_REPO} $version
@@ -61,7 +63,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
     echo "Starting the Rancher catalog release"
 
     if [ -z "$RANCHER_CATALOG_PATHS" ]; then
-         RANCHER_CATALOG_PATHS=$(for i in $(grep -R ${DOCKERHUB_REPO}: * | awk -F'[ /]' '{print $1"/"$2}' | uniq); do grep -l ${DOCKERHUB_REPO}: $i"/"$(find $i  -maxdepth 1 -type d  | awk  'BEGIN{FS="/"}{print $3}' | sort -n | tail -n 1)/docker-compose*; done | awk -F'/' '{print $1"/"$2}') 
+         RANCHER_CATALOG_PATHS=$(for i in $(grep ${DOCKERHUB_REPO}: */*/*/docker-compose* | awk -F'[ /]' '{print $1"/"$2}' | uniq); do grep -l ${DOCKERHUB_REPO}: $i"/"$(find $i  -maxdepth 1 -type d  | awk  'BEGIN{FS="/"}{print $3}' | sort -n | tail -n 1)/docker-compose*; done | awk -F'/' '{print $1"/"$2}') 
     fi
 
     for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
