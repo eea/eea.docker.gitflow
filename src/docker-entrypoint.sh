@@ -120,16 +120,14 @@ fi
 if [[ "$GIT_NAME" == "$APACHE_GITNAME" ]]; then
     export DOCKERHUB_REPO=$DOCKERHUB_APACHEREPO    
     export RANCHER_CATALOG_SAME_VERSION=true
-    exec /gitflow.sh $@
 fi
 
 if [[ "$GIT_NAME" == "$VARNISH_GITNAME" ]]; then
     export DOCKERHUB_REPO=$DOCKERHUB_VARNISHREPO
     export RANCHER_CATALOG_SAME_VERSION=true
-    exec /gitflow.sh $@
 fi
 
-if [ -n "$GITFLOW" ]; then
+if [ -n "$DOCKERHUB_REPO" ]; then
     exec /gitflow.sh $@
 else
     exec /egg_gitflow.sh $@
