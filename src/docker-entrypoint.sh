@@ -10,98 +10,36 @@ if [ -z "$GIT_NAME" ]; then
  exit 1
 fi
 
-if [ -z "$GIT_ORG" ]; then
- GIT_ORG="eea"
-fi
-
+GIT_ORG=${GIT_ORG:-'eea'}
 GIT_SRC=https://github.com/${GIT_ORG}/${GIT_NAME}.git
 
 if [ -z "$GIT_VERSIONFILE" ]; then
   GIT_VERSIONFILE="$(echo $GIT_NAME | sed 's|\.|/|g')/version.txt"
 fi
 
-if [ -z "$GIT_HISTORYFILE" ]; then
-  GIT_HISTORYFILE="docs/HISTORY.txt"
-fi
 
-if [ -z "$GIT_USERNAME" ]; then
- GIT_USERNAME="EEA Jenkins"
-fi
-
-if [ -z "$GIT_EMAIL" ]; then
- GIT_EMAIL="eea-github@googlegroups.com"
-fi
-
-if [ -z "$EGGREPO_URL" ]; then
- EGGREPO_URL=https://eggrepo.eea.europa.eu/
-fi
-
-if [  -z "$PYPI_CHECK_URL" ]; then
- PYPI_CHECK_URL=https://pypi.org/simple/
-fi
-
-if [ -z "$KGS_GITNAME" ]; then
-  KGS_GITNAME=eea.docker.kgs
-fi
-
-if [ -z "$WWW_GITNAME" ]; then
-  WWW_GITNAME=eea.docker.plone-eea-www
-fi
-
-if [ -z "$APACHE_GITNAME" ]; then
-  APACHE_GITNAME=eea.docker.apache-eea-www
-fi
-
-if [ -z "$VARNISH_GITNAME" ]; then
-  VARNISH_GITNAME=eea.docker.varnish-eea-www
-fi
-
-if [ -z "$KGS_VERSIONS_PATH" ]; then
-  KGS_VERSIONS_PATH=src/plone/versions.cfg
-fi
-
-if [ -z "$DOCKERHUB_KGSREPO" ]; then
-  DOCKERHUB_KGSREPO="eeacms/kgs"
-fi
-
-if [ -z "$DOCKERHUB_WWWREPO" ]; then
-  DOCKERHUB_WWWREPO="eeacms/www"
-fi
-
-if [ -z "$DOCKERHUB_WWWDEVREPO" ]; then
-  DOCKERHUB_WWWDEVREPO="eeacms/www-devel"
-fi
-
-if [ -z "$DOCKERHUB_KGSDEVREPO" ]; then
-  DOCKERHUB_KGSDEVREPO="eeacms/kgs-devel"
-fi
-
-if [ -z "$DOCKERHUB_APACHEREPO" ]; then
-  DOCKERHUB_APACHEREPO="eeacms/apache-eea-www"
-fi
-
-if [ -z "$DOCKERHUB_VARNISHREPO" ]; then
-  DOCKERHUB_VARNISHREPO="eeacms/varnish-eea-www"
-fi
-
-if [ -z "$TIME_TO_WAIT_RELEASE" ]; then
-  TIME_TO_WAIT_RELEASE=240
-fi
-
-if [ -z "$TIME_TO_WAIT_START" ]; then
-  TIME_TO_WAIT_START=30
-fi
-
-if [ -z "$RANCHER_CATALOG_GITNAME" ]; then
-  RANCHER_CATALOG_GITNAME=eea.rancher.catalog
-fi
-
-if [ -z "$DOCKERHUB_USER" ]; then
-  DOCKERHUB_USER=eeajenkins
-fi
+GIT_HISTORYFILE=${GIT_HISTORYFILE:-'docs/HISTORY.txt'}
+GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
+GIT_EMAIL=${GIT_EMAIL:-'eea-github@googlegroups.com'}
+EGGREPO_URL=${EGGREPO_URL:-'https://eggrepo.eea.europa.eu/'}
+PYPI_CHECK_URL=${PYPI_CHECK_URL:-'https://pypi.org/simple/'}
+KGS_GITNAME=${KGS_GITNAME:-'eea.docker.kgs'}
+WWW_GITNAME=${WWW_GITNAME:-'eea.docker.plone-eea-www'}
+APACHE_GITNAME=${APACHE_GITNAME:-'eea.docker.apache-eea-www'}
+VARNISH_GITNAME=${VARNISH_GITNAME:-'eea.docker.varnish-eea-www'}
+KGS_VERSIONS_PATH=${KGS_VERSIONS_PATH:-'src/plone/versions.cfg'}
+DOCKERHUB_KGSREPO=${DOCKERHUB_KGSREPO:-'eeacms/kgs'}
+DOCKERHUB_WWWREPO=${DOCKERHUB_WWWREPO:-'eeacms/www'}
+DOCKERHUB_WWWDEVREPO=${DOCKERHUB_WWWDEVREPO:-'eeacms/www-devel'}
+DOCKERHUB_KGSDEVREPO=${DOCKERHUB_KGSDEVREPO:-'eeacms/kgs-devel'}
+DOCKERHUB_APACHEREPO=${DOCKERHUB_APACHEREPO:-'eeacms/apache-eea-www'}
+DOCKERHUB_VARNISHREPO=${DOCKERHUB_VARNISHREPO:-'eeacms/varnish-eea-www'}
+RANCHER_CATALOG_GITNAME=${RANCHER_CATALOG_GITNAME:-'eea.rancher.catalog'}
+DOCKERHUB_USER=${DOCKERHUB_USER:-'eeajenkins'}
 
 
-
+TIME_TO_WAIT_RELEASE=${TIME_TO_WAIT_RELEASE:-240}
+TIME_TO_WAIT_START=${TIME_TO_WAIT_START:-30}
 
 
 export GIT_ORG GIT_SRC GIT_VERSIONFILE GIT_HISTORYFILE GIT_USERNAME GIT_EMAIL EGGREPO_URL KGS_GITNAME KGS_VERSIONS_PATH APACHE_GITNAME VARNISH_GITNAME DOCKERHUB_KGSREPO DOCKERHUB_APACHEREPO DOCKERHUB_VARNISHREPO TIME_TO_WAIT_RELEASE TIME_TO_WAIT_START DOCKERHUB_WWWREPO DOCKERHUB_WWWDEVREPO DOCKERHUB_KGSDEVREPO WWW_GITNAME RANCHER_CATALOG_GITNAME PYPI_CHECK_URL DOCKERHUB_USER
