@@ -54,8 +54,7 @@ fi
           echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
           break
 	else
-	  echo "DockerHub - can't find $DOCKERHUB_REPO:$DOCKERHUB_NAME - curl result is:"
-	  echo $buildhistory
+	  echo "DockerHub - can't find $DOCKERHUB_REPO:$DOCKERHUB_NAME"
         fi
         if [ ! -z "$DOCKERHUB_TRIGGER" ] && ! (( TIME_TO_WAIT_START % 10 )); then
             echo "One minute passed, build not starting , will use trigger to re-start build"
