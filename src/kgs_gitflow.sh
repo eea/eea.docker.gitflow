@@ -96,7 +96,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
-	FOUND_BUILD=$(  curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_KGSDEVREPO}/" |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"(Pending|In progress)\".*\}"  | wc -l )
+	FOUND_BUILD=$(  curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_KGSDEVREPO}/" |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"(Pending|In progress)\".*\}"  | wc -l )
 	
 
         if [ $FOUND_BUILD -gt 0 ];then

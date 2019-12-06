@@ -42,7 +42,7 @@ fi
     while [ $TIME_TO_WAIT_START  -ge 0 ]; do
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
-        FOUND_BUILD=$(  curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/" |  grep -E "\{.*\"build_tag\": \"$DOCKERHUB_NAME\",[^\{]*\"state\": \"(Success|Pending|In progress)\".*\}"  | wc -l )
+        FOUND_BUILD=$(  curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/" |  grep -E "\{.*\"build_tag\": \"$DOCKERHUB_NAME\",[^\{]*\"state\": \"(Success|Pending|In progress)\".*\}"  | wc -l )
 
         if [ $FOUND_BUILD -gt 0 ];then
           echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
@@ -64,12 +64,12 @@ fi
      while [ $TIME_TO_WAIT_RELEASE -ge 1 ]; do
         TIME_TO_WAIT_RELEASE=$(( $TIME_TO_WAIT_RELEASE - 1 ))
         waiting=$(( $waiting + 1 ))
-        buildhistory=$(curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/")
+        buildhistory=$(curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/")
         dockerhub_down=30
         while [ $(echo "$buildhistory" | grep -c "build_tag" ) -eq 0 ] && [ $dockerhub_down -gt 0 ]; do
            echo "Received unexpected response from DockerHub"
            echo "$buildhistory"
-           buildhistory=$(curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/")
+           buildhistory=$(curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/")
            sleep 60
            dockerhub_down=$(( $dockerhub_down - 1 ))
         done
@@ -79,7 +79,7 @@ fi
             exit 1
          fi
 
-        build_status=$(curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://cloud.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/" | python -c "import sys, json
+        build_status=$(curl -s -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_REPO}/" | python -c "import sys, json
 try:
   data_dict = json.load(sys.stdin)
   build_tag = '$DOCKERHUB_NAME'
