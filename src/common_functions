@@ -71,9 +71,11 @@ get_dockerhub_buildhistory()
       export JWT_DOCKERHUB_TOKEN=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin).get('token')")
  fi     
 
- #echo "Using ${JWT_DOCKERHUB_TOKEN}"
-  echo "Token ok, will continue to extract last ${number_history} for ${repo} DockerHub build history"
-  buildhistory=$( curl -s -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=${number_history}&object=/api/repo/v1/repository/${repo}/" )
-
+ buildhistory=$( curl -s -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=${number_history}&object=/api/repo/v1/repository/${repo}/" )
+ 
+ if [ $( echo $buildhistory | grep -c "meta" ) -eq 0 ]; then
+    echo "Check build history result, it looks like there is a problem"
+    echo $buildhistory
+ fi
 
 }  
