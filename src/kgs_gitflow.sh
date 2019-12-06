@@ -84,9 +84,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      echo "-------------------------------------------------------------------------------"
      echo "Starting the kgs-devel release on dockerhub"
 
-     echo "curl -H \"Content-Type: application/json\"  --data  \"{\"source_type\": \"Tag\", \"source_name\": \"$version\"}\" -X POST https://cloud.docker.com/api/build/v1/source/$TRIGGER_URL"
+     echo "curl -H \"Content-Type: application/json\"  --data  \"{\"source_type\": \"Tag\", \"source_name\": \"$version\"}\" -X POST https://hub.docker.com/api/build/v1/source/$TRIGGER_URL"
 
-     curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://cloud.docker.com/api/build/v1/source/$TRIGGER_URL
+     curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://hub.docker.com/api/build/v1/source/$TRIGGER_URL
 
 
      echo "-------------------------------------------------------------------------------"
@@ -105,7 +105,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         fi
         if [ ! -z "$TRIGGER_URL" ] && ! (( TIME_TO_WAIT_START % 10 )); then
             echo "One minute passed, build not starting , will use trigger to re-start build"
-            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://cloud.docker.com/api/build/v1/source/$TRIGGER_URL
+            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://hub.docker.com/api/build/v1/source/$TRIGGER_URL
         fi
     done
 
