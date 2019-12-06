@@ -39,3 +39,41 @@ fi
 }
 
 
+get_dockerhub_buildhistory()
+{
+ repo=$1
+ number_history=${2:-10}
+ 
+ if [ -n "$JWT_DOCKERHUB_TOKEN" ]; then  
+      curl_result=$( curl -s -I -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=1&object=/api/repo/v1/repository/${repo}/")
+      if [ $(echo $curl_result | grep -c -i "401 unauthorized") -eq 1 ]; then
+         #token has expired
+         echo "DockerHub Token has expired, will unset it"
+         unset JWT_DOCKERHUB_TOKEN
+         JWT_DOCKERHUB_TOKEN=
+      elif [ $(echo $curl_result | grep -c -i "200 OK") -eq 0 ]; then
+         echo "DockebHub error, will exit"
+         curl -s -I -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=1&object=/api/repo/v1/repository/${repo}/"
+         echo $curl_result
+         #exit 1
+      fi
+ fi
+
+ if [ -z "$JWT_DOCKERHUB_TOKEN" ]; then
+      echo "No DockerHub token found, requesting one"
+      curl_result=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${DOCKERHUB_USER}'", "password": "'${DOCKERHUB_PASS}'"}' https://hub.docker.com/v2/users/login/)
+      if [ $( echo $curl_result | grep -c "token" ) -eq 0 ]; then
+          echo "There was a problem with the GitHub API request:"
+          echo $curl_result
+          curl -s -I -H "Content-Type: application/json" -X POST -d '{"username": "'${DOCKERHUB_USER}'", "password": "'${DOCKERHUB_PASS}'"}' https://hub.docker.com/v2/users/login/
+          #exit 1
+      fi
+      export JWT_DOCKERHUB_TOKEN=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin).get('token')")
+ fi     
+
+ #echo "Using ${JWT_DOCKERHUB_TOKEN}"
+  echo "Token ok, will continue to extract last ${number_history} for ${repo} DockerHub build history"
+  buildhistory=$( curl -s -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=${number_history}&object=/api/repo/v1/repository/${repo}/" )
+
+
+}  

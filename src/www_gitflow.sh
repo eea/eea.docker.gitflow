@@ -5,7 +5,11 @@ set -e
 DOCKERHUB_KGSREPO_ESC=$(echo $DOCKERHUB_KGSREPO | sed 's/\//\\\//g')
 DOCKERHUB_WWWREPO_ESC=$(echo $DOCKERHUB_WWWREPO | sed 's/\//\\\//g')
 
-source /common_functions
+if [ -f /common_functions ]; then
+    source /common_functions
+elif [ -f ./common_functions ]; then
+    source ./common_functions
+fi
 
 
 git clone $GIT_SRC
@@ -102,8 +106,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
     
      echo "-------------------------------------------------------------------------------"
   
+     get_dockerhub_buildhistory ${DOCKERHUB_WWWREPO}
 
-     if [ $( curl  -s  -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_WWWREPO}/" |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"Success\".*\}"  | wc -l  ) -gt 0 ]; then
+     if [ $( echo $buildhistory |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"Success\".*\}"  | wc -l  ) -gt 0 ]; then
        echo "Found successfull release on DOCKERHUB - ${DOCKERHUB_WWWREPO}:$version" 
      else 
       /dockerhub_release_wait.sh ${DOCKERHUB_WWWREPO} $version $TRIGGER_MAIN_URL
@@ -120,7 +125,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
      echo "-------------------------------------------------------------------------------"
      
-     if [ $( curl  -s  -u $DOCKERHUB_USER:$DOCKERHUB_PASS  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=10&object=/api/repo/v1/repository/${DOCKERHUB_WWWDEVREPO}/" |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"Success\".*\}"  | wc -l  ) -gt 0 ]; then
+     get_dockerhub_buildhistory ${DOCKERHUB_WWWDEVREPO}
+     if [ $(  echo $buildhistory |  grep -E "\{.*\"build_tag\": \"$version\",[^\{]*\"state\": \"Success\".*\}"  | wc -l  ) -gt 0 ]; then
        echo "Found successfull release on DOCKERHUB - ${DOCKERHUB_WWWDEVREPO}:$version"
      else
        /dockerhub_release_wait.sh ${DOCKERHUB_WWWDEVREPO} $version $TRIGGER_URL
