@@ -39,7 +39,14 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
     else
       echo "-------------------------------------------------------------------------------"
       echo "Found $files_changed files changed since last release ($latestTag)"
-      version=$(echo $latestTag + 0.1 | bc)
+
+      if [ -n "${EXTRACT_VERSION_SH}" ] && [ -f "${EXTRACT_VERSION_SH}" ]; then
+        echo "Received EXTRACT_VERSION_SH variable ( ${EXTRACT_VERSION_SH} ) , will run it to calculate the new version"
+        version=$(./${EXTRACT_VERSION_SH})
+      else
+	echo "Calculating version with $latestTag + 0.1"
+        version=$(echo $latestTag + 0.1 | bc)
+      fi
 
       echo "Version is $version"
 
