@@ -61,6 +61,15 @@ fi
 if [ -n "$RANCHER_CATALOG_READ_VERSION" ]; then
   echo "Last catalog version is $old_version, write the next version you want to create to release ${DOCKER_IMAGENAME}:${DOCKER_IMAGEVERSION}"
   read new_version
+  if [ -n "$new_version" ]; then
+      echo "Received $new_version value, to continue press ENTER. If you want to stop the script, press N"
+      read confirm
+      if  [[ "$confirm" == "N" ]] || [[ "$confirm" == "n" ]]; then
+	exit 0
+      fi	
+  else
+      echo "Did not receive any value, will use the default - $DOCKER_IMAGEVERSION"
+  fi
 else
   # Auto generate Rancher Catalog next version or use the Docker Image version
   if [ -n "$RANCHER_CATALOG_NEXT_VERSION" ]; then
