@@ -17,24 +17,13 @@ update_file()
  message=$2
  url="$githubApiUrl/contents/$location";
 
- curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url?ref=${GIT_CHANGE_BRANCH} )
- if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
-      echo "There was a problem with the GitHub API request for $location:"
-      echo $curl_result
-      exit 1
- fi
+ valid_curl_get_result "$url?ref=${GIT_CHANGE_BRANCH}" '"sha"'
 
  sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
- echo "{\"message\": \"${message}\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"branch\": \"${GIT_CHANGE_BRANCH}\", \"content\": \"$(printf '%s' $(cat $location | base64))\"}" > /tmp/curl_data
+ 
+ valid_curl_get_result $url "{\"message\": \"${message}\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"branch\": \"${GIT_CHANGE_BRANCH}\", \"content\": \"$(printf '%s' $(cat $location | base64))\"}"
 
- result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
- if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 1 ]; then
-          echo "$location updated successfully"
-   else
-         echo "There was an error updating $location, please check the execution"
-         echo $result
-         exit 1
- fi
+ echo "$location updated successfully"
 }
 
 update_versionfile_withvalue()
@@ -50,6 +39,57 @@ update_versionfile()
 {
  update_versionfile_withvalue $(echo $1 + 0.1 | bc)
 }
+
+
+update_plone_config()
+{
+PLONE_GITNAME=$1
+VERSIONS_PATH=$2
+
+echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH"
+
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}"  > versions.cfg
+
+
+if [ $(grep -c "\[versions\]" versions.cfg) -eq 0 ]; then
+   echo "There was a problem getting the versions file"
+   cat versions.cfg
+   exit 1
+fi
+
+if [ $(grep -c "^${GIT_NAME} = $version$" versions.cfg) -eq 1 ]; then
+    echo "${PLONE_GITNAME} versions file already updated, skipping"
+    return
+fi
+
+old_version=$( grep  "^${GIT_NAME} =" versions.cfg | awk '{print $3}')
+check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
+
+if [[ ! $check_version_bigger == "OK" ]]; then
+      echo "${version} is smaller than the version from ${PLONE_GITNAME} - ${old_version}, skipping"
+      return
+fi
+
+if [ $(grep -c "^${GIT_NAME} =" versions.cfg) -eq 0 ]; then
+  echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH}, skipping upgrade"
+  return
+fi
+
+echo "Updating ${PLONE_GITNAME} versions file with released version"
+
+valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" '"sha"'
+
+sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+
+sed -i "s/^${GIT_NAME} =.*/${GIT_NAME} = $version/" versions.cfg 
+
+valid_curl_put_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" 
+
+echo "${PLONE_GITNAME} versions file updated succesfully"
+
+}
+
+
 
 if [ ! -z "$GIT_CHANGE_ID" ]; then
         GIT_BRANCH=PR-${GIT_CHANGE_ID}
@@ -382,51 +422,10 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
     if [ ! -z "$EGGREPO_PASSWORD$PYPI_PASSWORD" ]; then
       # Updating versions.cfg
-      echo "Starting the update of KGS versions.cfg"
-      curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}"  > versions.cfg
 
-      if [ $(grep -c "\[versions\]" versions.cfg) -eq 0 ]; then
-        echo "There was a problem getting the versions file"
-        cat versions.cfg
-        exit 1
-      fi
-
-      if [ $(grep -c "^${GIT_NAME} = $version$" versions.cfg) -eq 1 ]; then
-          echo "KGS versions file already updated, skipping"
-      else
-        old_version=$( grep  "^${GIT_NAME} =" versions.cfg | awk '{print $3}')
-
-        check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
-
-        if [[ ! $check_version_bigger == "OK" ]]; then
-          echo "${version} is smaller than the version from ${KGS_GITNAME} - ${old_version}, skipping"
-        else
-
-          echo "Updating KGS versions file with released version"
-
-          curl_result=$( curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}" )
-
-          if [ $( echo $curl_result | grep -c '"sha"' ) -eq 0 ]; then
-             echo "There was a problem with the GitHub API request:"
-             echo $curl_result
-             exit 1
-          fi
-
-
-          sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
-
-          grep -q "^${GIT_NAME} =" versions.cfg  && sed -i "s/^${GIT_NAME} =.*/${GIT_NAME} = $version/" versions.cfg || sed -i "/# automatically set /a ${GIT_NAME} = $version" versions.cfg
-
-          result=$(curl -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" "https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/contents/${KGS_VERSIONS_PATH}")
-
-          if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 1 ]; then
-             echo "KGS versions file updated succesfully"
-          else
-             echo "There was an error updating the KGS file, please check the execution"
-             echo $result
-             exit 1
-          fi
-       fi
+      update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH}
+      update_plone_config eea.docker.plone src/plone/versions.cfg
+      update_plone_config eea.docker.plonesaas src/plone/versions.cfg
     fi
  fi
 
