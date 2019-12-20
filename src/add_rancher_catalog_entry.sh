@@ -58,12 +58,18 @@ if [[ ! "$lastdir" == "$biggestdirnr" ]]; then
 fi
 
 
-# Auto generate Rancher Catalog next version or use the Docker Image version
-if [ -z "$RANCHER_CATALOG_NEXT_VERSION" ]; then
-  new_version=$DOCKER_IMAGEVERSION
+if [ -n "$RANCHER_CATALOG_READ_VERSION" ]; then
+  echo "Last catalog version is $old_version, write the next version you want to create to release ${DOCKER_IMAGENAME}:${DOCKER_IMAGEVERSION}"
+  read new_version
 else
-  new_version=$(echo $old_version + 0.1 | bc)
+  # Auto generate Rancher Catalog next version or use the Docker Image version
+  if [ -n "$RANCHER_CATALOG_NEXT_VERSION" ]; then
+    new_version=$(echo $old_version + 0.1 | bc)
+  else
+    new_version=$DOCKER_IMAGEVERSION
+  fi
 fi
+
 
 # Modify the same latest Rancher Catalog entry or generate new one?
 if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
@@ -74,6 +80,8 @@ else
   new_version=$old_version
   echo "will use same directory for update, $nextdir"
 fi
+
+
 
 DOCKER_COMPOSE=$(ls $lastdir | grep docker-compose.yml)
 
