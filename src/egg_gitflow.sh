@@ -17,7 +17,7 @@ update_file()
  message=$2
  url="$githubApiUrl/contents/$location";
 
- valid_curl_get_result "$url?ref=${GIT_CHANGE_BRANCH}" '"sha"'
+ valid_curl_get_result "$url?ref=${GIT_CHANGE_BRANCH}" 'sha'
 
  sha_file=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
  
@@ -77,7 +77,7 @@ fi
 
 echo "Updating ${PLONE_GITNAME} versions file with released version"
 
-valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" '"sha"'
+valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" 'sha'
 
 sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 

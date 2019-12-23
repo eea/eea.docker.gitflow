@@ -6,7 +6,7 @@ valid_curl_get_result()
  curl_result=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url)
 
  if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
-          echo "There was a problem with the GitHub API request:"
+          echo "There was a problem with the GitHub API request for $url"
           echo $curl_result
           exit 1
  fi
