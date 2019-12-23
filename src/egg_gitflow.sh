@@ -370,66 +370,64 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_VERSIONFILE}?ref=develop"  > ${GIT_VERSIONFILE}
 
         if [ $(grep -c ^$version$ ${GIT_VERSIONFILE}) -eq 1 ]; then
-        echo "Found same version on develop as just released, will update it"
+          echo "Found same version on develop as just released, will update it"
 
-        curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_HISTORYFILE}?ref=develop"  > ${GIT_HISTORYFILE}
+          curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_HISTORYFILE}?ref=develop"  > ${GIT_HISTORYFILE}
 
-        next_version=$( echo "$(echo $version + 0.1 | bc)-dev0")
-        echo $next_version  > $GIT_VERSIONFILE
-        echo "Changelog
+          next_version=$( echo "$(echo $version + 0.1 | bc)-dev0")
+          echo $next_version  > $GIT_VERSIONFILE
+          echo "Changelog
 =========
 
 $next_version - (unreleased)
 ---------------------------
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
-       valid_curl_get_result ${GITHUBURL}/refs/heads/develop sha
-       sha_develop=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+         valid_curl_get_result ${GITHUBURL}/refs/heads/develop sha
+         sha_develop=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
 
-       valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat ${GIT_VERSIONFILE} | base64))\",\"encoding\": \"base64\" }" sha
-       sha_version=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
-
-
-       valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat ${GIT_HISTORYFILE} | base64))\",\"encoding\": \"base64\" }" sha
-       sha_history=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
-
-       valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_develop}\",\"tree\": [{\"path\": \"${GIT_VERSIONFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_version}\" }, { \"path\": \"${GIT_HISTORYFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_history}\" }]}" sha
-
-       sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
-
-       # create commit
-
-       valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Back to devel\", \"parents\": [\"${sha_develop}\"], \"tree\": \"${sha_newtree}\"}"  sha
-
-       sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+         valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat ${GIT_VERSIONFILE} | base64))\",\"encoding\": \"base64\" }" sha
+         sha_version=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
 
-       # update branch to commit
-       curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/develop)
+         valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat ${GIT_HISTORYFILE} | base64))\",\"encoding\": \"base64\" }" sha
+         sha_history=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
-       if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 200" ) -eq 0 ]; then
+         valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_develop}\",\"tree\": [{\"path\": \"${GIT_VERSIONFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_version}\" }, { \"path\": \"${GIT_HISTORYFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_history}\" }]}" sha
+
+         sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+
+         # create commit
+
+         valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Back to devel\", \"parents\": [\"${sha_develop}\"], \"tree\": \"${sha_newtree}\"}"  sha
+
+         sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+
+
+         # update branch to commit
+         curl_result=$(curl -i -s -X PATCH -H "Authorization: bearer $GIT_TOKEN" --data " { \"sha\":\"$sha_new_commit\"}" ${GITHUBURL}/refs/heads/develop)
+
+         if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 200" ) -eq 0 ]; then
               echo "There was a problem with the commit on develop"
               echo $curl_result
               exit 1
-        fi
+         fi
 
       else
-       echo "Version file already changed on develop"
+         echo "Version file already changed on develop"
       fi
 
 
-        echo "--------------------------------------------------------------------------------------------------------------------"
+       echo "--------------------------------------------------------------------------------------------------------------------"
 
     if [ ! -z "$EGGREPO_PASSWORD$PYPI_PASSWORD" ]; then
       # Updating versions.cfg
-
       update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH}
       update_plone_config eea.docker.plone src/plone/versions.cfg
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg
     fi
- fi
-
 fi
+
 
 
 exec "$@"
