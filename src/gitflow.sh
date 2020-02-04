@@ -165,18 +165,18 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
               
 	      for dependency in "$DEPENDENT_DOCKERFILE_URL"
               do
+		IFS='/' read -ra DEP <<< "$dependency"
 		if [ -f "$dependency" ] || [ "${#DEP[@]}" -lt 5 ]; then 
 			continue
 		fi	
-                IFS='/' read -ra DEP <<< "$dependency"
                  
-		PATH=$(echo $dependency | sed 's#^[^/]*/[^/]*/blob/[^/]*/\(.*\)$#\1#')
+		DOCKERFILE_PATH=$(echo $dependency | sed 's#^[^/]*/[^/]*/blob/[^/]*/\(.*\)$#\1#')
 
-                echo "Found dependency - Organization:${DEP[0]}, Repository:${DEP[1]}, Branch:${DEP[3]}, PATH:$PATH"
+                echo "Found dependency - Organization:${DEP[0]}, Repository:${DEP[1]}, Branch:${DEP[3]}, Dockerfile path:$DOCKERFILE_PATH"
 
                 GITHUBURL=https://api.github.com/repos/${DEP[0]}/${DEP[1]}
 
-		curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${GITHUBURL}/contents/${PATH}?ref=${DEP[3]}"  > /tmp/Dockerfile
+		curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${GITHUBURL}/contents/${DOCKERFILE_PATH}?ref=${DEP[3]}"  > /tmp/Dockerfile
 
 		if [ $(grep -c "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile) -eq 0 ]; then
                      echo "There was a problem getting the Dockerfile or it does not contain a ${DOCKERHUB_REPO} reference"
@@ -202,15 +202,15 @@ $old_version" | sort  --sort=version | tail -n 1)
 
 		echo "Updating Dockerfile with the released version"
 
-                valid_curl_get_result "$GITHUBURL/contents/${PATH}?ref=${DEP[3]}" sha
+                valid_curl_get_result "$GITHUBURL/contents/${DOCKERFILE_PATH}?ref=${DEP[3]}" sha
 
                 sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
                 sed -i "s/^FROM ${DOCKERHUB_REPO}.*/FROM ${DOCKERHUB_REPO}:$version/g" /tmp/Dockerfile
 
-                valid_curl_put_result "$GITHUBURL/contents/${PATH}" "{\"message\": \"Release ${DOCKERHUB_REPO} $version\", \"sha\": \"${sha_versionfile}\", \"branch\": \"${DEP[3]}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}"
+                valid_curl_put_result "$GITHUBURL/contents/${DOCKERFILE_PATH}" "{\"message\": \"Release ${DOCKERHUB_REPO} $version\", \"sha\": \"${sha_versionfile}\", \"branch\": \"${DEP[3]}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}"
 
-                echo "${DEP[0]}/${DEP[1]},branch ${DEP[3]},$PATH updated succesfully"
+                echo "${DEP[0]}/${DEP[1]},branch ${DEP[3]},$DOCKERFILE_PATH updated succesfully"
 
              done
           
