@@ -45,9 +45,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
     git fetch --tags
    
-    latestTag=$(git describe --tags)
+    latestTag=$(git describe --tags --abbrev=0)
 
-    files_changed=$(git --no-pager diff --name-only master $(git merge-base $(git describe --tags)  master) | wc -l )
+    files_changed=$(git --no-pager diff --name-only master $(git merge-base $(git describe --tags --abbrev=0)  master) | wc -l )
 
     if [ $files_changed -eq 0 ]; then
       echo "No files changed since last release, $latestTag"
@@ -78,7 +78,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 	       if [ -f "$dependency" ]; then
 		  echo "Found local dependency - $dependency, will continue with the update on it"
                    
-		  sed -i "s/^FROM $DOCKERHUB_REPO.*/FROM $DOCKERHUB_REPO:$version/" $dependency
+		  sed -i "s#^FROM $DOCKERHUB_REPO.*#FROM $DOCKERHUB_REPO\:$version#g" $dependency
                     
 
                   valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat $dependency | base64))\",\"encoding\": \"base64\" }" sha
