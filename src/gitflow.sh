@@ -208,7 +208,7 @@ $old_version" | sort  --sort=version | tail -n 1)
 
                 sed -i "s#^FROM ${DOCKERHUB_REPO}.*#FROM ${DOCKERHUB_REPO}\:$version#g" /tmp/Dockerfile
 
-                valid_curl_put_result "$GITHUBURL/contents/${DOCKERFILE_PATH}" "{\"message\": \"Release ${DOCKERHUB_REPO} $version\", \"sha\": \"${sha_dockerfile}\", \"branch\": \"${DEP[3]}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat /tmp/Dockerfile | base63))\"}"
+                valid_curl_put_result "$GITHUBURL/contents/${DOCKERFILE_PATH}" "{\"message\": \"Release ${DOCKERHUB_REPO} $version\", \"sha\": \"${sha_dockerfile}\", \"branch\": \"${DEP[3]}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat /tmp/Dockerfile | base64))\"}"
 
                 echo "${DEP[0]}/${DEP[1]},branch ${DEP[3]},$DOCKERFILE_PATH updated succesfully"
 
