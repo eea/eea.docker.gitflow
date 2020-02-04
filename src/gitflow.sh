@@ -85,7 +85,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                   sha_dockerfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 		  
 		  echo "Created blob for Dockerfile -- $sha_dockerfile"
-		  if [ -n "$tree" ];
+		  if [ -n "$tree" ]; then
 			  tree=","$tree
 		  fi
 		  tree="{\"path\": \"$dependency\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_dockerfile}\" }$tree"
@@ -93,7 +93,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                 
 	      done    
 
-            if [ -n "$tree" ];
+            if [ -n "$tree" ]; then
                 echo "Using tree [$tree]"
 	        valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
                 sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
