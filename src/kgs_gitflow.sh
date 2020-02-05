@@ -33,7 +33,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      if [[ "$latestTag" == "$version"* ]]; then
         if [ ! -z "$HOTFIX" ]; then
            echo "HOTFIX parameter received, calculating new version"
-           version=$(echo $version | awk -F "-" '{print $1"-"($2+1)}')
+           version=$(echo $latestTag | awk -F "-" '{print $1"-"($2+1)}')
             echo "New version is $version"
        else
            echo "Version $version already released, run with HOTFIX parameter to re-release."

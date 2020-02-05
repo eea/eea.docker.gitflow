@@ -61,8 +61,25 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         echo "Found EXTRACT_VERSION_SH script ( ${EXTRACT_VERSION_SH} ) , will run it to calculate the new version"
         version=$(./${EXTRACT_VERSION_SH})
       else
-	echo "Calculating version with $latestTag + 0.1"
-        version=$(echo $latestTag + 0.1 | bc)
+	
+	echo "Calculating version using YEAR.MONTH.DAY-version format"
+
+        version=$(date +"%-y.%-m.%-d")
+
+        echo "Version is $version"
+
+        if [[ "$latestTag" == "$version"* ]]; then
+          if [ ! -z "$HOTFIX" ]; then
+               echo "HOTFIX parameter received, calculating new version"
+               version=$(echo $latestTag | awk -F "-" '{print $1"-"($2+1)}')
+               echo "New version is $version"
+          else
+              echo "Version $version already released, run with HOTFIX parameter to re-release."
+              exit 0
+          fi
+       fi
+
+
       fi
 
       echo "Version is $version"
@@ -190,14 +207,16 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                 fi
 
                 old_version=$( grep  "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile  | awk -F':| ' '{print $3}')
-                
+               
+	        echo "Dockerfile current version is - $old_version"	
 		biggest_version=$(echo "$version
 $old_version" | sort  --sort=version | tail -n 1)
 
-                if [[ "$old_version" == "$version" ]]; then
-                   echo "${version} is smaller than the version from Dockerfile - ${old_version}, skipping"
+                if [[ "$old_version" == "$biggest_version" ]]; then
+                   echo "${version} is smaller or equal than the version from Dockerfile, skipping"
                    continue
 	        fi
+                 
 
 
 		echo "Updating Dockerfile with the released version"
@@ -218,7 +237,7 @@ $old_version" | sort  --sort=version | tail -n 1)
 
     if [ -z "$TRIGGER_RELEASE" ];then
 	    echo "-------------------------------------------------------------------------------"
-            echo "Did not receive a trigger to a devel repo"
+            echo "Did not receive a post-processing trigger to a dockerhub repo"
 	    exit 0
     fi
 
