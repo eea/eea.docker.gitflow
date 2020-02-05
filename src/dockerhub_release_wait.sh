@@ -21,7 +21,7 @@ fi
 DOCKERHUB_REPO=$1
 DOCKERHUB_NAME=$2
 
-if [ ! -z "$3" ]; then
+if [ -n "$3" ]; then
    echo "Received trigger parameter, will try to start build if not found"
    DOCKERHUB_TRIGGER=$3
 fi
@@ -56,8 +56,8 @@ fi
 	else
 	  echo "DockerHub - can't find $DOCKERHUB_REPO:$DOCKERHUB_NAME"
         fi
-        if [ ! -z "$DOCKERHUB_TRIGGER" ] && ! (( TIME_TO_WAIT_START % 10 )); then
-            echo "One minute passed, build not starting , will use trigger to re-start build"
+        if [ -n "$DOCKERHUB_TRIGGER" ] && ! (( TIME_TO_WAIT_START % 10 )); then
+            echo "Over one minute passed, build not starting , will use trigger to re-start build"
             curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$DOCKERHUB_NAME\"}" -X POST https://hub.docker.com/api/build/v1/source/$DOCKERHUB_TRIGGER
         fi
     done

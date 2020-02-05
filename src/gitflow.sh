@@ -73,7 +73,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 	      echo "Received DEPENDENT_DOCKERFILE_URL variable - values $DEPENDENT_DOCKERFILE_URL"
 	      echo "Checking if there are any local Dockerfiles - ex for devel"
 	      tree=""
-	      for dependency in "$DEPENDENT_DOCKERFILE_URL"
+	      for dependency in $DEPENDENT_DOCKERFILE_URL
 	      do
 	       if [ -f "$dependency" ]; then
 		  echo "Found local dependency - $dependency, will continue with the update on it"
@@ -163,7 +163,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
               echo "Received DEPENDENT_DOCKERFILE_URL variable - values $DEPENDENT_DOCKERFILE_URL"
 	      echo "Checking if there are any remote(other repos, other branches) Dockerfiles"
               
-	      for dependency in "$DEPENDENT_DOCKERFILE_URL"
+	      for dependency in $DEPENDENT_DOCKERFILE_URL
               do
 		IFS='/' read -ra DEP <<< "$dependency"
 		if [ -f "$dependency" ] || [ "${#DEP[@]}" -lt 5 ]; then 
@@ -225,21 +225,20 @@ $old_version" | sort  --sort=version | tail -n 1)
     echo "-------------------------------------------------------------------------------"
     echo "Starting triggered release(s)"
 
-    for trigger in "$TRIGGER_RELEASE"
+    for trigger in $TRIGGER_RELEASE
     do
         IFS=';' read -ra TRIG <<< "$trigger"
 
-         echo "Found release on ${DEP[0]}, will trigger it with the new version - $version"
+         echo "Found release on ${TRIG[0]}, will trigger it with the new version - $version"
 
-         curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$version\"}" -X POST https://hub.docker.com/api/build/v1/source/${DEP[1]}
 	 
-	 /dockerhub_release_wait.sh ${DEP[0]} $version ${DEP[1]}
+	 /dockerhub_release_wait.sh ${TRIG[0]} $version ${TRIG[1]}
 
 
-         get_catalog_paths ${DEP[0]}
+         get_catalog_paths ${TRIG[0]}
 
          for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
-               /add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH ${DEP[0]} $version $RANCHER_CATALOG_SAME_VERSION
+               /add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH ${TRIG[0]} $version $RANCHER_CATALOG_SAME_VERSION
          done
 
 
