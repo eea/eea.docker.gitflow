@@ -260,13 +260,26 @@ $old_version" | sort  --sort=version | tail -n 1)
                /add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH ${TRIG[0]} $version $RANCHER_CATALOG_SAME_VERSION
          done
 
-
+         #make sure master is resubmitted if failed
+	 get_dockerhub_buildhistory ${TRIG[0]}
+         build_status=$( echo $buildhistory | python -c "import sys, json
+try:
+  data_dict = json.load(sys.stdin)
+  build_tag = 'latest'
+  for res in data_dict['objects']:
+    if res['build_tag'] == build_tag:
+      print '%s' % res['state']
+      break
+except:
+  print 'Error parsing DockerHub API response %s' % sys.stdin
+")
+        if [[ $build_status == "Failed" ]] ; then
+                echo "Build  ${TRIG[0]}:latest failed on DockerHub, will resubmit it"
+                curl -i -H "Content-Type: application/json" --data "\"docker_tag\": \"master\"}" -X POST https://hub.docker.com/api/build/v1/source/${TRIG[1]}
+        fi
 
     done
 	    
-
-
-
 fi
 
 exec "$@"
