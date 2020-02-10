@@ -45,9 +45,14 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
     git fetch --tags
    
-    latestTag=$(git describe --tags --abbrev=0)
+    latestTag1=$(git describe --tags --abbrev=0)
 
-    files_changed=$(git --no-pager diff --name-only master $(git merge-base $(git describe --tags --abbrev=0)  master) | wc -l )
+    latestTag2=$(git for-each-ref --sort=-taggerdate --count=1 --format '%(refname:short)' refs/tags)
+
+    latestTag=$(echo "$latestTag1
+$latestTag2" | sort --sort=version | tail -n 1)
+
+    files_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | wc -l )
 
     if [ $files_changed -eq 0 ]; then
       echo "No files changed since last release, $latestTag"
