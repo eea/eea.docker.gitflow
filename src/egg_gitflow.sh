@@ -103,7 +103,9 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
         fi
 
         if [ $(echo $files_changed | grep $GIT_VERSIONFILE | wc -l) -eq 0 ]; then
-
+             echo "Files changed: $files_changed"
+	     echo "Version file: $GIT_VERSIONFILE"
+	     echo "Did not find version file changed"
              old_version=$(printf '%s' $(cat $GIT_VERSIONFILE))
 
              update_versionfile $old_version
