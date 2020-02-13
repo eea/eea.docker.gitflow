@@ -107,10 +107,15 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 	     echo "Version file: $GIT_VERSIONFILE"
 	     echo "Did not find version file changed"
              old_version=$(printf '%s' $(cat $GIT_VERSIONFILE))
-
-             update_versionfile $old_version
-             echo "Version file updated to default value ( last release +0.1), will stop execution "
-             exit 0
+	     
+	     git fetch --tags
+             if [ $(git tag | grep -c "^$old_version$" ) -ne 0 ]; then
+               update_versionfile $old_version
+               echo "Version file updated to default value ( last release +0.1), will stop execution "
+               exit 0
+	     else
+	       echo "Did not find version $old_version in tags, will keep the same version as in in master, as it is unreleased"
+             fi
         fi
 
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
