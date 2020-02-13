@@ -316,8 +316,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
               
               echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
               python setup.py sdist --formats=zip
-              twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
+              twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
 
          else
