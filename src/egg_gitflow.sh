@@ -157,10 +157,11 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
              echo "Passed check: New version is bigger than last released version (no versions released yet)"
         else
                 get_last_tag
-                check_version_bigger=$(echo $version"."$latestTag | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
+                biggest_version=$(echo "$version
+$latestTag" | sort --sort=version | tail -n 1 )
 
-                if [[ ! $check_version_bigger == "OK" ]]; then
-                 echo "Version ${version} is smaller than last version ${last_version}, will set it ${last_version} + 0.1"
+                if [[ $bigger_version == "$latestTag" ]]; then
+                 echo "Version ${version} is smaller than last version ${latestTag}, will set it ${latestTag} + 0.1"
                  update_versionfile $latestTag
                  exit 0
                 fi
