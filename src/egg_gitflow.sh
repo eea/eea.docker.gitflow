@@ -176,7 +176,7 @@ $latestTag" | sort --sort=version | tail -n 1 )
 		        cp setup.py /tmp/setup.py
                         new_line=$(grep '^ *long_description=.*' setup.py | sed 's#long_description=.*#long_description_content_type="text/x-rst",#')
                         sed -i "/^ *long_description=.*/i\\${new_line}" setup.py
-			if [ $(diff setup.py /tmp/setup.py | wc -l) -gt 0]; then
+			if [ $(diff setup.py /tmp/setup.py | wc -l) -gt 0 ]; then
                            update_file setup.py "Updated setup.py, added long_description_content_type - needs review"
 			else
 			   echo "There is a problem with your setup.py, check that it has long_description, long_description_content_type and description values"
