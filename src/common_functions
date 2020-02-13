@@ -48,12 +48,8 @@ valid_curl_put_result()
 
 get_last_tag()
 {
-if [ $(git tag | wc -l) -gt 0 ]; then
+if [ $(git describe --abbrev=0 --tags 2>/dev/null | wc -l) -gt 0 ]; then
    latestTag=`git describe --abbrev=0 --tags`
-   if [ $? -ne 0 ]; then
-     latestTag=0.1
-     echo "Could not extract the latest tag, will set it to 0.1"
-   fi
 else
    latestTag=0.1
 fi
