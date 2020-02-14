@@ -35,7 +35,7 @@ valid_curl_put_result()
  url=$1
  data=$2
  echo "$data" > /tmp/curl_data
- result=$(curl  -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
+ result=$(curl -I -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
 
  if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 0 ]; then
           echo "There was a problem with the GitHub API request for url-$url ( did not receive HTTP 200 ) :"
