@@ -137,6 +137,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 
          if [[  $version  =~ ^[0-9]+\.[0-9]+[\.|-]dev[0-9]*$ ]] ; then
              new_version=$(echo $version | cut -d. -f1,2 | cut -d- -f1,1 )
+	     echo "Version format from version.txt is not ok, will set it to $new_version"
              update_versionfile_withvalue $new_version
              echo "Removed dev from version file"
              exit 0
