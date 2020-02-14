@@ -22,7 +22,7 @@ valid_curl_post_result()
  curl_result=$(curl -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
 
  if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
-          echo "There was a problem with the GitHub API request:"
+          echo "There was a problem with the GitHub API request for url - $url ( check valid response $check_valid_response):"
           echo $curl_result
           exit 1
  fi
@@ -38,7 +38,7 @@ valid_curl_put_result()
  result=$(curl  -i -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
 
  if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 0 ]; then
-          echo "There was a problem with the GitHub API request:"
+          echo "There was a problem with the GitHub API request for url-$url ( did not receive HTTP 200 ) :"
           echo $curl_result
           exit 1
  fi
