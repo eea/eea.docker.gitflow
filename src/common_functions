@@ -36,7 +36,8 @@ valid_curl_put_result()
  data=$2
  echo "$data" > /tmp/curl_data
  echo $url
- curl -I -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url
+ cat /tmp/curl_data
+ curl -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url
  
  result=$(curl -I -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
  echo $result
