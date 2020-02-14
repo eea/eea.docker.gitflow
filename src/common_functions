@@ -1,12 +1,12 @@
 
 valid_curl_get_result()
 {
- url=$1
+ get_url=$1
  check_valid_response=$2
- curl_result=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $url)
+ curl_result=$(curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN" $get_url)
 
  if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
-          echo "There was a problem with the GitHub API request for $url"
+          echo "There was a problem with the GitHub API request for $get_url"
           echo $curl_result
           exit 1
  fi
@@ -15,14 +15,14 @@ valid_curl_get_result()
 
 valid_curl_post_result()
 {
- url=$1
+ post_url=$1
  data=$2
  check_valid_response=$3
  echo "$data" > /tmp/curl_data
- curl_result=$(curl -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
+ curl_result=$(curl -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $post_url)
 
  if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
-          echo "There was a problem with the GitHub API request for url - $url ( check valid response $check_valid_response):"
+          echo "There was a problem with the GitHub API request for url - $post_url ( check valid response $check_valid_response):"
           echo $curl_result
           exit 1
  fi
@@ -32,17 +32,14 @@ valid_curl_post_result()
 
 valid_curl_put_result()
 {
- url=$1
+ put_url=$1
  data=$2
  echo "$data" > /tmp/curl_data
- echo $url
- cat /tmp/curl_data
- curl -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url
+ curl -I -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $put_url
  
- result=$(curl -I -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $url)
- echo $result
+ result=$(curl -I -s -X PUT -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $put_url)
  if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 200") -eq 0 ]; then
-          echo "There was a problem with the GitHub API request for url-$url ( did not receive HTTP 200 ) :"
+          echo "There was a problem with the GitHub API request for url - $put_url ( did not receive HTTP 200 ) :"
           echo $result
           exit 1
  fi
