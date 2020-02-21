@@ -212,8 +212,11 @@ $latestTag2" | sort --sort=version | tail -n 1)
                 fi
 
                 old_version=$( grep  "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile  | awk -F':| ' '{print $3}')
-               
+                
 	        echo "Dockerfile current version is - $old_version"	
+		if [[ "$old_version" == "latest" ]]; then 
+		   old_version="0.0"
+		fi
 		biggest_version=$(echo "$version
 $old_version" | sort  --sort=version | tail -n 1)
 
