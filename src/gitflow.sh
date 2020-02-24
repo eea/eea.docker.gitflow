@@ -41,8 +41,14 @@ git clone $GIT_SRC
 cd $GIT_NAME
 
 # Image release on DockerHub
-if [[ "$GIT_BRANCH" == "master" ]]; then
+if [[ "$GIT_BRANCH" == "master" ]] || [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]]; then
 
+  if [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]]; then
+    version=$GIT_BRANCH
+    echo "Script is running on tag, so it will skip the release part"
+    echo "Version is $version"
+    git checkout $version
+  else    
     git fetch --tags
    
     latestTag1=$(git describe --tags --abbrev=0)
@@ -160,6 +166,14 @@ $latestTag2" | sort --sort=version | tail -n 1)
         exit 1
       fi
     fi
+
+    fi
+   
+     if [[ "$GITFLOW_BEHAVIOR" == "TAG_ONLY" ]]; then
+	 echo "Received TAG_ONLY as gitflow behavior, so will stop script here, the release will continue on repo"
+	 exit 0
+     fi
+
 
     echo "-------------------------------------------------------------------------------"
 
