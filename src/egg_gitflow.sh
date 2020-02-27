@@ -238,8 +238,11 @@ global-include *.mo" > MANIFEST.in
 
 
         if [ $(echo $files_changed | grep $GIT_HISTORYFILE | wc -l) -eq 0 ]; then
-             echo "Changelog not updated, will populate it with default values"
-             echo "Changelog
+             echo "Did not find $GIT_HISTORYFILE in the files changed in the PR:"
+	     echo "$files_changed"	
+	     if [ $( grep -cE "^$version -.*" $GIT_HISTORYFILE ) -eq 0 ]; then
+	       echo "Did not find $version entry in  $GIT_HISTORYFILE, will populate it with default values"
+               echo "Changelog
 =========
 
 $version - ($(date +"%Y-%m-%d"))
@@ -247,10 +250,13 @@ $version - ($(date +"%Y-%m-%d"))
 * Change: $GIT_CHANGE_TITLE [$GIT_CHANGE_AUTHOR]
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
-            update_file $GIT_HISTORYFILE "Updated changelog - needs review"
+              update_file $GIT_HISTORYFILE "Updated changelog - needs review"
 
-            echo "History file updated with default lines ( version, date and PR title  and user )"
-            exit 0
+              echo "History file updated with default lines ( version, date and PR title  and user )"
+              exit 0
+	    else
+	      echo "Found $version entry in  $GIT_HISTORYFILE, so will skip updating it "
+	    fi
         fi
 
 
