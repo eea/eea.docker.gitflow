@@ -181,19 +181,27 @@ $latestTag2" | sort --sort=version | tail -n 1)
 
 
     echo "-------------------------------------------------------------------------------"
-    echo "Starting the Rancher catalog release"
-    
-    if [ -z "$RANCHER_CATALOG_PATHS" ]; then
-    
-	  get_catalog_paths $DOCKERHUB_REPO
-       
-    fi
-    
-    for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
-      	/add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH $DOCKERHUB_REPO $version $RANCHER_CATALOG_SAME_VERSION 
-    done
+    if [[ "$GITFLOW_BEHAVIOR" == "TAG_ONLY" ]]; then
+         echo "Received TAG_ONLY as gitflow behavior, so will skip the catalog release"
+        
+    else
 
-   
+
+      echo "Starting the Rancher catalog release"
+    
+      if [ -z "$RANCHER_CATALOG_PATHS" ]; then
+    
+  	  get_catalog_paths $DOCKERHUB_REPO
+       
+      fi
+    
+      for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
+        	/add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH $DOCKERHUB_REPO $version $RANCHER_CATALOG_SAME_VERSION 
+      done
+
+    fi
+
+
       echo "-------------------------------------------------------------------------------"
       if [ -n "$DEPENDENT_DOCKERFILE_URL" ];then
               echo "Received DEPENDENT_DOCKERFILE_URL variable - values $DEPENDENT_DOCKERFILE_URL"
@@ -212,18 +220,50 @@ $latestTag2" | sort --sort=version | tail -n 1)
 
                 GITHUBURL=https://api.github.com/repos/${DEP[0]}/${DEP[1]}
 
-		curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${GITHUBURL}/contents/${DOCKERFILE_PATH}?ref=${DEP[3]}"  > /tmp/Dockerfile
+		DEPENDENT_DOCKERFILE_TIMEOUT=${DEPENDENT_DOCKERFILE_TIMEOUT:-60}
+		DOCKERFILE_RETRY=${DEPENDENT_DOCKERFILE_RETRY:-10}
 
-		if [ $(grep -c "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile) -eq 0 ]; then
-                     echo "There was a problem getting the Dockerfile or it does not contain a ${DOCKERHUB_REPO} reference"
-                     cat /tmp/Dockerfile
-		     exit 1
-	        fi
+		while [ $DOCKERFILE_RETRY -gt 0 ]
+		do
+
+	 		curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${GITHUBURL}/contents/${DOCKERFILE_PATH}?ref=${DEP[3]}"  > /tmp/Dockerfile
+
+			if [ $(grep -c "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile) -eq 0 ]; then
+              	             echo "There was a problem getting the Dockerfile or it does not contain a ${DOCKERHUB_REPO} reference"
+                	     cat /tmp/Dockerfile
+	         	     exit 1
+	                fi
  
-                if [ $(grep -c "^FROM ${DOCKERHUB_REPO}:$version$" /tmp/Dockerfile) -eq 1 ]; then
-                 echo "Dockerfile already updated, skipping"
-                 continue
-                fi
+	  		if [[ "$GITFLOW_BEHAVIOR" == "TAG_ONLY" ]]; then
+                		if [ $(grep -c "^FROM ${DOCKERHUB_REPO}:$version$" /tmp/Dockerfile) -eq 1 ]; then
+                		       echo "Dependent dockerfile is already updated to $version"
+				       DOCKERFILE_RETRY=-100
+	      			else
+ 		   		    echo "Dependent dockerfile is not yet updated to $version, waiting $DEPENDENT_DOCKERFILE_TIMEOUT seconds"
+		 		    sleep $DEPENDENT_DOCKERFILE_TIMEOUT
+				    let DOCKERFILE_RETRY=$DEPENDENT_DOCKERFILE_RETRY-1
+	                        fi
+
+                        else
+                              if [ $(grep -c "^FROM ${DOCKERHUB_REPO}:$version$" /tmp/Dockerfile) -eq 1 ]; then
+                                     echo "Dockerfile already updated, skipping"
+                                     DOCKERFILE_RETRY=-100
+			      else
+	              	          echo "Dockerfile not yet updated"
+				  DOCKERFILE_RETRY=-5
+			      fi
+                       fi
+                done
+             
+		if [ $DOCKERFILE_RETRY -eq -100 ]; then
+			continue
+	        fi
+
+		if [ $DOCKERFILE_RETRY -eq 0 ]; then
+			echo "Dependent dockerfile was not updated in $DEPENDENT_DOCKERFILE_RETRY x $DEPENDENT_DOCKERFILE_TIMEOUT seconds, exiting with error ( TAG_ONLY behavior) "
+			exit 1
+		fi
+
 
                 old_version=$( grep  "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile  | awk -F':| ' '{print $3}')
                 
@@ -263,8 +303,14 @@ $old_version" | sort  --sort=version | tail -n 1)
 	    exit 0
     fi
 
+    if [[ "$GITFLOW_BEHAVIOR" == "TAG_ONLY" ]]; then
+	    echo "Skipping triggered release(s) because of the TAG_ONLY parameter"
+	    exit 0
+    fi
+
     echo "-------------------------------------------------------------------------------"
     echo "Starting triggered release(s)"
+
 
     for trigger in $TRIGGER_RELEASE
     do
