@@ -169,11 +169,6 @@ $latestTag2" | sort --sort=version | tail -n 1)
 
     fi
    
-     if [[ "$GITFLOW_BEHAVIOR" == "TAG_ONLY" ]]; then
-	 echo "Received TAG_ONLY as gitflow behavior, so will stop script here, the release will continue on repo"
-	 exit 0
-     fi
-
 
     echo "-------------------------------------------------------------------------------"
 
