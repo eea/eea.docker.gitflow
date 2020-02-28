@@ -224,14 +224,11 @@ $latestTag" | sort --sort=version | tail -n 1 )
                 echo "Passed check: README.rst and $GIT_HISTORYFILE have correct RST format"
 	fi
 
+	namespace=$(echo $GIT_VERSIONFILE |  cut -d'/' -f1)
 	if [ -f MANIFEST.in ]; then
           	echo "Checking MANIFEST.in file and fixing it"
 
-		namespace=$(echo $GIT_VERSIONFILE |  cut -d'/' -f1)
-
-		
-
-		if [ $( grep -c "include.*txt.*"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft docs"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft $namespace"   MANIFEST.in ) -eq 0 ]; then
+                if [ $( grep -c "include.*txt.*"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft docs"   MANIFEST.in ) -eq 0 ] || [ $( grep -c "graft $namespace"   MANIFEST.in ) -eq 0 ]; then
 			echo "Did not find correct MANIFEST.in file, will re-set it to default value"
 			echo "include *.md *.rst *.txt
 graft docs
@@ -254,10 +251,6 @@ global-include *.mo" > MANIFEST.in
                  create_file MANIFEST.in "Created MANIFEST.in from template using $namespace - needs review"
 		 exit 0
 	fi
-
-
-
-
 
         if [ $(echo $files_changed | grep $GIT_HISTORYFILE | wc -l) -eq 0 ]; then
              echo "Did not find $GIT_HISTORYFILE in the files changed in the PR:"
