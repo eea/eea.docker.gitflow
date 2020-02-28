@@ -26,6 +26,18 @@ update_file()
  echo "$location updated successfully"
 }
 
+
+create_file()
+{
+ location=$1
+ message=$2
+ url="$githubApiUrl/contents/$location";
+
+ valid_curl_put_result $url "{\"message\": \"${message}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"branch\": \"${GIT_CHANGE_BRANCH}\", \"content\": \"$(printf '%s' $(cat $location | base64))\"}"
+
+ echo "$location created successfully"
+}
+
 update_versionfile_withvalue()
 {
  version=$1
@@ -231,6 +243,16 @@ global-include *.mo" > MANIFEST.in
                        update_file MANIFEST.in "Updated MANIFEST.in, recreated it from template using $namespace - needs review"
 		fi
                 echo "Passed check: MANIFEST.in contains docs and files"
+	else
+	        echo "include *.md *.rst *.txt
+graft docs
+graft ${namespace}
+global-exclude *pyc
+global-exclude *~
+global-exclude *.un~
+global-include *.mo" > MANIFEST.in
+                 create_file MANIFEST.in "Created MANIFEST.in from template using $namespace - needs review"
+		 exit 0
 	fi
 
 
