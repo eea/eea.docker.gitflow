@@ -57,6 +57,7 @@ update_plone_config()
 {
 PLONE_GITNAME=$1
 VERSIONS_PATH=$2
+EGG_NAME=${GIT_NAME}
 
 echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH"
 
@@ -69,35 +70,39 @@ if [ $(grep -c "\[versions\]" versions.cfg) -eq 0 ]; then
    exit 1
 fi
 
-if [ $(grep -c "^${GIT_NAME} = $version$" versions.cfg) -eq 1 ]; then
-    echo "${PLONE_GITNAME} versions file already updated, skipping"
+if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
+  EGG_NAME=$(echo ${GIT_NAME} | sed 's/_/-/')
+  if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
+    echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH}, skipping upgrade"
+    return
+  fi
+fi
+
+
+
+if [ $(grep -c "^${EGG_NAME} = $version$" versions.cfg) -eq 1 ]; then
+    echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version', skipping"
     return
 fi
 
-old_version=$( grep  "^${GIT_NAME} =" versions.cfg | awk '{print $3}')
+old_version=$( grep  "^${EGG_NAME} =" versions.cfg | awk '{print $3}')
 check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
 
 if [[ ! $check_version_bigger == "OK" ]]; then
       echo "${version} is smaller than the version from ${PLONE_GITNAME} - ${old_version}, skipping"
       return
 fi
-
-if [ $(grep -c "^${GIT_NAME} =" versions.cfg) -eq 0 ]; then
-  echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH}, skipping upgrade"
-  return
-fi
-
-echo "Updating ${PLONE_GITNAME} versions file with released version"
+echo "Updating ${PLONE_GITNAME} versions file with released version on ${EGG_NAME}"
 
 valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" sha
 
 sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
-sed -i "s/^${GIT_NAME} =.*/${GIT_NAME} = $version/" versions.cfg 
+sed -i "s/^${EGG_NAME} =.*/${EGG_NAME} = $version/" versions.cfg 
 
 valid_curl_put_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" 
 
-echo "${PLONE_GITNAME} versions file updated succesfully"
+echo "${PLONE_GITNAME} versions file updated succesfully with '${EGG_NAME} = $version'"
 
 }
 
