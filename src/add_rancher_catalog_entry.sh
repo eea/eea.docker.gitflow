@@ -104,6 +104,18 @@ if [ $(grep -c "image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION$"  $lastdir/$D
   exit 0
 fi
 
+
+echo "--------------------------------------------------------"
+if [ $(grep "image: $DOCKER_IMAGENAME_ESC" $lastdir/$DOCKER_COMPOSE | grep -v gitflow-disable | wc -l ) -eq 0 ]; then
+  echo "Did not find in latest $DOCKER_COMPOSE images with $DOCKER_IMAGENAME without gitflow-disable"
+  echo "Will skip the creation of new version of rancher catalog!"
+  #clean-up
+  cd $current_dir
+  rm -rf $RANCHER_CATALOG_GITNAME
+  exit 0
+fi
+
+
 echo "Checked latest $DOCKER_COMPOSE ($lastdir/$DOCKER_COMPOSE), $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION is not present, will go on with creating the new rancher catalog version!"
 
 echo "--------------------------------------------------------"
@@ -163,7 +175,7 @@ fi
 # Update Rancher Catalog entry
 
 cd $nextdir
-sed -i "/    image: $DOCKER_IMAGENAME_ESC:/c\    image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION"  $DOCKER_COMPOSE
+sed -i "/    image: ${DOCKER_IMAGENAME_ESC}:/ {/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/}" $DOCKER_COMPOSE
 sed -i "/  version: /c\  version: \"$new_version\"" rancher-compose.yml
 cd ..
 sed -i "s/version: \"$old_version\"/version: \"$new_version\"/g" config.yml
