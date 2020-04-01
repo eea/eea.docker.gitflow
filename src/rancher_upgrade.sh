@@ -22,7 +22,7 @@ echo "Getting stack information"
 check=$(rancher --url $RANCHER_URL --access-key $RANCHER_ACCESS --secret-key $RANCHER_SECRET --env $RANCHER_ENVID stack | grep $stack_id)
 current_catalog=$(echo $check | awk '{print $4}')
 upgrade=$(echo $check | awk '{print $7}')
-if [ "$current_catalog" == "catalog://EEA:$name:$number" ]; then echo "Stack already upgaded to the latest release"; exit 0; fi
+if [ "$current_catalog" == "catalog://EEA:$name:$number" ]; then echo "Stack already upgraded to the latest release catalog://EEA:$name:$number"; exit 0; fi
 
 count=0
 while [ "$upgrade" != "$catalog:$number" ] && [ $count -lt 30 ]; do
@@ -34,5 +34,5 @@ while [ "$upgrade" != "$catalog:$number" ] && [ $count -lt 30 ]; do
 done
 
 if [ $count -eq 30 ]; then echo "30 minutes passed, stack is not upgrade-able, exiting"; exit 1; fi
-echo "Found stack ready to be upgaded, upgrading stack to catalog://$catalog:$number"
+echo "Found stack, it's ready to be upgraded to catalog://$catalog:$number"
 rancher --url $RANCHER_URL --access-key $RANCHER_ACCESS --secret-key $RANCHER_SECRET --env $RANCHER_ENVID catalog upgrade catalog://$catalog:$number --stack $stack_id --confirm
