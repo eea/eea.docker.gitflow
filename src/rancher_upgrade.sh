@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#in case we are using old variable name
+RANCHER_STACKID=${RANCHER_STACKID:-$stack_id}
+
 if [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_ACCESS" ] || [ -z "$RANCHER_SECRET" ] || [ -z "$RANCHER_ENVID" ] || [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_STACKID" ] || [ -z "$template" ]; then
    echo "Did not receive all mandatory parameters!!!"
    exit 1
