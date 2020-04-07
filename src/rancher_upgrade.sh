@@ -1,7 +1,5 @@
 #!/bin/bash
 
-env
-
 #in case we are using old variable name
 RANCHER_STACKID=${RANCHER_STACKID:-$stack_id}
 
