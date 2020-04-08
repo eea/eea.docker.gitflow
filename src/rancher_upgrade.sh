@@ -28,15 +28,14 @@ upgrade=$(echo $check | awk '{print $7}')
 if [ "$current_catalog" == "catalog://EEA:$name:$number" ]; then echo "Stack already upgraded to the latest release catalog://EEA:$name:$number"; exit 0; fi
 
 count=0
-while [ "$upgrade" != "$catalog:$number" ] && [ $count -lt 30 ]; do
-    echo "Did not find stack to be upgrade-able yet - '$upgrade' is not '$catalog:$number', sleeping 1 min, then refreshing it again"
+while [[ "$check" != *"$catalog:$number"* ]] && [ $count -lt 30 ]; do
+    echo "Did not find stack to be upgrade-able yet - '$check' is not *'$catalog:$number'*, sleeping 1 min, then refreshing it again"
     sleep 60
     rancher --url $RANCHER_URL --access-key $RANCHER_ACCESS --secret-key $RANCHER_SECRET --env $RANCHER_ENVID catalog refresh | grep $catalog 
     let count=$count+1
-    result=$(rancher --url $RANCHER_URL --access-key $RANCHER_ACCESS --secret-key $RANCHER_SECRET --env $RANCHER_ENVID stack | grep $RANCHER_STACKID )
+    check=$(rancher --url $RANCHER_URL --access-key $RANCHER_ACCESS --secret-key $RANCHER_SECRET --env $RANCHER_ENVID stack | grep $RANCHER_STACKID )
     echo "Stack information:"
-    echo $result
-    upgrade=$(echo $result | awk '{print $7}')
+    echo $check
 done
 
 if [ $count -eq 30 ]; then echo "30 minutes passed, stack is not upgrade-able, exiting"; exit 1; fi
