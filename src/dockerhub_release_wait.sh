@@ -39,6 +39,8 @@ if [ -z "$DOCKERHUB_REPO" ] ||  [ -z "$DOCKERHUB_NAME" ]; then
   exit 1
 fi
 
+echo "Starting dockerhub release wait script"
+
 check_result=$(curl -s -X GET -H "Content-Type: application/json"   "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/?page_size=100&name=${DOCKERHUB_NAME}" | grep "${DOCKERHUB_NAME}\"" )
 
 if [ -n "$check_result" ]; then  
