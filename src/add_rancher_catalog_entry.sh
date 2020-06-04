@@ -193,8 +193,7 @@ cd ..
 sed -i "s/version: \"$old_version\"/version: \"$new_version\"/g" config.yml
 
 if [ -f 'auto_release.sh' ]; then
-        chmod 755 auto_release.sh
-        ./auto_release.sh
+        source auto_release.sh
 fi
 
 
