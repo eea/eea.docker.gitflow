@@ -189,14 +189,13 @@ sed -i "/    image: ${DOCKER_IMAGENAME_ESC}:/ {/gitflow-disable/! s/    image: $
 sed -i "/  version: /c\  version: \"$new_version\"" rancher-compose.yml
 
 
+cd ..
+sed -i "s/version: \"$old_version\"/version: \"$new_version\"/g" config.yml
+
 if [ -f 'auto_release.sh' ]; then
         chmod 755 auto_release.sh
         ./auto_release.sh
 fi
-
-
-cd ..
-sed -i "s/version: \"$old_version\"/version: \"$new_version\"/g" config.yml
 
 
 #create blobs for changed files
