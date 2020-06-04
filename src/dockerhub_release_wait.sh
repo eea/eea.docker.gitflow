@@ -39,6 +39,12 @@ if [ -z "$DOCKERHUB_REPO" ] ||  [ -z "$DOCKERHUB_NAME" ]; then
   exit 1
 fi
 
+check_result=$(curl -s -X GET -H "Content-Type: application/json"   "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/?page_size=100&name=${DOCKERHUB_NAME}" | grep "${DOCKERHUB_NAME}\"" )
+
+if [ -n "$check_result" ]; then  
+  echo "Found image already build in tags"
+  exit 0
+fi
 
     echo "-------------------------------------------------------------------------------"
     wait_in_case_of_error=15
