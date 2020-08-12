@@ -49,7 +49,7 @@ update_versionfile_withvalue()
 
 update_versionfile()
 {
- update_versionfile_withvalue $(echo $1 + 0.1 | bc)
+ update_versionfile_withvalue $(echo $1 | awk '{printf "%.1f-dev0", $1 + 0.1}' )
 }
 
 
@@ -414,8 +414,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           echo "Found same version on develop as just released, will update it"
 
           curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${githubApiUrl}/contents/${GIT_HISTORYFILE}?ref=develop"  > ${GIT_HISTORYFILE}
-
-          next_version=$( echo "$(echo $version + 0.1 | bc)-dev0")
+          
+          next_version=$( echo $version | awk '{printf "%.1f-dev0", $1 + 0.1}' )
           echo $next_version  > $GIT_VERSIONFILE
           echo "Changelog
 =========
