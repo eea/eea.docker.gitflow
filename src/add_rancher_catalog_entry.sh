@@ -76,7 +76,7 @@ if [ -n "$RANCHER_CATALOG_READ_VERSION" ]; then
 else
   # Auto generate Rancher Catalog next version or use the Docker Image version
   if [ -n "$RANCHER_CATALOG_NEXT_VERSION" ]; then
-    new_version=$(echo $old_version + 0.1 | bc)
+    new_version=$(echo $old_version | awk '{printf "%.1f-dev0", $1 + 0.1}' )
   else
     new_version=$DOCKER_IMAGEVERSION
   fi
