@@ -52,6 +52,8 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]];
     git fetch --tags
    
     latestTag1=$(git describe --tags --abbrev=0)
+    #check in case there are multiple tags per commit
+    latestTag1=$(git log  --tags --decorate=full | grep refs/tags/$latestTag1 | grep -o refs/tags/[^\ ,\)]*  | sed 's#refs/tags/##g' | sort --sort=version | tail -n 1)
 
     latestTag2=$(git for-each-ref --sort=-taggerdate --count=1 --format '%(refname:short)' refs/tags)
 
