@@ -7,6 +7,7 @@ if [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_ACCESS" ] || [ -z "$RANCHER_SECRET" ]
    echo "Did not receive all mandatory parameters - url and auth!!!"
    exit 1
 fi
+env
 if [ -z "$RANCHER_ENVID" ] || [ -z "$RANCHER_STACKID" ] || [ -z "$template" ]; then
    echo "Did not receive all mandatory parameters - rancher env, stack, template!!!"
    exit 1
