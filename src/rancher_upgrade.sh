@@ -3,10 +3,15 @@
 #in case we are using old variable name
 RANCHER_STACKID=${RANCHER_STACKID:-$stack_id}
 
-if [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_ACCESS" ] || [ -z "$RANCHER_SECRET" ] || [ -z "$RANCHER_ENVID" ] || [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_STACKID" ] || [ -z "$template" ]; then
-   echo "Did not receive all mandatory parameters!!!"
+if [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_ACCESS" ] || [ -z "$RANCHER_SECRET" ]; then
+   echo "Did not receive all mandatory parameters - url and auth!!!"
    exit 1
 fi
+if [ -z "$RANCHER_ENVID" ] || [ -z "$RANCHER_STACKID" ] || [ -z "$template" ]; then
+   echo "Did not receive all mandatory parameters - rancher env, stack, template!!!"
+   exit 1
+fi
+
 echo "Getting the latest catalog entry for $template"
 
 rm -rf eea.rancher.catalog
