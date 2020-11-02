@@ -7,7 +7,7 @@ if [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_ACCESS" ] || [ -z "$RANCHER_SECRET" ]
    echo "Did not receive all mandatory parameters - url and auth!!!"
    exit 1
 fi
-env
+
 if [ -z "$RANCHER_ENVID" ] || [ -z "$RANCHER_STACKID" ] || [ -z "$template" ]; then
    echo "Did not receive all mandatory parameters - rancher env, stack, template!!!"
    exit 1
@@ -35,6 +35,7 @@ if [ "$current_catalog" == "catalog://EEA:$name:$number" ]; then echo "Stack alr
 
 count=0
 while [[ "$check" != *"$catalog:$number"* ]] && [ $count -lt 30 ]; do
+    rancher --url $RANCHER_URL --access-key $RANCHER_ACCESS --secret-key $RANCHER_SECRET --env $RANCHER_ENVID stack
     echo "Did not find stack to be upgrade-able yet - '$check' is not *'$catalog:$number'*, sleeping 1 min, then refreshing it again"
     sleep 60
     rancher --url $RANCHER_URL --access-key $RANCHER_ACCESS --secret-key $RANCHER_SECRET --env $RANCHER_ENVID catalog refresh | grep $catalog 
