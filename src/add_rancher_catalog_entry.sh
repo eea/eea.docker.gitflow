@@ -98,10 +98,20 @@ fi
 DOCKER_COMPOSE=$(ls $lastdir | grep docker-compose.yml )
 
 echo "--------------------------------------------------------"
-if [ $(grep -c "image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION$"  $lastdir/$DOCKER_COMPOSE ) -gt 0 ]; then
-  echo "Found in latest $DOCKER_COMPOSE images with $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION"
+if [ $(grep  "image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION$"  */$DOCKER_COMPOSE | wc -l ) -gt 0 ]; then
+  echo "Found in old template $DOCKER_COMPOSE images with $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION"
   echo "Will skip the creation of new version of rancher catalog!"
   #clean-up
+  cd $current_dir
+  rm -rf $RANCHER_CATALOG_GITNAME
+  exit 0
+fi
+
+biggest_version=$(echo "$DOCKER_IMAGEVERSION
+$old_version" | sort --sort=version | tail -n 1 )
+
+if [[ $bigger_version == "$old_version" ]]; then
+  echo "Version ${DOCKER_IMAGEVERSION} is smaller than last version ${old_version}, will skip rancher catalog"
   cd $current_dir
   rm -rf $RANCHER_CATALOG_GITNAME
   exit 0
