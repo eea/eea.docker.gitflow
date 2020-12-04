@@ -88,6 +88,10 @@ fi
 old_version=$( grep  "^${EGG_NAME} =" versions.cfg | awk '{print $3}')
 check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
 
+if [[ "$old_version" == "$version-dev"* ]]; then 
+      check_version_bigger="OK"
+fi
+
 if [[ ! $check_version_bigger == "OK" ]]; then
       echo "${version} is smaller than the version from ${PLONE_GITNAME} - ${old_version}, skipping"
       return
@@ -325,6 +329,12 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             GIT_VERSIONFILE="src/$GIT_VERSIONFILE"
         fi
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
+
+        if [[ "$version" == *"-dev"* ]]; then 
+	      echo "Version file not updated, still contains -dev, error" 
+	      exit 1
+	fi
+
         echo "--------------------------------------------------------------------------------------------------------------------"
 
         if [ ! -z "$EGGREPO_USERNAME$EGGREPO_PASSWORD" ]; then
