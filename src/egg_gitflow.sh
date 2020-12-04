@@ -88,7 +88,7 @@ fi
 old_version=$( grep  "^${EGG_NAME} =" versions.cfg | awk '{print $3}')
 check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
 
-if [[ "$old_version" == "$version-dev"* ]]; then 
+if [[ "${old_version}" == "${version}-dev"* ]]; then 
       check_version_bigger="OK"
 fi
 
