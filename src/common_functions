@@ -56,14 +56,13 @@ else
 fi
 }
 
-
 get_dockerhub_buildhistory()
 {
  repo=$1
  number_history=${2:-10}
  
  if [ -n "$JWT_DOCKERHUB_TOKEN" ]; then  
-      curl_result=$( curl -s -I -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" --retry 5 --retry-delay 10 --max-time 15 -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=1&object=/api/repo/v1/repository/${repo}/")
+      curl_result=$( curl -s -I -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" --retry 5 --retry-delay 10 --max-time 15 -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=1&object=/api/repo/v1/repository/${repo}/")  || echo "Curl result code $?"
       if [ $(echo $curl_result | grep -c -i "401 unauthorized") -eq 1 ]; then
          #token has expired
          echo "DockerHub Token has expired, will unset it"
@@ -78,7 +77,7 @@ get_dockerhub_buildhistory()
 
  if [ -z "$JWT_DOCKERHUB_TOKEN" ]; then
       echo "No DockerHub token found, requesting one"
-      curl_result=$(curl -s -H "Content-Type: application/json" --retry 5 --retry-delay 10 --max-time 15 -X POST -d '{"username": "'${DOCKERHUB_USER}'", "password": "'${DOCKERHUB_PASS}'"}' https://hub.docker.com/v2/users/login/)
+      curl_result=$(curl -s -H "Content-Type: application/json" --retry 5 --retry-delay 10 --max-time 15 -X POST -d '{"username": "'${DOCKERHUB_USER}'", "password": "'${DOCKERHUB_PASS}'"}' https://hub.docker.com/v2/users/login/)  || echo "Curl result code $?"
       if [ $( echo $curl_result | grep -c "token" ) -eq 0 ]; then
           echo "There was a problem with the GitHub API request:"
           echo $curl_result
@@ -86,8 +85,12 @@ get_dockerhub_buildhistory()
       fi
       export JWT_DOCKERHUB_TOKEN=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin).get('token')")
  fi     
-
- buildhistory=$( curl -s -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" --retry 5 --retry-delay 10 --max-time 15 -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=${number_history}&object=/api/repo/v1/repository/${repo}/" )
+ buildhistory=""
+ while [ -z "$buildhistory" ]; do
+   buildhistory=$( curl -s -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" --retry 5 --retry-delay 10 --max-time 15 -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=${number_history}&object=/api/repo/v1/repository/${repo}/" )  || echo "Curl result code $?"
+   echo "Received error from dockerhub, will retry in 20s"
+   sleep 20
+ done
  
  if [ $( echo $buildhistory | grep -c "meta" ) -eq 0 ]; then
     echo "Check build history result, it looks like there is a problem"
