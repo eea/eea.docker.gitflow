@@ -10,6 +10,15 @@ if [ -z "$GIT_NAME" ]; then
  exit 1
 fi
 
+# for javascript repos
+if [ -n "${GIT_USER}" ] && [ -n "${NPM_TOKEN}" ]; then
+    exec /js-release.sh $@
+    exit 0
+fi
+
+
+
+
 GIT_ORG=${GIT_ORG:-'eea'}
 GIT_SRC=https://github.com/${GIT_ORG}/${GIT_NAME}.git
 
