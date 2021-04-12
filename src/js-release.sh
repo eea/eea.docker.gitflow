@@ -11,29 +11,26 @@ if [ -z "$GIT_TOKEN" ]; then
  echo "GIT token not given"
  exit 1
 fi
-	
-GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
-GIT_USER=${GIT_USER:-'eea-jenkins'}
-GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
 GIT_ORG=${GIT_ORG:-'eea'}
+GIT_USER=${GIT_USER:-'eea-jenkins'}
+GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
+GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
+
+
 GIT_SRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${GIT_NAME}.git
 
 
 git config --global user.name "${GIT_USERNAME}"
 git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
 
-if [ -n "$NPM_TOKEN" ]; then
-  echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
-fi
-
 git clone $GIT_SRC
 
 #if PR
-if [ -n "$GIT_CHANGE_ID" ] && [[ "$CHANGE_TARGET" == "master" ]] && [[ "$CHANGE_BRANCH" == "develop" ]]; then
+if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT_CHANGE_BRANCH" == "develop" ]]; then
          
 
-	git checkout $CHANGE_BRANCH
+	git checkout $GIT_CHANGE_BRANCH
 	existing_tags=$(git tag)
 
         if [ -z "$existing_tags" ]; then
@@ -42,14 +39,14 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$CHANGE_TARGET" == "master" ]] && [[ "$CHANGE_
 	     version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
 	     git tag -a $version -m "Initial release"
 	     git push origin tag $version
-	     git checkout $CHANGE_BRANCH     
+	     git checkout $GIT_CHANGE_BRANCH     
 	fi
         version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
         
 	#check if version was already updated
         git fetch --tags
 
-        if [ $(git diff --name-status ${CHANGE_BRANCH}..${CHANGE_TARGET} | wc -l) -eq 0 ]; then
+        if [ $(git diff --name-status ${GIT_CHANGE_BRANCH}..${GIT_CHANGE_TARGET} | wc -l) -eq 0 ]; then
 		echo "There are no changes to release"
 		exit 0
 	fi
@@ -78,6 +75,13 @@ fi
 
 
 if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
+
+        if [ -n "$NPM_TOKEN" ]; then
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+    	else
+  	    echo "Did no receive NPM_TOKEN variable, necessary for npm release"
+	    exit 1
+	fi
 
         version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
 

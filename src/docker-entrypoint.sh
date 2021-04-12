@@ -10,16 +10,26 @@ if [ -z "$GIT_NAME" ]; then
  exit 1
 fi
 
+GIT_ORG=${GIT_ORG:-'eea'}
+GIT_USER=${GIT_USER:-'eea-jenkins'}
+GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
+GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
+
+languages=$(curl -H "Accept: application/vnd.github.v3+json" -s  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/languages)
+
+
 # for javascript repos
-if [ -n "${GIT_USER}" ] && [ -n "${NPM_TOKEN}" ]; then
-    exec /js-release.sh $@
-    exit 0
+if [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/package.json | grep -i http.*200 | wc -l) -eq 1 ] && [ -n "$GIT_TOKEN" ] && [ -n "$GIT_BRANCH" ] ; then
+    #check language, if calculated
+    if  [ $(echo $languages | grep : | wc -l) -eq 0 ] || [ $(echo $languages | grep -i javascript | wc -l) -ne 0 ]; then
+    	exec /js-release.sh $@
+    	exit 0
+    fi
 fi
 
 
 
 
-GIT_ORG=${GIT_ORG:-'eea'}
 GIT_SRC=https://github.com/${GIT_ORG}/${GIT_NAME}.git
 
 if [ -z "$GIT_VERSIONFILE" ]; then
@@ -28,8 +38,6 @@ fi
 
 
 GIT_HISTORYFILE=${GIT_HISTORYFILE:-'docs/HISTORY.txt'}
-GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
-GIT_EMAIL=${GIT_EMAIL:-'eea-github@googlegroups.com'}
 EGGREPO_URL=${EGGREPO_URL:-'https://eggrepo.eea.europa.eu/'}
 PYPI_CHECK_URL=${PYPI_CHECK_URL:-'https://pypi.org/simple/'}
 KGS_GITNAME=${KGS_GITNAME:-'eea.docker.kgs'}
