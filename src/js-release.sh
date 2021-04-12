@@ -70,7 +70,8 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	             git commit -m "Automated release $version"
                      git push
 	     else
-	             git checkout -- CHANGELOG.md     
+	             echo "Did not find any new commits beside the automated ones, will not add them"
+		     git checkout -- CHANGELOG.md     
 	     fi
 	fi
         
@@ -88,6 +89,13 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
     	else
   	    echo "Did no receive NPM_TOKEN variable, necessary for npm release"
 	    exit 1
+	fi
+
+        git checkout $GIT_BRANCH
+
+        if [ -n "$GIT_COMMIT" ]; then
+              echo "Received commit as a variable, will checkout on it instead of the $GIT_BRANCH branch"
+	      git checkout $GIT_COMMIT
 	fi
 
         version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
