@@ -18,7 +18,7 @@ GIT_ORG=${GIT_ORG:-'eea'}
 GIT_USER=${GIT_USER:-'eea-jenkins'}
 GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
-
+GITHUB_TOKEN=${GIT_TOKEN}
 
 GIT_SRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${GIT_NAME}.git
 
