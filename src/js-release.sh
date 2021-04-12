@@ -2,6 +2,8 @@
 
 set -e
 
+echo "Starting javascript release script"
+
 if [ -z "$GIT_NAME" ] || [ -z "$GIT_BRANCH" ]; then
  echo "GIT repo name and branch not given"
  exit 1
@@ -26,9 +28,12 @@ git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
 
 git clone $GIT_SRC
 
+cd "$GIT_NAME"
+
 #if PR
 if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT_CHANGE_BRANCH" == "develop" ]]; then
          
+        echo "Starting pre-release on PULL REQUEST"
 
 	git checkout $GIT_CHANGE_BRANCH
 	existing_tags=$(git tag)
@@ -76,6 +81,8 @@ fi
 
 if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
+	echo "Starting release on github and npm"
+
         if [ -n "$NPM_TOKEN" ]; then
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
     	else
@@ -89,8 +96,9 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
         git fetch --tags
         
         if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
-             echo "Release already done, skipping tag creation"
+             echo "GitHub release already done, skipping tag creation"
         else
+	    echo "Starting GitHub release"
             release-it --no-git --no-npm -i patch --ci
         fi
 
@@ -103,11 +111,11 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	    #check if already published
            
 	    if [ $(npm view ${package_name}@$version) -ne 0 ]; then
-		echo "Package already published"
+		echo "NPM package already published"
                 exit 0
 	    fi 
 	fi
-
+        echo "Publishing npm package"
         npm publish --access=public
 
 fi
