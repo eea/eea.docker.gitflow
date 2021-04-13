@@ -114,7 +114,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
 	package_name=$(grep '"name"' package.json | awk -F'"' '{print $4}')
 
-	if [ $(npm search $package_name --json | grep "\"$package_name\"") -ne 0 ]; then
+	if [ $(npm search $package_name --json | grep "\"$package_name\"" | wc -l) -ne 0 ]; then
 
 	    #check if already published
            
