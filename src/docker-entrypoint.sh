@@ -17,18 +17,14 @@ GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
 languages=$(curl -H "Accept: application/vnd.github.v3+json" -s  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/languages)
 
-
 # for javascript repos
 if [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/package.json | grep -i http.*200 | wc -l) -eq 1 ] && [ -n "$GIT_TOKEN" ] && [ -n "$GIT_BRANCH" ] ; then
     #check language, if calculated
-    if  [ $(echo $languages | grep : | wc -l) -eq 0 ] || [ $(echo $languages | grep -i javascript | wc -l) -ne 0 ]; then
+    if  [ $(echo $languages | grep : | wc -l) -eq 0 ] || [ $(echo $languages | grep -i javascript | wc -l) -ne 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/setup.py | grep -i http.*200 | wc -l) -eq 0 ]; then
     	exec /js-release.sh $@
     	exit 0
     fi
 fi
-
-
-
 
 GIT_SRC=https://github.com/${GIT_ORG}/${GIT_NAME}.git
 
