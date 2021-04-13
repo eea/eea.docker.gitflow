@@ -118,7 +118,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
 	    #check if already published
            
-	    if [ $(npm view ${package_name}@$version) -ne 0 ]; then
+	    if [ $(npm view ${package_name}@$version | wc -l) -ne 0 ]; then
 		echo "NPM package already published"
                 exit 0
 	    fi 
