@@ -30,6 +30,9 @@ git clone $GIT_SRC
 
 cd "$GIT_NAME"
 
+cp /release-it.json .release-it.json
+
+
 #if PR
 if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT_CHANGE_BRANCH" == "develop" ]]; then
          
@@ -82,7 +85,9 @@ fi
 
 if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
+	
 	echo "Starting release on github and npm"
+        sed -i 's/"release": false,/"release": true,/' .release-it.json
 
         if [ -n "$NPM_TOKEN" ]; then
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
