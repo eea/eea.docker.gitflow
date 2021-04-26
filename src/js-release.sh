@@ -30,9 +30,6 @@ git clone $GIT_SRC
 
 cd "$GIT_NAME"
 
-cp /release-it.json .release-it.json
-echo ".release-it.json" >> .gitignore
-
 
 #if PR
 if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT_CHANGE_BRANCH" == "develop" ]]; then
@@ -63,7 +60,8 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
              echo "Start release with changelog update on new version"
-	     release-it --no-git.tag -i patch --ci
+	     cp /release-it.json .release-it.json
+             release-it --no-git.tag -i patch --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
@@ -88,7 +86,6 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
 	
 	echo "Starting release on github and npm"
-        sed -i 's/"release": false,/"release": true,/' .release-it.json
 
         if [ -n "$NPM_TOKEN" ]; then
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
@@ -113,7 +110,10 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
              echo "GitHub release already done, skipping tag creation"
         else
 	    echo "Starting GitHub release"
-            release-it --no-git --no-npm -i patch --ci
+            cp /release-it.json .release-it.json
+            sed -i 's/"release": false,/"release": true,/' .release-it.json
+
+	    release-it --no-git --no-npm -i patch --ci
         fi
 
 	#check if released
