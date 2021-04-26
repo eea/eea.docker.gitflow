@@ -31,6 +31,7 @@ git clone $GIT_SRC
 cd "$GIT_NAME"
 
 cp /release-it.json .release-it.json
+echo ".release-it.json" >> .gitignore
 
 
 #if PR
