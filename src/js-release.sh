@@ -51,10 +51,11 @@ $old_version" | sort --sort=version | tail -n 1 )
        echo "Will now update the version file"
        package_escaped=$(echo $3 | sed 's/\//\\\//g')
 
-       sed -i "s#\"$package_escaped\": \"old_version\"#\"$package_escaped\": \"$4\"#" $2
+       sed -i "s/\"$package_escaped\": \"old_version\"/\"$package_escaped\": \"$4\"/" $2
        git diff
        git add $2
        git commit -m "Automated release $3:$4" 
+       git push
        cd ..
        rm -rf frontend
 
