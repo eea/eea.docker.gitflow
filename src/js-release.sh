@@ -60,8 +60,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
              echo "Start release with changelog update on new version"
-	     cp /release-it.json .release-it.json
-             release-it --no-git.tag -i patch --ci
+             release-it --config /release-it.json --no-git.tag -i patch --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
@@ -110,10 +109,9 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
              echo "GitHub release already done, skipping tag creation"
         else
 	    echo "Starting GitHub release"
-            cp /release-it.json .release-it.json
-            sed -i 's/"release": false,/"release": true,/' .release-it.json
+            sed -i 's/"release": false,/"release": true,/' /release-it.json
 
-	    release-it --no-git --no-npm -i patch --ci
+	    release-it --config /release-it.json --no-git --no-npm -i patch --ci
         fi
 
 	#check if released
