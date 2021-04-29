@@ -105,7 +105,10 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
-	     exec $(grep after:bump /release-it.json | awk -F'"' '{print $4}')
+	     npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}')
+	     
+	     sh -c "$npx_command"
+	     
 	     if [ $(git diff CHANGELOG.md  | grep ^+- | grep -v 'Automated release' | wc -l ) -gt 0 ]; then
 		     # there were other commits besides the automated release ones"
  	             git add CHANGELOG.md
