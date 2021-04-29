@@ -138,7 +138,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	    exit 1
 	fi
 
-        git checkout $GIT_BRANCH
+        # git checkout $GIT_BRANCH
 
         if [ -n "$GIT_COMMIT" ]; then
               echo "Received commit as a variable, will checkout on it instead of the $GIT_BRANCH branch"
@@ -153,10 +153,11 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
         if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
              echo "GitHub release already done, skipping tag creation"
         else
-	    echo "Starting GitHub release"
+	    echo "Starting GitHub release of version ${version}"
+	    release-it -v
+	    
             sed -i 's/"release": false,/"release": true,/' /release-it.json
-
-	    release-it --config /release-it.json --github.release --no-git --no-npm  --no-increment --ci
+            release-it --no-increment --no-git --github.release --config /release-it.json --ci
         fi
 
 	#check if released
