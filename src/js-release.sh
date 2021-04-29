@@ -109,7 +109,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	     
 	     sh -c "$npx_command"
 	     
-	     if [ $(git diff CHANGELOG.md  | grep ^+- | grep -v 'Automated release' | wc -l ) -gt 0 ]; then
+	     if [ $(git diff CHANGELOG.md  | grep ^+- | grep -v '\- Automated release' | wc -l ) -gt 0 ]; then
 		     # there were other commits besides the automated release ones"
  	             git add CHANGELOG.md
 	             git commit -m "Automated release $version"
