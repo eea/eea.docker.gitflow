@@ -8,12 +8,12 @@
   "github": {
     "release": false,
     "releaseName": "${version}",
-    "releaseNotes": "npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -v ' Automated release '"
+    "releaseNotes": "npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -v '\\- Automated release '"
   },
   "npm": {
     "publish": false
   },
   "hooks": {
-    "after:bump": "npx auto-changelog --sort-commits date-desc  --commit-limit false -p; sed -i '/ Automated release /d' CHANGELOG.md"
+    "after:bump": "npx auto-changelog --sort-commits date-desc  --commit-limit false -p; sed -i '/\\- Automated release /d' CHANGELOG.md"
   }
 }
