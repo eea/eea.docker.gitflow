@@ -156,7 +156,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	    echo "Starting GitHub release"
             sed -i 's/"release": false,/"release": true,/' /release-it.json
 
-	    release-it --config /release-it.json --no-git --no-npm -i patch --ci
+	    release-it --config /release-it.json --github.release --no-git --no-npm  --no-increment --ci
         fi
 
 	#check if released
