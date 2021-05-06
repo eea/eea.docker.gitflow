@@ -181,11 +181,11 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
         echo "Checking and updating frontend dependencies in org:eea"
 
-        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code" | grep -iE 'full_name|path":' | awk -F'"' '{ print $4}' )
+        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | grep -iE 'full_name|path":' | awk -F'"' '{ print $4}' )
 	
 	if [ -z "$check_frontend" ]; then
              echo "Did not find any frontend dependencies"
-	     curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code"
+	     curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100"
              exit 0
 	fi
        
