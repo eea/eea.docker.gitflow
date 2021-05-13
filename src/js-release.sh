@@ -32,7 +32,7 @@ update_package_json()
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
        old_version=$(cat $2 |  python -c "import sys, json; dependencies=json.load(sys.stdin)['dependencies']; print dependencies.get(\"$3\",\"\") ")
-       if [[ "$old_version" == "None" ]]; then
+       if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] ; then
        	       echo "Did not find the package in dependecies list, skipping"
 	       return
        fi
@@ -46,8 +46,8 @@ update_package_json()
 	     echo "The released $3 version is already updated, finishing"
 	     return
        fi
-       if [ "$old_version" == "github:${GIT_ORG}/${GIT_NAME}*" ]; then
-             echo "Found dependency with github, will update to npm version"
+       if [[ "$old_version" == "github:${GIT_ORG}/${GIT_NAME}*" ]] || [[ "$old_version" == "${GIT_ORG}/${GIT_NAME}*" ]]; then
+             echo "Found dependency with github repo, will update to npm version"
 	     old_version=$(echo $old_version | sed 's/\//\\\//g')
 	 else    
 	 
