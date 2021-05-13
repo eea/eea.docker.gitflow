@@ -193,11 +193,11 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		if [ -z "$location" ]; then 
 			location=$i; 
 		else 
-			if [ $(echo $location | grep -i frontend | wc -l) -ne 0 ]; then
+			if [ $(echo $i | grep -i frontend | wc -l) -ne 0 ]; then
 				update_package_json $i $location $package_name $version
 				location=''
 			else
-				echo "Found $location, but does not contain frontend in it's name, so will skip it"
+				echo "Found $i, but does not contain frontend in it's name, so will skip it"
 				location=''
 			fi
 	        fi 
