@@ -38,15 +38,17 @@ update_package_json()
        fi
 
        echo "Found package version - $old_version"
-       if [[ "$old_version" == "^*" ]]; then 
+       if [[ "$old_version" == ^* ]]; then 
 	       echo "Package version is not fixed, will skip upgrade"; 
+	       return
        fi
 
        if [ "$4" == "$old_version" ]; then
 	     echo "The released $3 version is already updated, finishing"
 	     return
        fi
-       if [[ "$old_version" == "github:${GIT_ORG}/${GIT_NAME}*" ]] || [[ "$old_version" == "${GIT_ORG}/${GIT_NAME}*" ]]; then
+
+       if [[ "$old_version" == "github:${GIT_ORG}/${GIT_NAME}"* ]] || [[ "$old_version" == "${GIT_ORG}/${GIT_NAME}"* ]]; then
              echo "Found dependency with github repo, will update to npm version"
 	     old_version=$(echo $old_version | sed 's/\//\\\//g')
 	 else    
