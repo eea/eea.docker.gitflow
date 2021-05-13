@@ -19,8 +19,8 @@ languages=$(curl -H "Accept: application/vnd.github.v3+json" -s  https://api.git
 
 # for javascript repos
 if [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/package.json | grep -i http.*200 | wc -l) -eq 1 ] && [ -n "$GIT_TOKEN" ] && [ -n "$GIT_BRANCH" ] && [[ ! "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]]; then
-    #check language, if calculated
-    if  [ $(echo $languages | grep : | wc -l) -eq 0 ] || [ $(echo $languages | grep -i javascript | wc -l) -ne 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/setup.py | grep -i http.*200 | wc -l) -eq 0 ]; then
+    #check language, if calculated, check if not python - setup.py, check if not docker - Dockerfile
+    if  [ $(echo $languages | grep : | wc -l) -eq 0 ] || [ $(echo $languages | grep -i javascript | wc -l) -ne 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/setup.py | grep -i http.*200 | wc -l) -eq 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/Dockerfile | grep -i http.*200 | wc -l) -eq 0 ]; then
     	exec /js-release.sh $@
     	exit 0
     fi
