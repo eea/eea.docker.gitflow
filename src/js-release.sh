@@ -31,7 +31,12 @@ update_package_json()
        echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4"
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
-       old_version=$(cat $2 |  python -c "import sys, json; print json.load(sys.stdin)['dependencies'][\"$3\"]")
+       old_version=$(cat $2 |  python -c "import sys, json; dependencies=json.load(sys.stdin)['dependencies']; print dependencies.get(\"$3\",\"\") ")
+       if [ $old_version == "None" ]; then
+       	       echo "Did not find the package in dependecies list, skipping"
+	       return
+       fi
+
        echo "Found package version - $old_version"
        if [[ $old_version == ^* ]]; then 
 	       echo "Package version is not fixed, will skip upgrade"; 
@@ -41,12 +46,18 @@ update_package_json()
 	     echo "The released $3 version is already updated, finishing"
 	     return
        fi
-       biggest_version=$(echo "$4
+       if [ "$old_version" == "github:${GIT_ORG}/${GIT_NAME}*" ]; then
+             echo "Found dependency with github, will update to npm version"
+	     old_version=$(echo $old_version | sed 's/\//\\\//g')
+	 else    
+	 
+            biggest_version=$(echo "$4
 $old_version" | sort --sort=version | tail -n 1 )
 
-       if [ "$biggest_version" == "$old_version" ]; then
-             echo "The released $3 version is bigger than the released one, finishing"
-             return
+            if [ "$biggest_version" == "$old_version" ]; then
+                 echo "The released $3 version is bigger than the released one, finishing"
+                 return
+            fi
        fi
        echo "Will now update the version file"
        package_escaped=$(echo $3 | sed 's/\//\\\//g')
