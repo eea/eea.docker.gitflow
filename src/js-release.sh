@@ -32,13 +32,13 @@ update_package_json()
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
        old_version=$(cat $2 |  python -c "import sys, json; dependencies=json.load(sys.stdin)['dependencies']; print dependencies.get(\"$3\",\"\") ")
-       if [ $old_version == "None" ]; then
+       if [[ "$old_version" == "None" ]]; then
        	       echo "Did not find the package in dependecies list, skipping"
 	       return
        fi
 
        echo "Found package version - $old_version"
-       if [[ $old_version == ^* ]]; then 
+       if [[ "$old_version" == "^*" ]]; then 
 	       echo "Package version is not fixed, will skip upgrade"; 
        fi
 
