@@ -89,7 +89,7 @@ get_dockerhub_buildhistory()
  count=20
  while [ -z "$buildhistory" ] && [ "$count" -gt 0 ]; do
    buildhistory=$( curl -s -H "Authorization: JWT ${JWT_DOCKERHUB_TOKEN}" --retry 5 --retry-delay 10 --max-time 15 -XGET "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=${number_history}&object=/api/repo/v1/repository/${repo}/" )  || echo "Curl result code $?"
-   if [ -z "$buildhistory"]; then 
+   if [ -z "$buildhistory" ]; then 
    
      echo "Received nothing from dockerhub, will retry in 20s"
      echo  "https://hub.docker.com/api/audit/v1/action/?include_related=true&limit=${number_history}&object=/api/repo/v1/repository/${repo}/" 
