@@ -4,7 +4,6 @@ set -e
 
 export PYTHONIOENCODING=utf8
 
-
 if [ -z "$GIT_NAME" ]; then
  echo "GIT repo name not given"
  exit 1
@@ -15,6 +14,10 @@ GIT_USER=${GIT_USER:-'eea-jenkins'}
 GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
+if [[ "$LANGUAGE" == "javascript" ]; then
+    exec /js-release.sh $@
+fi
+
 languages=$(curl -H "Accept: application/vnd.github.v3+json" -s  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/languages)
 
 # for javascript repos
@@ -22,7 +25,6 @@ if [ ! $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents
     #check language, if calculated, check if not python - setup.py, check if not docker - Dockerfile
     if  [ $(echo $languages | grep : | wc -l) -eq 0 ] || [ $(echo $languages | grep -i javascript | wc -l) -ne 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/setup.py | grep -i http.*200 | wc -l) -eq 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/Dockerfile | grep -i http.*200 | wc -l) -eq 0 ]; then
     	exec /js-release.sh $@
-    	exit 0
     fi
 fi
 
