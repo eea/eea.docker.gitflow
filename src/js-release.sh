@@ -4,7 +4,7 @@ set -e
 
 echo "Starting javascript release script"
 
-if [ $GIT_NAME == "volto-addon-template" ]; then
+if [[ $GIT_NAME == "volto-addon-template" ]]; then
     echo "No release flow for templates, skipping all steps"
     exit 0
 fi    
