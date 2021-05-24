@@ -14,7 +14,7 @@ GIT_USER=${GIT_USER:-'eea-jenkins'}
 GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
-if [[ "$LANGUAGE" == "javascript" ]; then
+if [[ "$LANGUAGE" == "javascript" ]]; then
     exec /js-release.sh $@
 fi
 
