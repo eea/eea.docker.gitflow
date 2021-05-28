@@ -175,11 +175,16 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
         if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
              echo "GitHub release already done, skipping tag creation"
         else
-	    echo "Starting GitHub release of version ${version}"
-	    release-it -v
+	    #echo "Starting GitHub release of version ${version}"
+	    #release-it -v
 	    
-            sed -i 's/"release": false,/"release": true,/' /release-it.json
-            release-it --no-increment --no-git --github.release --config /release-it.json --ci
+            #sed -i 's/"release": false,/"release": true,/' /release-it.json
+            #release-it --no-increment --no-git --github.release --config /release-it.json --ci
+
+	    echo "Create release on $GIT_BRANCH using GitHub API"
+	    body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -v '\- Automated release ')
+	    curl   -X POST   -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN"  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases   -d "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  $body}"
+
         fi
 
 	#check if released
