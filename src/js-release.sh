@@ -32,7 +32,10 @@ GIT_SRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${GIT_NAME}.git
 
 update_package_json()
 {
-
+       if [[ ! $2 == "package.json" ]]; then 
+               echo "Dependency found in file $2, not package.json, skipping updaate"
+	       return
+       fi
        echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4"
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
@@ -66,13 +69,14 @@ $old_version" | sort --sort=version | tail -n 1 )
                  return
             fi
        fi
-       echo "Will now update the version file"
-       package_escaped=$(echo $3 | sed 's/\//\\\//g')
-
-       sed -i "s/\"$package_escaped\": \"$old_version\"/\"$package_escaped\": \"$4\"/" $2
+       echo "Will now update the version file and yarn.lock"
+       
+       yarn add -W $3@$4
+       
+       git status
        git diff
-       git add $2
-       git commit -m "Automated release $3:$4" 
+       git add package.json yarn.lock
+       git commit -m "Automated release $3@$4" 
        git push
        cd ..
        rm -rf frontend
