@@ -4,15 +4,24 @@ set -e
 
 export PYTHONIOENCODING=utf8
 
+export GIT_ORG=${GIT_ORG:-'eea'}
+export GIT_USER=${GIT_USER:-'eea-jenkins'}
+export GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
+export GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
+
+
+if [[ "$1" == *".sh" ]] || [[ "$1" == "/"* ]] || [[ "$1" == "./"* ]] ; then
+	if [ -f "$1" ]; then
+	    echo "Found script $1 as argument, will now run it"
+	    exec $@
+	fi
+fi
+
+
 if [ -z "$GIT_NAME" ]; then
  echo "GIT repo name not given"
  exit 1
 fi
-
-GIT_ORG=${GIT_ORG:-'eea'}
-GIT_USER=${GIT_USER:-'eea-jenkins'}
-GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
-GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
 if [[ "$LANGUAGE" == "javascript" ]]; then
     exec /js-release.sh $@
