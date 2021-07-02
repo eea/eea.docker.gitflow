@@ -72,7 +72,15 @@ $old_version" | sort --sort=version | tail -n 1 )
        echo "Will now update the version file and yarn.lock"
        
        yarn add -W $3@$4
-       
+
+       #Yarn takes a lot of time, will try pull, if it fails because of conflicts, start over"
+       pull_error=$(git pull 2>&1 | grep Aborting | wc -l)
+       if [ $pull_error -ne 0 ]; then
+          echo "There is a concurrency problem on repo $1, will cleanup and retry again"
+          cd ..
+          rm -rf frontend
+          update_package_json $1 $2 $3 $4
+       fi
        git status
        git diff
        git add package.json yarn.lock
