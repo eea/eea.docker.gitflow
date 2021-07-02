@@ -52,6 +52,11 @@ fi
 echo "List of projects on sonarqube linked with $SONARQUBE_TAG"
 echo $sonarqube_master
 
+if [ ! -f package.json ] && [ -n "$GIT_NAME" ]; then
+	wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/master/package.json"
+	echo "Did not find a package.json file, will download it from github for $GIT_NAME"
+fi
+
 
 package_addons=$(cat package.json | jq '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's/@eeacms\///' | sed 's/:asDefault//')
 
