@@ -99,13 +99,18 @@ for package in $package_addons; do
 			echo "Tag $SONARQUBE_TAG already exists, skipping Jenkinsfile update"
 		fi
 		rm $jenkins_file
-                curl -XPOST -u "${SONARQUBE_TOKEN}:" "${SONAR_HOST_URL}api/project_tags/set?project=$package-master&tags=${SONARQUBE_TAGS},master"
-                if [ $? -eq 0 ]; then
+		result=$(curl -XPOST -u "${SONARQUBE_TOKEN}:" "${SONAR_HOST_URL}api/project_tags/set?project=$package-master&tags=${SONARQUBE_TAGS},master")
+		if [ $(echo $result | grep error | wc -l ) -ne 0 ]; then
+			echo "Receive error when trying to update SonarQube tags"
+			echo $result
+		else
 			echo "Sonarqube tag updated succesfully on sonarqube, project $package-master"
 		fi
+
 	else
 		echo "Package $package already has correct tags on sonarqube, will skip it"
 	fi
+	echo "---------------------------------------------------------------------------------"
 done
 
 
