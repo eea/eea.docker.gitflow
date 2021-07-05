@@ -55,6 +55,8 @@ echo $sonarqube_master
 if [ ! -f package.json ] && [ -n "$GIT_NAME" ]; then
 	wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/master/package.json"
 	echo "Did not find a package.json file, will download it from github for $GIT_NAME"
+else
+	echo "Found package.json, will now extract the addons from it"
 fi
 
 
@@ -69,7 +71,7 @@ cd /tmp
 for package in $package_addons; do
 	package=$(echo $package | tr -d '"' )
         echo "Checking $package" 
-	if [ $(echo $sonarqube_master | grep -w "$package" | wc -l) -eq 0 ]; then
+	if [ $(echo $sonarqube_master | grep -w "\"$package\"" | wc -l) -eq 0 ]; then
 		#add in Jenkinsfile on develop, add in sonarqube
 		echo "Did not find the package in sonarqube with the $SONARQUBE_TAG tag, will try to set it"
 		jenkins_file=Jenkinsfile
