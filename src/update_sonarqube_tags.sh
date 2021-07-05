@@ -21,7 +21,9 @@ update_file()
 
      echo "Extracted current sha - $sha_file"
 
-     valid_curl_put_result "$GITHUBURL/contents/$3" "{\"message\": \"Add Sonarqube tag using frontend addons list\", \"sha\": ${sha_file}, \"branch\": \"$2\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat $3 | base64))\"}"
+     frontend=${GIT_NAME:-'frontend'}
+
+     valid_curl_put_result "$GITHUBURL/contents/$3" "{\"message\": \"Add Sonarqube tag using $frontend addons list\", \"sha\": ${sha_file}, \"branch\": \"$2\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat $3 | base64))\"}"
 
      if [ $? -eq 0 ]; then
 	     echo "$1, branch $2, $3 updated succesfully"
