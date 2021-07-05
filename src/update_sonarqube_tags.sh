@@ -36,6 +36,15 @@ if [ -z "$SONARQUBE_TOKEN" ] || [ -z "$SONARQUBE_TAG" ] || [ -z "$SONAR_HOST_URL
 	exit 1
 fi	
 
+
+if [[ $SONARQUBE_TAG =~ "," ]] || [[ $SONARQUBE_TAG =~ " " ]] || [[ $SONARQUBE_TAG =~ "/" ]] ; then
+        echo "SONARQUBE_TAG variable should not contain commas(,) spaces( ) or slashes(/)";
+        echo "Only one URL is supported per frontend"
+        echo "Instead of slash, please use the minus(-) character"
+        echo "The tag should be identical to the url that is in the Webscore table"
+        exit 1
+fi
+
 export GIT_ORG=${GIT_ORG:-'eea'}
 export GIT_USER=${GIT_USER:-'eea-jenkins'}
 export GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
