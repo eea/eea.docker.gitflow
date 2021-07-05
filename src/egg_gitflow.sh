@@ -434,7 +434,7 @@ $next_version - (unreleased)
 ---------------------------
 $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
-         valid_curl_get_result ${GITHUBURL}/refs/heads/develop sha
+         valid_curl_get_result ${GITHUBURL}/refs/heads/develop object.sha
          sha_develop=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
 
          valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat ${GIT_VERSIONFILE} | base64))\",\"encoding\": \"base64\" }" sha
