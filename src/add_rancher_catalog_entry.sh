@@ -140,7 +140,7 @@ echo "--------------------------------------------------------"
 
 
 # get sha from master
-valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
+valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
 sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
 
 # Create new Rancher Catalog entry

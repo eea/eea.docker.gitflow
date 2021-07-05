@@ -62,7 +62,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
      
 
-      valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
+      valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
       sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
       echo "Sha for master is $sha_master"
 

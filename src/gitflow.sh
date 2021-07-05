@@ -125,7 +125,7 @@ $latestTag2" | sort --sort=version | tail -n 1)
 
             if [ -n "$tree" ]; then
                 echo "Using tree [$tree]"
-	        valid_curl_get_result ${GITHUBURL}/refs/heads/master sha
+	        valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
                 sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
                 echo "Sha for master is $sha_master"
 
