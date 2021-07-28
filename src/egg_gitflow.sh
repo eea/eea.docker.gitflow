@@ -58,10 +58,16 @@ update_plone_config()
 PLONE_GITNAME=$1
 VERSIONS_PATH=$2
 EGG_NAME=${GIT_NAME}
+BRANCH_NAME=master
 
-echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH"
+if [ -n $3 ]; then
+    BRANCH_NAME=$3
+fi
+    
 
-curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}"  > versions.cfg
+echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH, on branch $BRANCH_NAME"
+
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}"  > versions.cfg
 
 
 if [ $(grep -c "\[versions\]" versions.cfg) -eq 0 ]; then
@@ -73,7 +79,7 @@ fi
 if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
   EGG_NAME=$(echo ${GIT_NAME} | sed 's/_/-/')
   if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
-    echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH}, skipping upgrade"
+    echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH} on branch $BRANCH_NAME, skipping upgrade"
     return
   fi
 fi
@@ -81,7 +87,7 @@ fi
 
 
 if [ $(grep -c "^${EGG_NAME} = $version$" versions.cfg) -eq 1 ]; then
-    echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version', skipping"
+    echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version' on branch $BRANCH_NAME, skipping"
     return
 fi
 
@@ -96,17 +102,17 @@ if [[ ! $check_version_bigger == "OK" ]]; then
       echo "${version} is smaller than the version from ${PLONE_GITNAME} - ${old_version}, skipping"
       return
 fi
-echo "Updating ${PLONE_GITNAME} versions file with released version on ${EGG_NAME}"
+echo "Updating ${PLONE_GITNAME} versions file on branch $BRANCH_NAME with released version on ${EGG_NAME}"
 
-valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" sha
+valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}" sha
 
 sha_versionfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
 
 sed -i "s/^${EGG_NAME} =.*/${EGG_NAME} = $version/" versions.cfg 
 
-valid_curl_put_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" 
+valid_curl_put_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\",\"branch\": \"${BRANCH_NAME}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" 
 
-echo "${PLONE_GITNAME} versions file updated succesfully with '${EGG_NAME} = $version'"
+echo "${PLONE_GITNAME} versions file on branch $BRANCH_NAME updated succesfully with '${EGG_NAME} = $version'"
 
 }
 
@@ -476,7 +482,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH}
       update_plone_config eea.docker.plone src/plone/versions.cfg
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg
-      update_plone_config eea.docker.plone.clms site.cfg
+      update_plone_config eea.docker.plone.clms site.cfg develop
     fi
 fi
 
