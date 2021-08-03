@@ -217,6 +217,8 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	if [ -z "$already_published" ]; then
 		echo "Publishing npm package"
                 npm publish --access=public
+		echo "Waiting for npm to sync their data for yarn before updating frontends"
+		sleep 30
         fi
 
         echo "Checking and updating frontend dependencies in org:eea"
