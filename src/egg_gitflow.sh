@@ -479,9 +479,9 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
     if [ ! -z "$EGGREPO_PASSWORD$PYPI_PASSWORD" ]; then
       # Updating versions.cfg
-      update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH}
-      update_plone_config eea.docker.plone src/plone/versions.cfg
-      update_plone_config eea.docker.plonesaas src/plone/versions.cfg
+      update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH} master
+      update_plone_config eea.docker.plone src/plone/versions.cfg master
+      update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
       update_plone_config eea.docker.plone.clms site.cfg develop
     fi
 fi
