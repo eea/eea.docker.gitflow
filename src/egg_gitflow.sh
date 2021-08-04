@@ -60,7 +60,7 @@ VERSIONS_PATH=$2
 EGG_NAME=${GIT_NAME}
 BRANCH_NAME=master
 
-if [ -n $3 ]; then
+if [ -n "$3" ]; then
     BRANCH_NAME=$3
 fi
     
