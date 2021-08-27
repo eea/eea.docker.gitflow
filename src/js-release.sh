@@ -225,7 +225,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
         echo "Checking and updating frontend dependencies in org:eea"
 
-        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | jq -c '.items[] | select( .repository.full_name | contains("frontend") ) |  .repository.full_name, .path '  | tr -d '"')
+        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | jq -r -c '.items[] | select( .repository.full_name | contains("frontend") ) |  .repository.full_name, .path ' )
 	
 	if [ -z "$check_frontend" ]; then
              echo "Did not find any frontend dependencies"
@@ -242,7 +242,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	done
 
 
-        check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq .items[].name  | tr -d '"')
+        check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].name )
 
        
 	for i in $( echo "$check_kitkat" ); do 
