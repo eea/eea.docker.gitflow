@@ -36,9 +36,11 @@ update_package_json()
                echo "Dependency found in file $2, not package.json, skipping updaate"
 	       return
        fi
-       echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4"
+       UPDATE_BRANCH="${5:-master}"
+       echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH"
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
+       git checkout $UPDATE_BRANCH
        old_version=$(cat $2 |  python -c "import sys, json; dependencies=json.load(sys.stdin)['dependencies']; print dependencies.get(\"$3\",\"\") ")
        if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] ; then
        	       echo "Did not find the package in dependecies list, skipping"
@@ -79,7 +81,7 @@ $old_version" | sort --sort=version | tail -n 1 )
           echo "There is a concurrency problem on repo $1, will cleanup and retry again"
           cd ..
           rm -rf frontend
-          update_package_json $1 $2 $3 $4
+          update_package_json $1 $2 $3 $4 $5
        fi
        git status
        git diff
@@ -223,28 +225,28 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
         echo "Checking and updating frontend dependencies in org:eea"
 
-        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | grep -iE 'full_name|path":' | awk -F'"' '{ print $4}' )
+        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | jq -c '.items[] | select( .repository.full_name | contains("frontend") ) |  .repository.full_name, .path ' )
 	
 	if [ -z "$check_frontend" ]; then
              echo "Did not find any frontend dependencies"
 	     curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100"
-             exit 0
 	fi
-       
+        repo=''
 	for i in $( echo "$check_frontend" ); do 
-		if [ -z "$location" ]; then 
-			location=$i; 
+		if [ -z "$repo" ]; then 
+			repo=$i; 
 		else 
-			if [ $(echo $i | grep -i frontend | wc -l) -ne 0 ]; then
-				update_package_json $i $location $package_name $version
-				location=''
-			else
-				echo "Found $i, but does not contain frontend in it's name, so will skip it"
-				location=''
-			fi
+			update_package_json $repo $i $package_name $version master
+			repo=''
 	        fi 
 	done
 
 
+        check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq .items[].name)
+
+       
+	for i in $( echo "$check_kitkat" ); do 
+		update_package_json $i package.json $package_name $version develop
+        done
 fi
 
