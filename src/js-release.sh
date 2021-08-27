@@ -242,7 +242,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	done
 
 
-        check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].name )
+        check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
 
        
 	for i in $( echo "$check_kitkat" ); do 
