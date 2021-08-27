@@ -225,20 +225,14 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
         echo "Checking and updating frontend dependencies in org:eea"
 
-        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | jq -r -c '.items[] | select( .repository.full_name | contains("frontend") ) |  .repository.full_name, .path ' )
+        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | jq -r -c '.items[] | select( .repository.full_name | contains("frontend") ) |  .repository.full_name' )
 	
 	if [ -z "$check_frontend" ]; then
              echo "Did not find any frontend dependencies"
 	     curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100"
 	fi
-        repo=''
 	for i in $( echo "$check_frontend" ); do 
-		if [ -z "$repo" ]; then 
-			repo=$i; 
-		else 
-			update_package_json $repo $i $package_name $version master
-			repo=''
-	        fi 
+			update_package_json $i package.json $package_name $version master
 	done
 
 
