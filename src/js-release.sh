@@ -226,7 +226,15 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		sleep 60
         fi
 
+
+        echo "Check if format is x.y.z"
+	if [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ]; then
+	    echo "Version format is not major.minor.patch, will skip frontend and kitkat update"
+	    exit 0
+	fi
+
         echo "Checking and updating frontend dependencies in org:eea"
+
 
         check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | jq -r -c '.items[] | select( .repository.full_name | contains("frontend") ) |  .repository.full_name' )
 	
