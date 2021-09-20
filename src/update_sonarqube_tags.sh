@@ -71,7 +71,7 @@ else
 fi
 
 
-package_addons=$(cat package.json | jq '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's/@eeacms\///' | sed 's/:asDefault//')
+package_addons=$(cat package.json | jq -r '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's/@eeacms\///' | sed 's/:asDefault//')
 
 echo "List of package addons"
 echo $package_addons
@@ -79,8 +79,21 @@ echo $package_addons
 cd /tmp
 
 
+echo "$package_addons" > /tmp/package_addons
+
 for package in $package_addons; do
-	package=$(echo $package | tr -d '"' )
+     if [[ $package =~ volto-[a-z\-]*kitkat ]]; then
+	     echo "Found $package ( kitkat type), will add it's addons"
+	     wget -q "https://raw.githubusercontent.com/eea/$package/develop/package.json"
+             cat package.json | jq -r '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's/@eeacms\///' | sed 's/:asDefault//' >> /tmp/package_addons 
+             rm package.json
+     fi
+done
+
+cat /tmp/package_addons | sort -n | uniq > /tmp/all_addons
+
+
+for package in $(cat /tmp/all_addons); do
         echo "Checking $package" 
 	if [ $(echo $sonarqube_master | grep -w "\"$package\"" | wc -l) -eq 0 ]; then
 		#add in Jenkinsfile on develop, add in sonarqube
