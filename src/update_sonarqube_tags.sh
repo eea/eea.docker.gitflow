@@ -71,7 +71,7 @@ else
 fi
 
 
-package_addons=$(cat package.json | jq -r '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's/@eeacms\///' | sed 's/:asDefault//')
+package_addons=$(cat package.json | jq -r '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's|@eeacms/||' | sed 's|:[a-zA-Z,]*||')
 
 echo "List of package addons"
 echo $package_addons
