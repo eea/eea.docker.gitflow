@@ -91,7 +91,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 
         echo "Check if format is x.y.z"
         if [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ]; then
-            echo "Version format is not major.minor.patch"
+            echo "Current package.json version $version format is not major.minor.patch"
 	    echo "Please manually update the format to a correct version ( major.minor.patch ) "
             exit 1
         fi
