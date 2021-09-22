@@ -85,7 +85,7 @@ for package in $package_addons; do
      if [[ $package =~ volto-[a-z\-]*kitkat ]]; then
 	     echo "Found $package ( kitkat type), will add it's addons"
 	     wget -q "https://raw.githubusercontent.com/eea/$package/develop/package.json"
-             cat package.json | jq -r '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's/@eeacms\///' | sed 's/:asDefault//' >> /tmp/package_addons 
+             cat package.json | jq -r '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's|@eeacms/||' | sed 's|:[a-zA-Z,]*||' >> /tmp/package_addons 
              rm package.json
      fi
 done
