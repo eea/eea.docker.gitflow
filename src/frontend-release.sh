@@ -2,7 +2,7 @@
 
 set -e
 
-echo "Starting javascript release script"
+echo "Starting frontend release script"
 
 if [[ $GIT_NAME == "volto-addon-template" ]]; then
     echo "No release flow for templates, skipping all steps"
@@ -27,8 +27,6 @@ GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 export GITHUB_TOKEN="${GIT_TOKEN}"
 
 GIT_SRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${GIT_NAME}.git
-
-
 
 git config --global user.name "${GIT_USERNAME}"
 git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
