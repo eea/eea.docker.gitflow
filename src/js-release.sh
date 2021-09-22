@@ -74,7 +74,10 @@ $old_version" | sort --sort=version | tail -n 1 )
        echo "Will now update the version file and yarn.lock"
        
        yarn add -W $3@$4
-
+       
+       echo "Also run deduplicate to fix broken yarn.lock file"
+       yarn-deduplicate yarn.lock
+       
        #Yarn takes a lot of time, will try pull, if it fails because of conflicts, start over"
        pull_error=$(git pull 2>&1 | grep Aborting | wc -l)
        if [ $pull_error -ne 0 ]; then
@@ -243,10 +246,10 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	     curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100"
 	fi
 	for i in $( echo "$check_frontend" ); do 
-	          if [[ $i == "eea/sustainability-frontend" ]] || [[ $i == "eea/climate-energy-frontend" ]] ; then
-		        update_package_json $i package.json $package_name $version develop
+	          if [[ $i == "eea/ims-frontend" ]] || [[ $i == "eea/clms-frontend" ]] ; then
+		        update_package_json $i package.json $package_name $version master
 		  else
-			update_package_json $i package.json $package_name $version master
+			update_package_json $i package.json $package_name $version develop
 		  fi
 	done
 
