@@ -23,14 +23,27 @@ if [ -z "$GIT_NAME" ]; then
  exit 1
 fi
 
+
+
+
 if [[ "$LANGUAGE" == "javascript" ]]; then
-    exec /js-release.sh $@
+
+	if [[ ! "${GIT_NAME,,}" =~ ^.*-frontend$ ]]; then
+		exec /js-release.sh $@
+	else
+		exec /frontend-release.sh $@
+	fi
 fi
 
 languages=$(curl -H "Accept: application/vnd.github.v3+json" -s  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/languages)
 
 # for javascript repos
 if [ ! $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/package.json | grep -i http.*404 | wc -l) -eq 1 ] && [ -n "$GIT_TOKEN" ] && [ -n "$GIT_BRANCH" ] && [[ ! "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]]; then
+
+    if [[ "${GIT_NAME,,}" =~ ^.*-frontend$ ]]; then
+                exec /frontend-release.sh $@
+    fi
+
     #check language, if calculated, check if not python - setup.py, check if not docker - Dockerfile
     if  [ $(echo $languages | grep : | wc -l) -eq 0 ] || [ $(echo $languages | grep -i javascript | wc -l) -ne 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/setup.py | grep -i http.*200 | wc -l) -eq 0 ] && [ $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/Dockerfile | grep -i http.*200 | wc -l) -eq 0 ]; then
     	exec /js-release.sh $@

@@ -70,6 +70,8 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	        git push
 	fi
 
+        #echo "Update yarn.lock"
+
 	echo "Starting pre-release on PULL REQUEST"
 
         if [ -z "$existing_tags" ]; then
