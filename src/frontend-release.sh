@@ -113,7 +113,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
                 git commit -m "Automated update of yarn.lock"
              fi
 
-	     release-it minor --config /release-it.json --no-git.tag -i patch --ci
+	     release-it version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}') --config /release-it.json --no-git.tag -i patch --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
