@@ -68,21 +68,6 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	        git push
 	fi
 
-        echo "Update yarn.lock"
-
-        yarn
-
-	echo "Running yarn-deduplicate"
-
-	yarn-deduplicate yarn.lock
-
-	if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
-		echo "Found changes in yarn.lock, will now update it"
-		git add yarn.lock
-		git commit -m "Automated update of yarn.lock"
-                git push
-	fi
-
 	echo "Starting pre-release on PULL REQUEST"
 
         if [ -z "$existing_tags" ]; then
@@ -114,7 +99,21 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
              echo "Start release with changelog update on new version"
-             release-it minor --config /release-it.json --no-git.tag -i patch --ci
+             echo "Update yarn.lock"
+
+             yarn
+
+             echo "Running yarn-deduplicate"
+
+             yarn-deduplicate yarn.lock
+
+             if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
+                echo "Found changes in yarn.lock, will now update it"
+                git add yarn.lock
+                git commit -m "Automated update of yarn.lock"
+             fi
+
+	     release-it minor --config /release-it.json --no-git.tag -i patch --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
