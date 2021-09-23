@@ -28,7 +28,7 @@ fi
 
 if [[ "$LANGUAGE" == "javascript" ]]; then
 
-	if [[ ! "${GIT_NAME,,}" =~ ^.*-frontend$ ]]; then
+	if [[ ! "${GIT_NAME,,}" =~ ^.*frontend$ ]]; then
 		exec /js-release.sh $@
 	else
 		exec /frontend-release.sh $@
@@ -40,7 +40,7 @@ languages=$(curl -H "Accept: application/vnd.github.v3+json" -s  https://api.git
 # for javascript repos
 if [ ! $(curl  -Is  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/contents/package.json | grep -i http.*404 | wc -l) -eq 1 ] && [ -n "$GIT_TOKEN" ] && [ -n "$GIT_BRANCH" ] && [[ ! "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]]; then
 
-    if [[ "${GIT_NAME,,}" =~ ^.*-frontend$ ]]; then
+    if [[ "${GIT_NAME,,}" =~ ^.*frontend$ ]]; then
                 exec /frontend-release.sh $@
     fi
 
