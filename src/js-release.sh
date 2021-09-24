@@ -152,7 +152,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	     sh -c "$npx_command"
 	     sed -i '/\- Automated release /d' CHANGELOG.md
 	     
-	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -v '\- Automated release' | wc -l ) -gt 0 ]; then
+	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -v '\- Automated release' | grep -v 'Add Sonarqube tag using .* addons list' | wc -l ) -gt 0 ]; then
 		     # there were other commits besides the automated release ones"
  	             git add CHANGELOG.md
 	             git commit -m "Automated release $version"
@@ -202,7 +202,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
             #release-it --no-increment --no-git --github.release --config /release-it.json --ci
 
 	    echo "Create release on $GIT_BRANCH using GitHub API"
-	    body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -v '\- Automated release ' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
+	    body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -v '\- Automated release ' | grep -v 'Add Sonarqube tag using .* addons list' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
 	    
 	    curl   -X POST   -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN"  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases -d "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  \"$body\"}" 
 
