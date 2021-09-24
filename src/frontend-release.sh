@@ -97,7 +97,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
         fi
 
 
-	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
+	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ] || [ $(git tag | grep ^v${version}$ | wc -l) -eq 1 ]; then
              echo "Start release with changelog update on new version"
              echo "Update yarn.lock"
 
