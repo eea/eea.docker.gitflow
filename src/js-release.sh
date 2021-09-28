@@ -241,7 +241,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
         echo "Checking and updating frontend dependencies in org:eea"
 
-        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name' )
+        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
 	
 	for i in $( echo "$check_frontend" ); do 
 	    update_package_json $i package.json $package_name $version develop
