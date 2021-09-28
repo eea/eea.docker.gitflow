@@ -32,19 +32,22 @@ GIT_SRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${GIT_NAME}.git
 
 update_package_json()
 {
-       if [[ ! $2 == "package.json" ]]; then 
-               echo "Dependency found in file $2, not package.json, skipping updaate"
-	       return
-       fi
        UPDATE_BRANCH="${5:-master}"
        echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH"
+       
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
        git checkout $UPDATE_BRANCH
+       
+       if [ ! -f "package.json" ]; then
+          echo "Repository does not contain package.json, skipping"
+	  return
+       fi
+       
        old_version=$(cat $2 |  python -c "import sys, json; dependencies=json.load(sys.stdin)['dependencies']; print dependencies.get(\"$3\",\"\") ")
        if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] ; then
        	       echo "Did not find the package in dependecies list, skipping"
-	       return
+       	       return
        fi
 
        echo "Found package version - $old_version"
@@ -238,27 +241,16 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
         echo "Checking and updating frontend dependencies in org:eea"
 
-
-        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100" | jq -r -c '.items[] | select( .repository.full_name | contains("frontend") ) |  .repository.full_name' )
+        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name' )
 	
-	if [ -z "$check_frontend" ]; then
-             echo "Did not find any frontend dependencies"
-	     curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100"
-	fi
 	for i in $( echo "$check_frontend" ); do 
-	          if [[ $i == "eea/ims-frontend" ]]; then
-		        update_package_json $i package.json $package_name $version master
-		  else
-			update_package_json $i package.json $package_name $version develop
-		  fi
-	done
-
+	    update_package_json $i package.json $package_name $version develop
+        done
 
         check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
-
        
 	for i in $( echo "$check_kitkat" ); do 
-		update_package_json $i package.json $package_name $version develop
+            update_package_json $i package.json $package_name $version develop
         done
 fi
 
