@@ -246,7 +246,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	     curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea filename:package.json frontend \"$package_name\"" "https://api.github.com/search/code?per_page=100"
 	fi
 	for i in $( echo "$check_frontend" ); do 
-	          if [[ $i == "eea/ims-frontend" ]] || [[ $i == "eea/clms-frontend" ]] ; then
+	          if [[ $i == "eea/ims-frontend" ]]; then
 		        update_package_json $i package.json $package_name $version master
 		  else
 			update_package_json $i package.json $package_name $version develop
