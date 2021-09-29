@@ -113,16 +113,16 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
                 git commit -m "Automated update of yarn.lock"
              fi
 
-	     release-it version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}') --config /frontend-release-it.json --no-git.tag -i patch --ci
+	     release-it version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}') --config /release-it.json --no-git.tag -i patch --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
 	     npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
 	     
 	     sh -c "$npx_command"
-	     sed -i "/\- Automated release $version/d" CHANGELOG.md
+	     sed -i '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]/d' CHANGELOG.md
 	     
-	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -v "\- Automated release $version" | wc -l ) -gt 0 ]; then
+	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | | grep -Eiv '\- Automated release [0-9\.]+|Add Sonarqube tag using .* addons list|jenkins|yarn' | wc -l ) -gt 0 ]; then
 		     # there were other commits besides the automated release ones"
  	             git add CHANGELOG.md
 	             git commit -m "Automated release $version"
@@ -165,10 +165,10 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	    #release-it -v
 	    
             #sed -i 's/"release": false,/"release": true,/' /release-it.json
-            #release-it --no-increment --no-git --github.release --config /frontend-release-it.json --ci
+            #release-it --no-increment --no-git --github.release --config /release-it.json --ci
 
 	    echo "Create release on $GIT_BRANCH using GitHub API"
-	    body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -v "\- Automated release $version" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
+	    body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -Eiv '\- Automated release [0-9\.]+|Add Sonarqube tag using .* addons list|jenkins|yarn' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
 	    
 	    curl   -X POST   -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN"  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases -d "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  \"$body\"}" 
 
