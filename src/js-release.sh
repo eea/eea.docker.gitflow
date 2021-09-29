@@ -95,7 +95,7 @@ $old_version" | sort --sort=version | tail -n 1 )
        if [ $(grep "yarn.lock" .gitignore | wc -l ) -eq 0 ]; then
            git add yarn.lock
        fi
-       git commit -m "Automated release $3@$4" 
+       git commit -m "Release $3@$4" 
        git push
        cd ..
        rm -rf frontend
