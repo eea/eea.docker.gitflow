@@ -154,6 +154,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	     
 	     sh -c "$npx_command"
 	     sed -i '/\- Automated release /d' CHANGELOG.md
+	     sed -i '/Add Sonarqube tag using .* addons list /d' CHANGELOG.md
 	     
 	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -v '\- Automated release' | grep -v 'Add Sonarqube tag using .* addons list' | wc -l ) -gt 0 ]; then
 		     # there were other commits besides the automated release ones"
