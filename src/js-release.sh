@@ -44,36 +44,33 @@ update_package_json()
 	  return
        fi
        
-       old_version=$(cat $2 |  python -c "import sys, json; dependencies=json.load(sys.stdin)['dependencies']; print dependencies.get(\"$3\",\"\") ")
-       if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] ; then
+       old_version=$(jq -r ".dependencies | .\"$3\"" package.json )
+       
+       if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] || [[ "$old_version" == "null" ]] ; then
        	       echo "Did not find the package in dependecies list, skipping"
        	       return
        fi
 
        echo "Found package version - $old_version"
-       if [[ "$old_version" == ^* ]]; then 
-	       echo "Package version is not fixed, will skip upgrade"; 
-	       return
-       fi
 
        if [ "$4" == "$old_version" ]; then
 	     echo "The released $3 version is already updated, finishing"
 	     return
        fi
-
-       if [[ "$old_version" == "github:${GIT_ORG}/${GIT_NAME}"* ]] || [[ "$old_version" == "${GIT_ORG}/${GIT_NAME}"* ]]; then
-             echo "Found dependency with github repo, will update to npm version"
-	     old_version=$(echo $old_version | sed 's/\//\\\//g')
-	 else    
-	 
-            biggest_version=$(echo "$4
+       echo "Checking prerequisites"
+       if [ $(echo $old_version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ]; then
+	    echo "Version format ($old_version) is not fixed to major.minor.patch, will not automatically upgrade it, finishing"
+	    return
+       fi
+       
+       biggest_version=$(echo "$4
 $old_version" | sort --sort=version | tail -n 1 )
 
-            if [ "$biggest_version" == "$old_version" ]; then
+       if [[ "$biggest_version" == "$old_version" ]]; then
                  echo "The released $3 version is bigger than the released one, finishing"
                  return
-            fi
        fi
+       echo "Old version $old_version is smaller than the released version"
        echo "Will now update the version file and yarn.lock"
        
        yarn add -W $3@$4
