@@ -33,6 +33,12 @@ GIT_SRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${GIT_NAME}.git
 update_package_json()
 {
        UPDATE_BRANCH="${5:-master}"
+       
+       if [[ "$1" == "eea/volto-frontend-template" ]]; then
+            echo "Skipping frontend template"
+	    return
+       fi
+       
        echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH"
        
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
