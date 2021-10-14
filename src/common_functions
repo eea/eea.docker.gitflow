@@ -69,10 +69,12 @@ get_dockerhub_buildhistory()
          unset JWT_DOCKERHUB_TOKEN
          JWT_DOCKERHUB_TOKEN=
       elif [ $(echo $curl_result | grep -c -i "200 OK") -eq 0 ]; then
-         echo "DockebHub error, will exit"
+         echo "DockebHub error, will retry after 5 minutes"
          echo $curl_result
-         exit 1
-      fi
+         sleep 300
+         get_dockerhub_buildhistory $1 $2
+         return
+     fi
  fi
 
  if [ -z "$JWT_DOCKERHUB_TOKEN" ]; then
