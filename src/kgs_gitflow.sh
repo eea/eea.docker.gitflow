@@ -60,7 +60,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           exit 1
       fi
 
-      sha_file=$(echo $curl_result |  jq -r '.sha // empty'
+      sha_file=$(echo $curl_result |  jq -r '.sha // empty')
 
       sed -i "s/^    EEA_KGS_VERSION=.*/    EEA_KGS_VERSION=$version/" Dockerfile
 

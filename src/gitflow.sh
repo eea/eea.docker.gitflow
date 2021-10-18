@@ -112,7 +112,7 @@ $latestTag2" | sort --sort=version | tail -n 1)
                     
 
                   valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat $dependency | base64))\",\"encoding\": \"base64\" }" sha
-                  sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty'
+                  sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty')
 		  
 		  echo "Created blob for Dockerfile -- $sha_dockerfile"
 		  if [ -n "$tree" ]; then
@@ -130,11 +130,11 @@ $latestTag2" | sort --sort=version | tail -n 1)
                 echo "Sha for master is $sha_master"
 
                 valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [$tree]}" sha
-                sha_newtree=$(echo $curl_result |  jq -r '.sha // empty'
+                sha_newtree=$(echo $curl_result |  jq -r '.sha // empty')
                 echo "Created a github tree - $sha_newtree"
 
                 valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Release $version\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
-                sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty'
+                sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty')
                 echo "Added a new commit - $sha_new_commit"
        
                 # update master to commit
@@ -282,7 +282,7 @@ $old_version" | sort  --sort=version | tail -n 1)
 
                 valid_curl_get_result "$GITHUBURL/contents/${DOCKERFILE_PATH}?ref=${DEP[3]}" sha
 
-                sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty'
+                sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty')
 
                 sed -i "s#^FROM ${DOCKERHUB_REPO}.*#FROM ${DOCKERHUB_REPO}\:$version#g" /tmp/Dockerfile
 

@@ -19,7 +19,7 @@ update_file()
 
  valid_curl_get_result "$url?ref=${GIT_CHANGE_BRANCH}" sha
 
- sha_file=$(echo $curl_result |  jq -r '.sha // empty'
+ sha_file=$(echo $curl_result |  jq -r '.sha // empty')
  
  valid_curl_put_result $url "{\"message\": \"${message}\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"branch\": \"${GIT_CHANGE_BRANCH}\", \"content\": \"$(printf '%s' $(cat $location | base64))\"}"
 
@@ -106,7 +106,7 @@ echo "Updating ${PLONE_GITNAME} versions file on branch $BRANCH_NAME with releas
 
 valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}" sha
 
-sha_versionfile=$(echo $curl_result |  jq -r '.sha // empty'
+sha_versionfile=$(echo $curl_result |  jq -r '.sha // empty')
 
 sed -i "s/^${EGG_NAME} =.*/${EGG_NAME} = $version/" versions.cfg 
 
@@ -444,21 +444,21 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
          sha_develop=$(echo $curl_result |  jq -r '.object.sha // empty'
 
          valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat ${GIT_VERSIONFILE} | base64))\",\"encoding\": \"base64\" }" sha
-         sha_version=$(echo $curl_result |  jq -r '.sha // empty'
+         sha_version=$(echo $curl_result |  jq -r '.sha // empty')
 
 
          valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat ${GIT_HISTORYFILE} | base64))\",\"encoding\": \"base64\" }" sha
-         sha_history=$(echo $curl_result |  jq -r '.sha // empty'
+         sha_history=$(echo $curl_result |  jq -r '.sha // empty')
 
          valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_develop}\",\"tree\": [{\"path\": \"${GIT_VERSIONFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_version}\" }, { \"path\": \"${GIT_HISTORYFILE}\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_history}\" }]}" sha
 
-         sha_newtree=$(echo $curl_result |  jq -r '.sha // empty'
+         sha_newtree=$(echo $curl_result |  jq -r '.sha // empty')
 
          # create commit
 
          valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Back to devel\", \"parents\": [\"${sha_develop}\"], \"tree\": \"${sha_newtree}\"}"  sha
 
-         sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty'
+         sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty')
 
 
          # update branch to commit

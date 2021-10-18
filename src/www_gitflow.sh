@@ -54,10 +54,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
       GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${WWW_GITNAME}/git
 
       valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat Dockerfile | base64))\",\"encoding\": \"base64\" }" sha
-      sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty'
+      sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty')
       echo "Created blob for Dockerfile -- $sha_dockerfile"
       valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat devel/Dockerfile | base64))\",\"encoding\": \"base64\" }" sha
-      sha_devdockerfile=$(echo $curl_result |  jq -r '.sha // empty'
+      sha_devdockerfile=$(echo $curl_result |  jq -r '.sha // empty')
       echo "Created blob for devel/Dockerfile -- $sha_devdockerfile"
 
      
@@ -68,12 +68,12 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
 
       valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"Dockerfile\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_dockerfile}\" }, { \"path\": \"devel/Dockerfile\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_devdockerfile}\" }]}" sha
-      sha_newtree=$(echo $curl_result |  jq -r '.sha // empty'
+      sha_newtree=$(echo $curl_result |  jq -r '.sha // empty')
    
       echo "Created a github tree - $sha_newtree"
      
       valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Release $version\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
-      sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty'
+      sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty')
      
       echo "Added a new commit - $sha_new_commit"
 
