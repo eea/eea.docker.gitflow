@@ -126,7 +126,7 @@ $latestTag2" | sort --sort=version | tail -n 1)
             if [ -n "$tree" ]; then
                 echo "Using tree [$tree]"
 	        valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
-                sha_master=$(echo $curl_result |  jq -r '.object.sha // empty'
+                sha_master=$(echo $curl_result |  jq -r '.object.sha // empty')
                 echo "Sha for master is $sha_master"
 
                 valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [$tree]}" sha
