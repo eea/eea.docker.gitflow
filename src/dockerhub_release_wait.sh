@@ -102,10 +102,10 @@ try:
   build_tag = '$DOCKERHUB_NAME'
   for res in data_dict['objects']:
     if res['build_tag'] == build_tag:
-      print '%s' % res['state']
+      print('%s' % res['state'])
       break
 except:
-  print 'Error parsing DockerHub API response %s' % sys.stdin
+  print('Error parsing DockerHub API response %s' % sys.stdin)
 ")
         if [[ ! $build_status == "Pending" ]] && [[ ! $build_status == "In progress" ]] && [[ ! $build_status == "Success" ]] && [ $wait_in_case_of_error -gt 0 ]; then
 		echo "Build  $DOCKERHUB_REPO:$DOCKERHUB_NAME failed on DockerHub ( status $build_status), will wait $wait_in_case_of_error in case it will be ok"

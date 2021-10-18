@@ -85,7 +85,7 @@ get_dockerhub_buildhistory()
           echo $curl_result
           exit 1
       fi
-      export JWT_DOCKERHUB_TOKEN=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin).get('token')")
+      export JWT_DOCKERHUB_TOKEN=$(echo $curl_result | jq -r '.token // empty' )
  fi     
  buildhistory=""
  count=20

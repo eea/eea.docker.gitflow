@@ -141,7 +141,7 @@ echo "--------------------------------------------------------"
 
 # get sha from master
 valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
-sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+sha_master=$(echo $curl_result |  jq -r '.object.sha // empty'
 
 # Create new Rancher Catalog entry
 if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
@@ -172,14 +172,14 @@ for res in data_dict['tree']:
   # echo $tree_list  
   valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": $tree_list}" sha
 
-  sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+  sha_newtree=$(echo $curl_result |  jq -r '.sha // empty'
 
 
   # create commit
 
   valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Prepare for release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
 
-  sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+  sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty'
 
 
   # update master to commit
@@ -217,26 +217,26 @@ fi
 #create blobs for changed files
 
 valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat config.yml | base64))\",\"encoding\": \"base64\" }" sha
-sha_config=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+sha_config=$(echo $curl_result |  jq -r '.sha // empty'
 
 valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat $nextdir/$DOCKER_COMPOSE | base64))\",\"encoding\": \"base64\" }" sha
-sha_docker_compose=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+sha_docker_compose=$(echo $curl_result |  jq -r '.sha // empty'
 
 valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat  $nextdir/rancher-compose.yml | base64))\",\"encoding\": \"base64\" }" sha
-sha_rancher_compose=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+sha_rancher_compose=$(echo $curl_result |  jq -r '.sha // empty'
 
 # add in tree copies
 
 valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"$RANCHER_CATALOG_PATH/$nextdir/$DOCKER_COMPOSE\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_docker_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/$nextdir/rancher-compose.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_rancher_compose}\" }, { \"path\": \"$RANCHER_CATALOG_PATH/config.yml\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_config}\" }]}" sha
 
-sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+sha_newtree=$(echo $curl_result |  jq -r '.sha // empty'
 
 
 # create commit
 
 valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Release of $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
 
-sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty'
 
 
 # update master to commit

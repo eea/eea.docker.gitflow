@@ -20,14 +20,14 @@ Example:
 
 """
 
-from __future__ import print_function
+
 import sys
 import json
 import contextlib
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from distutils.version import StrictVersion
 from docutils.core import publish_doctree
-from StringIO import StringIO
+from io import StringIO
 
 SOURCES = 'https://raw.githubusercontent.com/eea/eea.docker.kgs/master/src/plone/sources.cfg'
 KGS_VERSION = 'https://raw.githubusercontent.com/eea/eea.docker.kgs/{version}/src/plone/versions.cfg'
@@ -36,7 +36,7 @@ OLD_VERSION = "https://raw.githubusercontent.com/eea/eea.plonebuildout.core/mast
 def pullVersions(url):
     """ Compute versions
     """
-    with contextlib.closing(urllib2.urlopen(url)) as versionsFile:
+    with contextlib.closing(urllib.request.urlopen(url)) as versionsFile:
         for line in versionsFile:
             if line.startswith("#"):
                 continue
@@ -61,7 +61,7 @@ def pullVersions(url):
 def pullSources(url):
     """ Compute locations
     """
-    with contextlib.closing(urllib2.urlopen(url)) as sourcesFile:
+    with contextlib.closing(urllib.request.urlopen(url)) as sourcesFile:
         for line in sourcesFile:
             if line.startswith("#"):
                 continue
@@ -142,8 +142,8 @@ def main():
             "HISTORY.txt"]:
 
             try:
-                response = urllib2.urlopen("%s/%s" % (source, structure))
-            except urllib2.HTTPError:
+                response = urllib.request.urlopen("%s/%s" % (source, structure))
+            except urllib.error.HTTPError:
                 continue
             else:
                 break

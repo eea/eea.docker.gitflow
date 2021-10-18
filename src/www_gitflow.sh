@@ -21,7 +21,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
        
       skip_release=0
       valid_curl_get_result https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/releases/latest tag_name
-      version=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['tag_name']")
+      version=$(echo $curl_result |  jq -r '.tag_name // empty'
   
       echo "Found KGS latest release - $version"
       
@@ -54,26 +54,26 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
       GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${WWW_GITNAME}/git
 
       valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat Dockerfile | base64))\",\"encoding\": \"base64\" }" sha
-      sha_dockerfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+      sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty'
       echo "Created blob for Dockerfile -- $sha_dockerfile"
       valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat devel/Dockerfile | base64))\",\"encoding\": \"base64\" }" sha
-      sha_devdockerfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+      sha_devdockerfile=$(echo $curl_result |  jq -r '.sha // empty'
       echo "Created blob for devel/Dockerfile -- $sha_devdockerfile"
 
      
 
       valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
-      sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+      sha_master=$(echo $curl_result |  jq -r '.object.sha // empty'
       echo "Sha for master is $sha_master"
 
 
       valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [{\"path\": \"Dockerfile\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_dockerfile}\" }, { \"path\": \"devel/Dockerfile\", \"mode\": \"100644\", \"type\": \"blob\", \"sha\": \"${sha_devdockerfile}\" }]}" sha
-      sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+      sha_newtree=$(echo $curl_result |  jq -r '.sha // empty'
    
       echo "Created a github tree - $sha_newtree"
      
       valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Release $version\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
-      sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+      sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty'
      
       echo "Added a new commit - $sha_new_commit"
 

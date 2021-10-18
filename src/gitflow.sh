@@ -112,7 +112,7 @@ $latestTag2" | sort --sort=version | tail -n 1)
                     
 
                   valid_curl_post_result ${GITHUBURL}/blobs "{\"content\": \"$(printf '%s' $(cat $dependency | base64))\",\"encoding\": \"base64\" }" sha
-                  sha_dockerfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+                  sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty'
 		  
 		  echo "Created blob for Dockerfile -- $sha_dockerfile"
 		  if [ -n "$tree" ]; then
@@ -126,15 +126,15 @@ $latestTag2" | sort --sort=version | tail -n 1)
             if [ -n "$tree" ]; then
                 echo "Using tree [$tree]"
 	        valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
-                sha_master=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['object']['sha']")
+                sha_master=$(echo $curl_result |  jq -r '.object.sha // empty'
                 echo "Sha for master is $sha_master"
 
                 valid_curl_post_result  ${GITHUBURL}/trees "{\"base_tree\": \"${sha_master}\",\"tree\": [$tree]}" sha
-                sha_newtree=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+                sha_newtree=$(echo $curl_result |  jq -r '.sha // empty'
                 echo "Created a github tree - $sha_newtree"
 
                 valid_curl_post_result   ${GITHUBURL}/commits "{\"message\": \"Release $version\", \"parents\": [\"${sha_master}\"], \"tree\": \"${sha_newtree}\"}"  sha
-                sha_new_commit=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+                sha_new_commit=$(echo $curl_result |  jq -r '.sha // empty'
                 echo "Added a new commit - $sha_new_commit"
        
                 # update master to commit
@@ -282,7 +282,7 @@ $old_version" | sort  --sort=version | tail -n 1)
 
                 valid_curl_get_result "$GITHUBURL/contents/${DOCKERFILE_PATH}?ref=${DEP[3]}" sha
 
-                sha_dockerfile=$(echo $curl_result |  python -c "import sys, json; print json.load(sys.stdin)['sha']")
+                sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty'
 
                 sed -i "s#^FROM ${DOCKERHUB_REPO}.*#FROM ${DOCKERHUB_REPO}\:$version#g" /tmp/Dockerfile
 
@@ -333,10 +333,10 @@ try:
   build_tag = 'latest'
   for res in data_dict['objects']:
     if res['build_tag'] == build_tag:
-      print '%s' % res['state']
+      print('%s' % res['state'])
       break
 except:
-  print 'Error parsing DockerHub API response %s' % sys.stdin
+  print('Error parsing DockerHub API response %s' % sys.stdin)
 ")
         if [[ $build_status == "Failed" ]] ; then
                 echo "Build  ${TRIG[0]}:latest failed on DockerHub, will resubmit it"
