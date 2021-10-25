@@ -21,7 +21,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
        
       skip_release=0
       valid_curl_get_result https://api.github.com/repos/${GIT_ORG}/${KGS_GITNAME}/releases/latest tag_name
-      version=$(echo $curl_result |  jq -r '.tag_name // empty'
+      version=$(echo $curl_result |  jq -r '.tag_name // empty' )
   
       echo "Found KGS latest release - $version"
       
@@ -63,7 +63,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
      
 
       valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
-      sha_master=$(echo $curl_result |  jq -r '.object.sha // empty'
+      sha_master=$(echo $curl_result |  jq -r '.object.sha // empty' )
       echo "Sha for master is $sha_master"
 
 
