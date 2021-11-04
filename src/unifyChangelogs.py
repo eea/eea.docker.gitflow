@@ -36,7 +36,8 @@ OLD_VERSION = "https://raw.githubusercontent.com/eea/eea.plonebuildout.core/mast
 def pullVersions(url):
     """ Compute versions
     """
-    with contextlib.closing(urllib.request.urlopen(url)) as versionsFile:
+    with contextlib.closing(urllib.request.urlopen(url)) as vFile:
+        versionsFile=vFile.read().decode("utf-8").splitlines()
         for line in versionsFile:
             if line.startswith("#"):
                 continue
@@ -61,7 +62,8 @@ def pullVersions(url):
 def pullSources(url):
     """ Compute locations
     """
-    with contextlib.closing(urllib.request.urlopen(url)) as sourcesFile:
+    with contextlib.closing(urllib.request.urlopen(url)) as sFile:
+        sourcesFile=sFile.read().decode("utf-8").splitlines()
         for line in sourcesFile:
             if line.startswith("#"):
                 continue
