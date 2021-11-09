@@ -483,8 +483,8 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_config eea.docker.plone src/plone/versions.cfg master
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
       update_plone_config eea.docker.plone.clms site.cfg develop
-        echo $EGG_NAME 
-        update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg master
+      echo $EGG_NAME 
+      update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg master
     fi
 fi
 
