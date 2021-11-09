@@ -53,6 +53,11 @@ update_versionfile()
 }
 
 
+calculate_version() 
+{ 
+ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; 
+}
+
 update_plone_config()
 {
 PLONE_GITNAME=$1
@@ -84,16 +89,16 @@ if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
   fi
 fi
 
-
-
 if [ $(grep -c "^${EGG_NAME} = $version$" versions.cfg) -eq 1 ]; then
     echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version' on branch $BRANCH_NAME, skipping"
     return
 fi
 
 old_version=$( grep  "^${EGG_NAME} =" versions.cfg | awk '{print $3}')
-check_version_bigger=$(echo $version"."$old_version | awk -F. '{if ($1 > $3 || ( $1 == $3 && $2 > $4) ) print "OK"}')
-
+if [ $(calculate_version $version) -gt $(calculate_version $old_version) ]; then 
+   check_version_bigger="OK"
+fi
+   
 if [[ "${old_version}" == "${version}-dev"* ]]; then 
       check_version_bigger="OK"
 fi
