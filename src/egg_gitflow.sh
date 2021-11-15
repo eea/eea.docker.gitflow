@@ -491,6 +491,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       if [[ "$EGG_NAME" == "Products.Reportek" ]]; then
         update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg develop
 	if [ ! -z "$UPDATE_MASTER_BRANCH" ]; then
+	    echo "Update master branch"
 	    GIT_NAME="Products.Reportek"
 	    update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg master
 	fi
