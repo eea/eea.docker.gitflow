@@ -489,7 +489,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
       update_plone_config eea.docker.plone.clms site.cfg develop
       if [[ "$EGG_NAME" == "Products.Reportek" ]]; then
-        update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg develop
+        update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
       fi
     fi
 fi
