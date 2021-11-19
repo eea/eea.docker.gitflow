@@ -28,7 +28,16 @@ export GITHUB_TOKEN="${GIT_TOKEN}"
 
 GIT_SRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${GIT_NAME}.git
 
-
+check_and_push()
+{
+  if [[ "$1" == "yes" ]]; then
+        echo "RESOLUTIONS - Updating version on $2@$3 in package.json"
+        git diff
+	git add package.json
+        git commit -m "Release $2@$3 - resolutions"
+        git push
+  fi
+}
 
 update_package_json()
 {
@@ -50,22 +59,49 @@ update_package_json()
 	  return
        fi
        
+       # check resolutions 
+       old_version=$(jq -r ".resolutions | .\"$3\"" package.json )
+       biggest_version=$(echo "$4
+$old_version" | sort --sort=version | tail -n 1 )
+
+       to_push=""
+       
+       if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] || [[ "$old_version" == "null" ]] ; then
+       	  echo "No RESOLUTIONS to update, skipping"
+       elif [ "$4" == "$old_version" ]; then
+	  echo "RESOLUTIONS - The released $3 version is already updated"
+       elif [ $(echo $old_version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ]; then
+	  echo "RESOLUTIONS - Version format ($old_version) is not fixed to major.minor.patch, will not automatically upgrade it"
+       elif [[ "$biggest_version" == "$old_version" ]]; then
+          echo "RESOLUTIONS - The released $3 version is bigger than the released one, skipping"
+       else
+          echo "RESOLUTIONS - Old version $old_version is smaller than the released version"
+          echo "RESOLUTIONS - Will now update the package.json file"
+          jq ".resolutions[\"$3\"] = \"$4\"" package.json > newpackage.json
+	  mv newpackage.json package.json
+	  to_push="yes"
+       fi
+       
+       
        old_version=$(jq -r ".dependencies | .\"$3\"" package.json )
        
        if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] || [[ "$old_version" == "null" ]] ; then
-       	       echo "Did not find the package in dependecies list, skipping"
-       	       return
+       	       check_and_push $to_push $3 $4
+       	       echo "DEPENDENCIES - Did not find the package in dependecies list, skipping"
+ 	       return
        fi
 
-       echo "Found package version - $old_version"
+       echo "DEPENDENCIES - Found package version - $old_version"
 
        if [ "$4" == "$old_version" ]; then
-	     echo "The released $3 version is already updated, finishing"
+	     check_and_push $to_push $3 $4
+             echo "DEPENDENCIES - The released $3 version is already updated, finishing"  
 	     return
        fi
        echo "Checking prerequisites"
        if [ $(echo $old_version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ]; then
-	    echo "Version format ($old_version) is not fixed to major.minor.patch, will not automatically upgrade it, finishing"
+     	    check_and_push $to_push $3 $4
+	    echo "DEPENDENCIES - Version format ($old_version) is not fixed to major.minor.patch, will not automatically upgrade it, finishing"
 	    return
        fi
        
@@ -73,15 +109,16 @@ update_package_json()
 $old_version" | sort --sort=version | tail -n 1 )
 
        if [[ "$biggest_version" == "$old_version" ]]; then
-                 echo "The released $3 version is bigger than the released one, finishing"
+      	        check_and_push $to_push $3 $4
+                 echo "DEPENDENCIES - The released $3 version is bigger than the released one, finishing"
                  return
        fi
-       echo "Old version $old_version is smaller than the released version"
-       echo "Will now update the version file and yarn.lock"
+       echo "DEPENDENCIES - Old version $old_version is smaller than the released version"
+       echo "DEPENDENCIES - Will now update the version file and yarn.lock"
        
        yarn add -W $3@$4
        
-       echo "Also run deduplicate to fix broken yarn.lock file"
+       echo "DEPENDENCIES - Also run deduplicate to fix broken yarn.lock file"
        yarn-deduplicate yarn.lock
        
        #Yarn takes a lot of time, will try pull, if it fails because of conflicts, start over"
