@@ -38,7 +38,7 @@ echo "Found this statuses on the branch job"
 echo $checks
 
 cur_status=$(echo $checks | sort -n | tail -n 1 | awk '{print $2}')
-wait_for=65
+wait_for=130
 
 echo "Current status - $cur_status"
 while [[ $cur_status == "pending" ]] && [ $wait_for -gt 0 ]; do
@@ -60,8 +60,8 @@ if [[ $cur_status == "error" ]]; then
 	exit 1
 fi
 
-echo "Received status $cur_status, will continue with the processing"
-
+echo "Received status $cur_status, will not continue with the processing"
+exit 1
 
 
 
