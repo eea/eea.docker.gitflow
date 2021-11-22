@@ -45,12 +45,14 @@ while [[ $cur_status == "pending" ]] && [ $wait_for -gt 0 ]; do
    echo "Branch job is still processing, waiting for 30s ......."
    sleep 30 
    checks=$(curl -s -X GET -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN" $pull_request | jq -rc '.[] | select( .context | contains("continuous-integration/jenkins/branch")) |  "\(.created_at) \(.state)" ' )
-   cur_status=$(echo $checks | sort -n | tail -n | awk '{print $2}')
+   cur_status=$(echo $checks | sort -n | tail -n 1 | awk '{print $2}')
    wait_for=$((wait_for-1))
 done
 
+
 if [[ $cur_status == "success" ]]; then
         echo "Branch job was processed succesfully, will continue with CHANGELOG modification"
+        exit 0
 fi
 
 if [[ $cur_status == "error" ]]; then
@@ -58,7 +60,7 @@ if [[ $cur_status == "error" ]]; then
 	exit 1
 fi
 
-
+echo "Received status $cur_status, will continue with the processing"
 
 
 
