@@ -27,8 +27,7 @@ GIT_ORG=${GIT_ORG:-eea}
 echo "Starting the script to wait for branch tests to be done"
 echo "If the branch tests are failed, will not continue"
 
-echo "https://api.github.com/${GIT_ORG}/${GIT_NAME}/pulls/${GIT_CHANGE_ID} "
-pull_request=$(curl -s -X GET -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN" "https://api.github.com/${GIT_ORG}/${GIT_NAME}/pulls/${GIT_CHANGE_ID}" | jq -r .statuses_url)
+pull_request=$(curl -s -X GET -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN" "https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/pulls/${GIT_CHANGE_ID}" | jq -r .statuses_url)
 
 
 echo "$pull_request"
