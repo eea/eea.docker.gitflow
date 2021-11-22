@@ -144,7 +144,7 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
              if [ $(git tag | grep -c "^$old_version$" ) -ne 0 ]; then
                update_versionfile $old_version
                echo "Version file updated to default value ( last release +0.1), will stop execution "
-               exit 0
+               #exit 0
 	     else
 	       echo "Did not find version $old_version in tags, will keep the same version as in in master, as it is unreleased"
              fi
@@ -160,11 +160,12 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
          echo "Version already present in tags, so will set it to default value - last release + 0.1"
          get_last_tag
          update_versionfile $latestTag
-         exit 0
-        fi
-
-        echo "Passed check: Version is not present in git tags"
-
+         echo "Fixed check: Version is not present in git tags"
+         #exit 0
+	else
+         echo "Passed check: Version is not present in git tags"
+	fi
+     
         if [[ ! $version  =~ ^[0-9]+\.[0-9]+$ ]] ; then
 
          if [[  $version  =~ ^[0-9]+\.[0-9]+[\.|-]dev[0-9]*$ ]] ; then
@@ -172,17 +173,17 @@ if [ ! -z "$GIT_CHANGE_ID" ]; then
 	     echo "Version format from version.txt is not ok, will set it to $new_version"
              update_versionfile_withvalue $new_version
              echo "Removed dev from version file"
-             exit 0
-         fi
-
-
-         echo "Version ${version} does not respect format: \"number.number\", so will set it to default value - last release + 0.1"
-         get_last_tag
-         update_versionfile $latestTag
-         exit 0
+             #exit 0
+         else
+           echo "Version ${version} does not respect format: \"number.number\", so will set it to default value - last release + 0.1"
+           get_last_tag
+           update_versionfile $latestTag
+           echo "Fixed check: Version format is number.number"
+           #exit 0
+	 fi
+	else
+	   echo "Passed check: Version format is number.number"
         fi
-        echo "Passed check: Version format is number.number"
-
 
 	
 
@@ -196,9 +197,12 @@ $latestTag" | sort --sort=version | tail -n 1 )
                 if [[ $bigger_version == "$latestTag" ]]; then
                  echo "Version ${version} is smaller than last version ${latestTag}, will set it ${latestTag} + 0.1"
                  update_versionfile $latestTag
-                 exit 0
-                fi
-                echo "Passed check: New version is bigger than last released version"
+                 echo "Fixed check: New version is bigger than last released version"
+                 #exit 0
+	        else
+                  echo "Passed check: New version is bigger than last released version"
+
+		fi
         fi
 
         echo "Check if long_description_content_type exists in setup.py"
@@ -230,7 +234,7 @@ $latestTag" | sort --sort=version | tail -n 1 )
 				sed -i "s/^---------------------$/--------------------------/g" "$GIT_HISTORYFILE" 
 				echo "Fixed short title underlines"
                                 update_file $GIT_HISTORYFILE "Fixed short title underlines in changelog"
-				exit 0
+				#exit 0
 			fi
 
 
@@ -269,7 +273,7 @@ global-exclude *~
 global-exclude *.un~
 global-include *.mo" > MANIFEST.in
                  create_file MANIFEST.in "Created MANIFEST.in from template using $namespace - needs review"
-		 exit 0
+		 #exit 0
 	fi
 
         if [ $(echo $files_changed | grep $GIT_HISTORYFILE | wc -l) -eq 0 ]; then
@@ -288,7 +292,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
               update_file $GIT_HISTORYFILE "Updated changelog - needs review"
 
               echo "History file updated with default lines ( version, date and PR title  and user )"
-              exit 0
+              #exit 0
 	    else
 	      echo "Found $version entry in  $GIT_HISTORYFILE, so will skip updating it "
 	    fi
@@ -323,7 +327,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
         if [ $update_changelog -eq 1 ]; then
            update_file $GIT_HISTORYFILE "Updated changelog - removed develop information"
            echo "History file updated -  removed dev version"
-           exit 0
+           #exit 0
         fi
 
         echo "Passed check: History file updated"
