@@ -27,14 +27,18 @@ GIT_ORG=${GIT_ORG:-eea}
 echo "Starting the script to wait for branch tests to be done"
 echo "If the branch tests are failed, will not continue"
 
-pull_request=$(curl -s -X GET -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN"  https://api.github.com/${GIT_ORG}/${GIT_NAME}/pulls/${GIT_CHANGE_ID} | jq -r .statuses_url)
+echo "https://api.github.com/${GIT_ORG}/${GIT_NAME}/pulls/${GIT_CHANGE_ID} "
+pull_request=$(curl -s -X GET -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN" "https://api.github.com/${GIT_ORG}/${GIT_NAME}/pulls/${GIT_CHANGE_ID}" | jq -r .statuses_url)
 
-checks=$(curl -s -X GET -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN" $pull_request | jq -rc '.[] | select( .context | contains("continuous-integration/jenkins/branch")) |  "\(.created_at) \(.state)" ' )
+
+echo "$pull_request"
+
+checks=$(curl -s -X GET -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN" "$pull_request" | jq -rc '.[] | select( .context | contains("continuous-integration/jenkins/branch")) |  "\(.created_at) \(.state)" ' )
 
 echo "Found this statuses on the branch job"
 echo $checks
 
-cur_status=$(echo $checks | sort -n | tail -n | awk '{print $2}')
+cur_status=$(echo $checks | sort -n | tail -n 1 | awk '{print $2}')
 wait_for=65
 
 echo "Current status - $cur_status"
