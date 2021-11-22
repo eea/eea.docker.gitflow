@@ -162,6 +162,8 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
          
         echo "Starting pre-release on PULL REQUEST"
 
+        /wait_jenkins_branch_status.sh
+
 	git checkout $GIT_CHANGE_BRANCH
 	existing_tags=$(git tag)
 
