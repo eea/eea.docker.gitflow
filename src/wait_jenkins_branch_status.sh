@@ -2,12 +2,9 @@
 
 set -e
 
-
-# test on volto-test-addon
-if [ ! "$GIT_NAME" == "volto-test-addon" ]; then
-	exit 0
-fi
-
+# script that runs on PR and exits successfully only if github branch check on jenkins is successfull
+# waits if the status is "pending"
+# exits with error otherwise
 
 if [ -z "$GIT_TOKEN" ]; then
  echo "GIT token not given"
