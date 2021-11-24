@@ -82,11 +82,12 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
         
 	#check if version was already updated
         git fetch --tags
-
-        if [ $(git diff --name-status ${GIT_CHANGE_BRANCH}..${GIT_CHANGE_TARGET} | wc -l) -eq 0 ]; then
-		echo "There are no changes to release"
-		exit 0
-	fi
+        
+	
+        #if [ $(git diff --name-status ${GIT_CHANGE_BRANCH}..${GIT_CHANGE_TARGET} | wc -l) -eq 0 ]; then
+	#	echo "There are no changes to release"
+	#	exit 0
+	#fi
 
 
         echo "Check if format is x.y.z or x.y.z-beta.[0-9]*"
