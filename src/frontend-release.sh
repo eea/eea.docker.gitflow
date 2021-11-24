@@ -96,7 +96,8 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	    echo "Please manually update the format to a correct version ( major.minor.patch ) "
             exit 1
         fi
-
+ 
+        /wait_jenkins_branch_status.sh
 
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ] || [ $(git tag | grep ^v${version}$ | wc -l) -eq 1 ]; then
              echo "Start release with changelog update on new version"
