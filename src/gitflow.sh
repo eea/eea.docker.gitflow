@@ -323,8 +323,8 @@ $old_version" | sort  --sort=version | tail -n 1)
      
          if [ -n "$TRIGGER_WAIT_FOR_LATEST" ]; then 
 	     echo "Received WAIT_FOR_LATEST variable, so will now trigger latest version rebuild"
-             /dockerhub_release_wait.sh ${TRIG[0]} latest ${TRIG[1]}     
-	 fi
+             curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Branch\", \"source_name\": \"master\"}" -X POST https://hub.docker.com/api/build/v1/source/${TRIG[1]}
+ 	 fi
 
 	 /dockerhub_release_wait.sh ${TRIG[0]} $version ${TRIG[1]}
 
