@@ -43,7 +43,7 @@ echo "Starting dockerhub release wait script"
 
 check_result=$(curl -s -X GET -H "Content-Type: application/json" "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/?page_size=100&name=${DOCKERHUB_NAME}" | grep "${DOCKERHUB_NAME}\"" | wc -l )
 
-if [ $check_result -ne 0 ]; then  
+if [ $check_result -ne 0 ] && [[ -z "$GIT_COMMIT" ]]; then  
   echo "Found image already build in tags"
   exit 0
 fi
@@ -56,8 +56,13 @@ fi
         sleep 10
         TIME_TO_WAIT_START=$(( $TIME_TO_WAIT_START - 1 ))
         get_dockerhub_buildhistory ${DOCKERHUB_REPO}
-	FOUND_BUILD=$( echo $buildhistory |  grep -E "\{.*\"build_tag\": \"$DOCKERHUB_NAME\",[^\{]*\"state\": \"(Success|Pending|In progress|Building)\".*\}"  | wc -l )
-
+        	
+	if [ -n "$GIT_COMMIT" ]; then
+            FOUND_BUILD=$( echo $buildhistory | jq  ".objects[] | select(.build_tag==\"$DOCKERHUB_NAME\" and .commit==\"$GIT_COMMIT\" and .state == (\"Failed\",\"Success\",\"Pending\",\"In progress\", \"Building\") ) | length" | wc -l )
+	else
+	    FOUND_BUILD=$( echo $buildhistory | jq  ".objects[] | select(.build_tag==\"$DOCKERHUB_NAME\" and .state == (\"Success\",\"Pending\",\"In progress\", \"Building\") ) | length" | wc -l )
+        fi
+	
         if [ $FOUND_BUILD -gt 0 ];then
           echo "DockerHub started the $DOCKERHUB_REPO:$DOCKERHUB_NAME release"
           break
@@ -96,17 +101,13 @@ fi
          fi
 
          get_dockerhub_buildhistory ${DOCKERHUB_REPO}
-	 build_status=$( echo $buildhistory | python -c "import sys, json
-try:
-  data_dict = json.load(sys.stdin)
-  build_tag = '$DOCKERHUB_NAME'
-  for res in data_dict['objects']:
-    if res['build_tag'] == build_tag:
-      print('%s' % res['state'])
-      break
-except:
-  print('Error parsing DockerHub API response %s' % sys.stdin)
-")
+	 
+	 if [ -n "$GIT_COMMIT" ]; then
+            build_status=$( echo $buildhistory | jq  -r ".objects[] | select(.build_tag==\"$DOCKERHUB_NAME\" and .commit==\"$GIT_COMMIT\" ).state" | head -n 1 )
+ 	 else
+	    build_status=$( echo $buildhistory | jq  -r ".objects[] | select(.build_tag==\"$DOCKERHUB_NAME\").state" | head -n 1 )
+         fi
+		
         if [[ ! $build_status == "Pending" ]] && [[ ! $build_status == "In progress" ]] && [[ ! $build_status == "Success" ]] && [ $wait_in_case_of_error -gt 0 ]; then
 		echo "Build  $DOCKERHUB_REPO:$DOCKERHUB_NAME failed on DockerHub ( status $build_status), will wait $wait_in_case_of_error in case it will be ok"
          wait_in_case_of_error=$(( $wait_in_case_of_error - 1 ))
@@ -132,5 +133,6 @@ except:
      fi
 
      echo "-------------------------------------------------------------------------------"
+
 
 
