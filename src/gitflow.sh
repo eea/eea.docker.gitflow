@@ -308,7 +308,7 @@ $old_version" | sort  --sort=version | tail -n 1)
     echo "-------------------------------------------------------------------------------"
     echo "Starting triggered release(s)"
 
-    if [ -n "$WAIT_FOR_LATEST" ]; then
+    if [ -n "$TRIGGER_WAIT_FOR_LATEST" ]; then
          git_commit=$(git log -n 1 --pretty=format:"%H")
          echo "Will check if ${DOCKERHUB_REPO}:latest release with commit $git_commit is done before starting the dependent triggers"
          GIT_COMMIT=$git_commit /dockerhub_release_wait.sh ${DOCKERHUB_REPO} latest $TRIGGER_MAIN_URL	 
@@ -320,8 +320,12 @@ $old_version" | sort  --sort=version | tail -n 1)
         IFS=';' read -ra TRIG <<< "$trigger"
 
          echo "Found release on ${TRIG[0]}, will trigger it with the new version - $version"
+     
+         if [ -n "$TRIGGER_WAIT_FOR_LATEST" ]; then 
+	     echo "Received WAIT_FOR_LATEST variable, so will now trigger latest version rebuild"
+             /dockerhub_release_wait.sh ${TRIG[0]} latest ${TRIG[1]}     
+	 fi
 
-	 
 	 /dockerhub_release_wait.sh ${TRIG[0]} $version ${TRIG[1]}
 
 
