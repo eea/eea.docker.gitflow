@@ -308,6 +308,12 @@ $old_version" | sort  --sort=version | tail -n 1)
     echo "-------------------------------------------------------------------------------"
     echo "Starting triggered release(s)"
 
+    if [ -n "$WAIT_FOR_LATEST" ]; then
+         git_commit=$(git log -n 1 --pretty=format:"%H")
+         echo "Will check if ${DOCKERHUB_REPO}:latest release with commit $git_commit is done before starting the dependent triggers"
+         GIT_COMMIT=$git_commit /dockerhub_release_wait.sh ${DOCKERHUB_REPO} latest $TRIGGER_MAIN_URL	 
+	 
+    fi	 
 
     for trigger in $TRIGGER_RELEASE
     do
