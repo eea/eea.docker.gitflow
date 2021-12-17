@@ -71,7 +71,18 @@ fi
         fi
         if [ -n "$DOCKERHUB_TRIGGER" ] && ! (( TIME_TO_WAIT_START % 10 )); then
             echo "Over one minute passed, build not starting , will use trigger to re-start build"
-            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"$DOCKERHUB_NAME\"}" -X POST https://hub.docker.com/api/build/v1/source/$DOCKERHUB_TRIGGER
+
+	    TRIGGER_TYPE="Tag"
+	    TRIGGER_NAME="$DOCKERHUB_NAME"
+	    if [ -n "$GIT_COMMIT" ]; then
+                 TRIGGER_TYPE="Branch"
+	    fi
+	    if [[ "$DOCKERHUB_NAME" == "latest" ]]; then
+                 TRIGGER_TYPE="Branch"
+                 TRIGGER_NAME="master"
+	    fi
+
+            curl -i -H "Content-Type: application/json" --data "{\"source_type\": \"$TRIGGER_TYPE\", \"source_name\": \"$TRIGGER_NAME\"}" -X POST https://hub.docker.com/api/build/v1/source/$DOCKERHUB_TRIGGER
         fi
     done
 
