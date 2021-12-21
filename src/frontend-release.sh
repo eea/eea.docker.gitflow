@@ -99,8 +99,9 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
  
         /wait_jenkins_branch_status.sh
 
-	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ] || [ $(git tag | grep ^v${version}$ | wc -l) -eq 1 ]; then
-             echo "Start release with changelog update on new version"
+	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ] || [ $(git tag | grep ^v${version}$ | wc -l) -eq 1 ] || [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$' | wc -l) -eq 1 ]; then
+             echo "Current version is either already released or a beta version"
+	     echo "Start release with changelog update on new version"
              echo "Update yarn.lock"
 
              yarn
@@ -112,14 +113,35 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
              if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
                 echo "Found changes in yarn.lock, will now update it"
                 git add yarn.lock
-                git commit -m "Automated update of yarn.lock"
+                git commit -m "[YARN] Automated update of yarn.lock"
              fi
 
-	     release-it version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}') --config /release-it.json --no-git.tag -i patch --ci
+             new_version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}')
+	     
+             sed -i "s/%2F[0-9]\+\.[0-9]\+\.[0-9]\+\&build=last\&subject=release%20v[0-9]\+\.[0-9]\+\.[0-9]\+%20pipeline/%2F${new_version}\&build=last\&subject=release%20v${new_version}%20pipeline/" README.md
+	     sed -i "s#job/[0-9]\+\.[0-9]\+\.[0-9]\+/lastBuild/display#job/$new_version/lastBuild/display#" README.md
+	     
+             if [ $(git diff README.md | wc -l) -gt 0 ]; then
+                echo "Updating README.md with the next release link"
+                git add  README.md
+                git commit -m "[JENKINS] Automated badge update of README.md"
+             fi            
+
+             release-it version=$new_version --config /release-it.json --no-git.tag -i patch --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
-	     npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
+	     sed -i "s/%2F[0-9]\+\.[0-9]\+\.[0-9]\+\&build=last\&subject=release%20v[0-9]\+\.[0-9]\+\.[0-9]\+%20pipeline/%2F${version}\&build=last\&subject=release%20v${version}%20pipeline/" README.md
+	     sed -i "s#job/[0-9]\+\.[0-9]\+\.[0-9]\+/lastBuild/display#job/$version/lastBuild/display#" README.md
+	     to_push=""
+             if [ $(git diff README.md | wc -l) -gt 0 ]; then
+                echo "Updating README.md with the next release link"
+                git add  README.md
+                git commit -m "[JENKINS] Automated badge update of README.md"
+                to_push="yes"
+	     fi            
+
+             npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
 	     
 	     sh -c "$npx_command"
 	     sed -i '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]/d' CHANGELOG.md
@@ -131,8 +153,16 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
                      git push
 	     else
 	             echo "Did not find any new commits beside the automated ones, will not add them"
-		     git checkout -- CHANGELOG.md     
+		     git checkout -- CHANGELOG.md   
+		     
+		     if [[ "$to_push" == "yes" ]]; then
+		        echo "Will not regenerate CHANGELOG.md, but will update README.md with the new version"
+			git push
+		     fi
 	     fi
+	     
+	     
+	     
 	fi
         
 fi	
