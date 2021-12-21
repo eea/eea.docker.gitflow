@@ -128,6 +128,7 @@ $old_version" | sort --sort=version | tail -n 1 )
           cd ..
           rm -rf frontend
           update_package_json $1 $2 $3 $4 $5
+	  return
        fi
        git status
        git diff
@@ -135,11 +136,18 @@ $old_version" | sort --sort=version | tail -n 1 )
        if [ $(grep "yarn.lock" .gitignore | wc -l ) -eq 0 ]; then
            git add yarn.lock
        fi
-       git commit -m "Release $3@$4" 
-       git push
-       cd ..
-       rm -rf frontend
-
+       commit_ok=$(git commit -m "Release $3@$4" | grep -i "changed" | wc -l)
+       if [ $commit_ok -eq 1 ]; then
+         git push
+	 cd ..
+         rm -rf frontend
+       else
+         echo "There was a problem with the commit on repo $1, will cleanup and retry again"
+         cd ..
+         rm -rf frontend
+         update_package_json $1 $2 $3 $4 $5
+	 return
+       fi
 }
 
 git config --global user.name "${GIT_USERNAME}"
