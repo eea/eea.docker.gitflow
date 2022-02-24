@@ -121,7 +121,68 @@ echo "${PLONE_GITNAME} versions file on branch $BRANCH_NAME updated succesfully 
 
 }
 
+update_plone_constraints()
+{
+PLONE_GITNAME=$1
+VERSIONS_PATH=$2
+EGG_NAME=${GIT_NAME}
+BRANCH_NAME=master
 
+if [ -n "$3" ]; then
+    BRANCH_NAME=$3
+fi
+    
+
+echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH, on branch $BRANCH_NAME"
+
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}"  > constraints.txt
+
+
+if [ $(grep -c "==" constraints.txt) -eq 0 ]; then
+   echo "There was a problem getting the constraints file"
+   cat constraints.txt
+   exit 1
+fi
+
+if [ $(grep -c "^${EGG_NAME}==" constraints.txt) -eq 0 ]; then
+  EGG_NAME=$(echo ${GIT_NAME} | sed 's/_/-/')
+  if [ $(grep -c "^${EGG_NAME}==" constraints.txt) -eq 0 ]; then
+    echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH} on branch $BRANCH_NAME, skipping upgrade"
+    return
+  fi
+fi
+
+if [ $(grep -c "^${EGG_NAME}==$version$" constraints.txt) -eq 1 ]; then
+    echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version' on branch $BRANCH_NAME, skipping"
+    return
+fi
+
+old_version=$( grep  "^${EGG_NAME}==" constraints.txt | awk -F='=' '{print $2}')
+if [ $(calculate_version $version) -gt $(calculate_version $old_version) ]; then 
+   check_version_bigger="OK"
+fi
+   
+if [[ "${old_version}" == "${version}-dev"* ]]; then 
+      check_version_bigger="OK"
+fi
+
+if [[ ! $check_version_bigger == "OK" ]]; then
+      echo "${version} is smaller than the version from ${PLONE_GITNAME} - ${old_version}, skipping"
+      return
+fi
+echo "Updating ${PLONE_GITNAME} contstraints file on branch $BRANCH_NAME with released version on ${EGG_NAME}"
+
+valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}" sha
+
+sha_versionfile=$(echo $curl_result |  jq -r '.sha // empty')
+
+sed -i "s/^${EGG_NAME}==.*/${EGG_NAME}==$version/" constraints.txt
+
+valid_curl_put_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\",\"branch\": \"${BRANCH_NAME}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat constraints.txt | base64))\"}" 
+
+echo "${PLONE_GITNAME} contstraints file on branch $BRANCH_NAME updated succesfully with '${EGG_NAME}==$version'"
+
+}
 
 if [ ! -z "$GIT_CHANGE_ID" ]; then
         GIT_BRANCH=PR-${GIT_CHANGE_ID}
@@ -492,11 +553,14 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_config eea.docker.plone src/plone/versions.cfg master
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
       update_plone_config eea.docker.plone.clms site.cfg develop
-      update_plone_config plone-backend constraints.txt master
-      update_plone_config eea-website-backend constraints.txt master
       if [[ "$EGG_NAME" == "Products.Reportek" ]]; then
         update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
       fi
+      
+      #Updating constraints.txt
+      update_plone_constraints plone-backend constraints.txt master
+      update_plone_constraints eea-website-backend constraints.txt master
+      
     fi
 fi
 
