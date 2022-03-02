@@ -50,18 +50,22 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]];
     git checkout $version
   else    
     git fetch --tags
-   
-    latestTag1=$(git describe --tags --abbrev=0)
-    #check in case there are multiple tags per commit
-    latestTag1=$(git log  --tags --decorate=full | grep refs/tags/$latestTag1 | grep -o refs/tags/[^\ ,\)]*  | sed 's#refs/tags/##g' | sort --sort=version | tail -n 1)
-
-    latestTag2=$(git for-each-ref --sort=-taggerdate --count=1 --format '%(refname:short)' refs/tags)
-
-    latestTag=$(echo "$latestTag1
+    
+    if [ $(git tag | wc -l ) -eq 0 ]; then
+       #no tags exist
+       latestTag=0.0.0
+       files_changed=1
+    else
+      latestTag1=$(git describe --tags --abbrev=0)
+      #check in case there are multiple tags per commit
+      latestTag1=$(git log  --tags --decorate=full | grep refs/tags/$latestTag1 | grep -o refs/tags/[^\ ,\)]*  | sed 's#refs/tags/##g' | sort --sort=version | tail -n 1)
+      latestTag2=$(git for-each-ref --sort=-taggerdate --count=1 --format '%(refname:short)' refs/tags)
+      latestTag=$(echo "$latestTag1
 $latestTag2" | sort --sort=version | tail -n 1)
 
-    files_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | wc -l )
-
+      files_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | wc -l )
+    fi
+    
     if [ $files_changed -eq 0 ]; then
       echo "No files changed since last release, $latestTag"
       echo "Will continue without the release on github"
