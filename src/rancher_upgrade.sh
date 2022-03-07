@@ -3,13 +3,19 @@
 #in case we are using old variable name
 RANCHER_STACKID=${RANCHER_STACKID:-$stack_id}
 
+
 if [ -z "$RANCHER_URL" ] || [ -z "$RANCHER_ACCESS" ] || [ -z "$RANCHER_SECRET" ]; then
-   echo "Did not receive all mandatory parameters - url and auth!!!"
+   echo "Did not receive all mandatory parameters - rancher url and auth!!!"
    exit 1
 fi
 
-if [ -z "$RANCHER_ENVID" ] || [ -z "$RANCHER_STACKID" ] || [ -z "$template" ]; then
-   echo "Did not receive all mandatory parameters - rancher env, stack, template!!!"
+if [ -z "$RANCHER_STACKID" ]; then
+   echo "Did not receive STACK ID, will skip the upgrade"
+   exit 0
+fi
+
+if [ -z "$RANCHER_ENVID" ] || [ -z "$template" ]; then
+   echo "Did not receive all mandatory parameters - rancher env id, template!!!"
    exit 1
 fi
 
