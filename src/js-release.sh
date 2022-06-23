@@ -19,6 +19,12 @@ if [ -z "$GIT_TOKEN" ]; then
  exit 1
 fi
 
+if [ -f /common_functions ]; then
+    source /common_functions
+elif [ -f ./common_functions ]; then
+    source ./common_functions
+fi
+
 
 GIT_ORG=${GIT_ORG:-'eea'}
 GIT_USER=${GIT_USER:-'eea-jenkins'}
@@ -202,6 +208,20 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
              echo "Start release with changelog update on new version"
+	     
+	     valid_curl_get_result https://api.github.com/repos/$GIT_ORG/$GIT_NAME/pulls/$GIT_CHANGE_ID title
+	     GIT_PR_TITLE=$(echo $curl_result | jq -r ".title")
+	     
+	     echo "Extracted PR title - $GIT_PR_TITLE"
+
+             if [ $(echo "$GIT_PR_TITLE" | grep "^MINOR:" | wc -l ) -eq 1 ]; then
+	     echo "Will use a MINOR version for release"
+	     fi
+
+             if [ $(echo "$GIT_PR_TITLE" | grep "^MAJOR:" | wc -l ) -eq 1 ]; then
+	     echo "Will use a MAJOR version for release"
+	     fi
+	     
              release-it --config /release-it.json --no-git.tag -i patch --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
