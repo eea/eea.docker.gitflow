@@ -53,7 +53,7 @@ update_package_json()
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
        
-       if [ $(git branch | grep $UPDATE_BRANCH | wc -l) -eq 0 ]; then
+       if [ $(git branch --all | grep origin/${UPDATE_BRANCH}$ | wc -l) -eq 0 ]; then
           echo "Repository does not contain branch $UPDATE_BRANCH, skipping"
 	  return
        fi
