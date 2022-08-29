@@ -291,7 +291,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	        /releaseChangelog.sh
 		cat releasefile
 		
-		body=$(cat releasefile)
+		body=$(cat releasefile  | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g' )
 		echo  "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  \"$body\"}" 
 
 	    else
