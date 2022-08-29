@@ -224,6 +224,8 @@ repository="$1"
 new_tag="$2"
 old_tag="$3"
 
+echo "Starting the extraction of the release documentation with parameters: $1 $2 $3"
+
 
 if [ -z "$repository" ] && [ -n "$GIT_NAME" ]; then
 	repository="$GIT_ORG/$GIT_NAME"
@@ -236,6 +238,11 @@ if [ -z "$repository" ]; then
        exit 1
 
 fi
+
+if [ -z "$new_tag" ]; then
+	new_tag="master"
+fi
+
 
 get_commits $repository $new_tag $old_tag
 
