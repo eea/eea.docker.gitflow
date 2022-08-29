@@ -32,7 +32,12 @@ git config --global user.name "${GIT_USERNAME}"
 git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
 
 git clone $GIT_SRC
-
+cd $GIT_NAME
+if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT_CHANGE_BRANCH" == "develop" ]]; then
+        git checkout $GIT_CHANGE_BRANCH
+fi
+cd ..
+	
 if [ ! -f $GIT_NAME/package.json ]; then
    rm -rf $GIT_NAME
    echo "Not a javascript package, the check was wrong"

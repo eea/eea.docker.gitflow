@@ -19,6 +19,12 @@ if [ -z "$GIT_TOKEN" ]; then
  exit 1
 fi
 
+if [ -f /common_functions ]; then
+    source /common_functions
+elif [ -f ./common_functions ]; then
+    source ./common_functions
+fi
+
 
 GIT_ORG=${GIT_ORG:-'eea'}
 GIT_USER=${GIT_USER:-'eea-jenkins'}
@@ -52,6 +58,12 @@ update_package_json()
        
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
        cd frontend
+       
+       if [ $(git branch --all | grep origin/${UPDATE_BRANCH}$ | wc -l) -eq 0 ]; then
+          echo "Repository does not contain branch $UPDATE_BRANCH, skipping"
+	  return
+       fi
+              
        git checkout $UPDATE_BRANCH
        
        if [ ! -f "package.json" ]; then
@@ -196,7 +208,26 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ]; then
              echo "Start release with changelog update on new version"
-             release-it --config /release-it.json --no-git.tag -i patch --ci
+	     
+	     if [ -z "$GIT_CHANGE_TITLE" ]; then
+	     	valid_curl_get_result https://api.github.com/repos/$GIT_ORG/$GIT_NAME/pulls/$GIT_CHANGE_ID title
+	     	GIT_CHANGE_TITLE=$(echo $curl_result | jq -r ".title")
+	     	echo "Extracted PR title - $GIT_CHANGE_TITLE"
+             fi
+	     
+	     RELEASE_TYPE="patch"
+	     
+             if [ $(echo "$GIT_CHANGE_TITLE" | grep "^MINOR:" | wc -l ) -eq 1 ]; then
+	       echo "Will use a MINOR version for release, title of PR is $GIT_CHANGE_TITLE"
+               RELEASE_TYPE="minor"
+	     fi
+	     
+	     if [ $(echo "$GIT_CHANGE_TITLE" | grep "^MAJOR:" | wc -l ) -eq 1 ]; then
+  	       echo "Will use a MAJOR version for release, title of PR is $GIT_CHANGE_TITLE"
+               RELEASE_TYPE="major"
+	     fi
+	     
+	     release-it --config /release-it.json --no-git.tag -i $RELEASE_TYPE --ci
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
@@ -281,7 +312,17 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	fi
         
 	if [ -z "$already_published" ]; then
+		
 		echo "Publishing npm package"
+		
+		echo "Checking if prepublish script exist"
+		if [ $(cat  package.json | jq '.scripts.prepublish | length') -gt 0 ]; then
+		   echo "Found prepublish script, running it"
+		   yarn 
+		   yarn prepublish
+		fi
+		
+		
                 npm publish --access=public
 		echo "Waiting for npm to sync their data for yarn before updating frontends"
 		sleep 60
