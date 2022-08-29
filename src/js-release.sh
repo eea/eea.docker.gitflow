@@ -288,7 +288,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
 	    echo "Create release on $GIT_BRANCH using GitHub API"
 	    if [[ "$GIT_NAME" == "volto-eea-kitkat" ]]; then
-	        body=$( /releaseChangelog.sh "$GIT_BRANCH" )
+	        body=$( /releaseChangelog.sh )
 	    else
 	        body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs| grep -Eiv '\- Automated release [0-9\.]+|Add Sonarqube tag using .* addons list|jenkins|yarn' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
 	    fi
