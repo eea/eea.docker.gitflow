@@ -14,7 +14,7 @@ elif [ -f ./common_functions ]; then
 fi
 
 
-
+rm -f releasefile
 
 get_package_data()
 {

@@ -11,6 +11,8 @@ fi
 
 changeFile=${changeFile:-'docs/HISTORY.txt'}
 
+rm -f releasefile
+
 if [ -z "$version" ]; then
 	version=$1
 fi
@@ -24,6 +26,12 @@ fi
 line_nr=$(grep -nE "^$version .*\([0-9]*.*\)" $changeFile | head -n 1 | awk -F: '{print $1-1}')
 first_line=""
 last_line=""
+
+if [ -z "$line_nr" ]; then
+	echo "DID not find the version $version in the changelog - $changeFile"
+        touch releasefile
+	exit 0
+fi
 
 echo "found version information on line $line_nr on $changeFile"
 
