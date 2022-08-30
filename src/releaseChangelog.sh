@@ -196,7 +196,7 @@ fi
 
 valid_curl_get_result "https://api.github.com/repos/$repo/compare/$old_release...$new_release"
 
-commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| "- \(.commit.message) - [`\(.sha[0:8])`](\(.html_url))"' )
+commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| "- \(.commit.message) - [\(.commit.author.name) -  [`\(.sha[0:7])`](\(.html_url))]"' )
 
 
 
@@ -214,11 +214,6 @@ fi
 
 }
 
-
-#repository=eea/eea-website-frontend
-#volto-eea-kitkat
-#new_tag=0.18.0
-#old_tag=0.17.0
 
 repository="$1"
 new_tag="$2"

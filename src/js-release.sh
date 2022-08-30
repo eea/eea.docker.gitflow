@@ -298,6 +298,8 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	        body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /eea.hbs| grep -Eiv '\- Automated release [0-9\.]+|Add Sonarqube tag using .* addons list|jenkins|yarn' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
 	    fi
 
+            body=$(echo $body | sed 's/[R|r]efs #\([0-9]*\) /\[Refs #\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\) /g' )
+
 	    curl   -X POST   -H "Accept: application/vnd.github.v3+json"  -H "Authorization: bearer $GITHUB_TOKEN"  https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases -d "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  \"$body\"}" 
 
         fi
