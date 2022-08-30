@@ -40,7 +40,7 @@ done
 
 
 if [ -z "$last_line" ]; then
-  last_line=$(wc -l $changeFile)
+  last_line=$(wc -l $changeFile | awk '{print $1}'  )
 fi
 
 sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' | sed 's/#\([0-9]\{6\}\)/\[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' > releasefile
