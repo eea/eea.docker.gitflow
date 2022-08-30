@@ -10,6 +10,7 @@ if [ -z "$changeFile" ]; then
 fi
 
 changeFile=${changeFile:-'docs/HISTORY.txt'}
+
 if [ -z "$version" ]; then
 	version=$1
 fi
@@ -38,5 +39,5 @@ done
 
 sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' | sed 's/efs #\([0-9]*\)/efs \[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' > releasefile
  
-
+echo "Parsed lines ${first_line},${last_line} from $changeFile"
 
