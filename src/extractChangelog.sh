@@ -21,10 +21,11 @@ if [ -z "$version" ]; then
 fi
 
 
-line_nr=$(grep -nE "^$version .*\([0-9]*.*\)" $changeFile | tail -n 1 | awk -F: '{print $1-1}')
+line_nr=$(grep -nE "^$version .*\([0-9]*.*\)" $changeFile | head -n 1 | awk -F: '{print $1-1}')
 first_line=""
 last_line=""
 
+echo "found version information on line $line_nr on $changeFile"
 
 for i in $(grep -n '^----------.*$' $changeFile  | awk -F: '{print $1}'); do
      if [ -z "$first_line" ] && [ "$i" -gt "$line_nr" ]; then
@@ -37,7 +38,7 @@ for i in $(grep -n '^----------.*$' $changeFile  | awk -F: '{print $1}'); do
      fi
 done
 
-
+if 
 sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' | sed 's/#\([0-9]\{6\}\)/\[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' > releasefile
  
 echo "Parsed lines ${first_line},${last_line} from $changeFile"
