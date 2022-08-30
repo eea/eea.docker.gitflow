@@ -164,19 +164,24 @@ get_release_docs()
         for i in $(echo $new_packages); do
 
             get_package_data $i $(jq -r ".dependencies[\"$i\"]" new.json) 
-	    echo -e "### [$i]($homepage/tree/$new): $new\n" >> releasefile
+            if [ -n "$homepage" ]; then
+	       echo -e "### [$i]($homepage): $new\n" >> releasefile
+            else
+               echo -e "### [$i](https://www.npmjs.com/package/$i): $new\n" >> releasefile
+
+            fi
         done
          fi
 
 
         if [ -n "$old_packages" ]; then
 
-        echo "## Removed packages\n" >> releasefile
+        echo -e "## Removed packages\n" >> releasefile
 
         for i in $(echo $old_packages); do
 
             get_package_data $i $(jq -r ".dependencies[\"$i\"]" old.json)
-            echo "### $i: $old\n" >> releasefile
+            echo -e "### $i: $old\n" >> releasefile
         done
          fi
  }
@@ -196,7 +201,7 @@ fi
 
 valid_curl_get_result "https://api.github.com/repos/$repo/compare/$old_release...$new_release"
 
-commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| sort_by(.commit.message) | "- \(.commit.message) - [\(.commit.author.name) -  [`\(.sha[0:7])`](\(.html_url))]"' )
+commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| "- \(.commit.message) - [\(.commit.author.name) -  [`\(.sha[0:7])`](\(.html_url))]"' )
 
 
 
