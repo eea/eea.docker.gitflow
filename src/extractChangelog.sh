@@ -38,7 +38,11 @@ for i in $(grep -n '^----------.*$' $changeFile  | awk -F: '{print $1}'); do
      fi
 done
 
-if 
+
+if [ -z "$last_line" ]; then
+  last_line=$(wc -l $changeFile)
+fi
+
 sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' | sed 's/#\([0-9]\{6\}\)/\[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' > releasefile
  
 echo "Parsed lines ${first_line},${last_line} from $changeFile"
