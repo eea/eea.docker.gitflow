@@ -8,7 +8,7 @@
   "github": {
     "release": false,
     "releaseName": "${version}",
-    "releaseNotes": "npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /eea.hbs | grep -Eiv '\\- Automated release [0-9\\.]+ |Add Sonarqube tag using .* addons list|\\[jenkins|yarn' "
+    "releaseNotes": "npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs | grep -Eiv '\\- Automated release [0-9\\.]+ |Add Sonarqube tag using .* addons list|\\[jenkins|yarn' "
   },
   "npm": {
     "publish": false
