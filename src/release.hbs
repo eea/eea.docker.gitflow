@@ -1,0 +1,38 @@
+{{#each releases}}
+  {{#if @first}}
+  {{#commit-list commits heading='#### :boom: Breaking Change' subject='(^Breaking change[:(]|^breaking[:(]|^BREAKING CHANGE[:(]|^BREAKING[:(])'}}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{! List commits that add new features, but not those already listed above }}
+  {{#commit-list commits heading='#### :rocket: New Features' subject='^feat[:(]'}}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{#commit-list commits heading='#### :rocket: Dependency updates' subject='^Release .*@.*' }}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{! List commits that add new features, but not those already listed above }}
+  {{#commit-list commits heading='#### :bug: Bug Fixes' subject='^fix[:(]'}}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{#commit-list commits heading='#### :nail_care: Enhancements' subject='(^enhancement[:(]|^change[:(]|^refactor[:(]|^perf[:(])' }}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{#commit-list commits heading='#### :house: Internal changes' subject='^chore[:(]|^style[:(]'}}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{#commit-list commits heading='#### :house: Documentation changes' subject='^docs[:(]|^doc[:(]' }}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{#commit-list commits heading='#### :hammer_and_wrench: Others' exclude='^Breaking change[:(]|^breaking[:(]|^BREAKING CHANGE[:(]|^BREAKING[:(]|^feat[:(]|^fix[:(]|^enhancement[:(]|^change[:(]|^chore[:(]|^docs[:(]|^doc[:(]|^Autobuild|^Automated|^Release .*@.*|^\[JENKINS\]|^\[YARN\]|^refactor[:(]|^style[:(]' }}
+    - {{subject}} [{{author}} - [`{{shorthash}}`]({{href}})]
+  {{/commit-list}}
+
+  {{/if}}
+{{/each}}
