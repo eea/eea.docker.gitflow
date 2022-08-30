@@ -43,7 +43,9 @@ if [ -z "$last_line" ]; then
   last_line=$(wc -l $changeFile | awk '{print $1}'  )
 fi
 
-sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' | sed 's/#\([0-9]\{6\}\)/\[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' > releasefile
+sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' | sed 's/#\([0-9]\{5,6\}\)/\[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' > releasefile
  
+truncate -s -1 releasefile
+
 echo "Parsed lines ${first_line},${last_line} from $changeFile"
 
