@@ -36,6 +36,7 @@ for i in $(grep -n '^----------.*$' $changeFile  | awk -F: '{print $1}'); do
 done
 
 
-sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' 
+sed -n "${first_line},${last_line}p" $changeFile | awk 'NF' | sed 's/efs #\([0-9]*\)/efs \[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' > releasefile
+ 
 
 
