@@ -21,7 +21,7 @@ get_package_data()
 
 package="$1"
 new="$2"
-old="${3:-'0.0'}"
+old="$3"
 
 echo "$package $old --> $new"
 
@@ -70,8 +70,14 @@ if [[ ! "$homepage" == "https://github.com"* ]]; then
         return
 fi
 
+if [ $(echo $homepage | grep "/eea/" | wc -l ) -eq 0 ]; then
+    type="undefined"
+    return
+fi
 
-
+if [ -z "$old" ]; then
+    return
+fi
 
 if [[ $(echo -e "$new\n$old" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//'  | tail -n 1) == "$new" ]]; then
     type="upgrade"
@@ -86,10 +92,6 @@ echo $type
 
 url=$(echo "$homepage" | sed 's#/github.com/#/api.github.com/repos/#')"/releases?per_page=100"
 
-if [ $(echo $homepage | grep "/eea/" | wc -l ) -eq 0 ]; then
-    type="undefined"
-    return
-fi
 valid_curl_get_result $url
 
 
@@ -138,7 +140,7 @@ get_release_docs()
 	downgrade_packages=$(for i in $(echo "$common"); do new=$(grep ^$i new.txt | awk -F== '{print $2}'); old=$( grep ^$i old.txt | awk -F== '{print $2}'); if [[ $(echo -e "$new\n$old" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1) == "$old"   ]] && [[ ! "$new" == "$old" ]]; then echo $i; fi; done)
         undefined_packages=""
 
-        echo -e "# Constraints updates\n" > releasefile
+        echo -e "# Constraints updates\n" >> releasefile
 
 	
 	if [ -n "$upgrade_packages" ]; then
@@ -147,19 +149,28 @@ get_release_docs()
 	for i in $(echo "$upgrade_packages"); do
 	    get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') $(grep ^$i old.txt | awk -F== '{print $2}')
 	    if [[ $type == "undefined" ]]; then
-                  echo "skipping $i"
-		  undefined_packages="$undefined_packages $i"
-		  continue
-	    fi
+                  
+            if [ -n "$homepage" ]; then
+                    echo -e "### [$i]($homepage): $old ~ $new\n" >> releasefile
+            else
+                    echo -e "### [$i](https://pypi.org/project/$i/): $old ~ $new\n" >> releasefile
+            fi
 
-	    echo -e "### [$i: $old ~ $new]($homepage/releases)\n" >> releasefile
+		  
+            else
+	    
+
+	    echo -e "### [$i]($homepage/releases): $old ~ $new\n" >> releasefile
 	    for tag in $( echo "$tags"); do
                    get_release_by_tag $homepage $tag
 		   echo "$body" >> releasefile
                    echo "" >> releasefile 
             done
+
+	    fi
         done
 	fi
+
 
         if [ -n "$downgrade_packages" ]; then 
 
@@ -167,34 +178,28 @@ get_release_docs()
         
         for i in $(echo "$downgrade_packages"); do
 
-            get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') $(grep ^$i old.txt | awk -F== '{print $2}')
+	    nnew=$(grep ^$i new.txt | awk -F== '{print $2}')
+	    nold=$(grep ^$i old.txt | awk -F== '{print $2}')
+            get_package_data $i  $nnew  $nold
             if [[ $type == "undefined" ]]; then
-                  continue
-            fi
-            echo -e "### [$i: $new ~ $old]($homepage/releases)\n" >> releasefile
+               if [ -n "$homepage" ]; then
+                   echo -e "### [$i]($homepage): $nold ~ $nnew\n" >> releasefile
+               else
+                    echo -e "### [$i](https://pypi.org/project/$i/): $nold ~ $nnew\n" >> releasefile
+               fi
+ 
+            else
+            echo -e "### [$i]($homepage/releases): $nold ~ $nnew\n" >> releasefile
 	    for tag in $(echo "$tags"); do
                    get_release_by_tag $homepage $tag
                    echo "$body" >> releasefile
 		   echo "" >> releasefile
 
             done
+	    fi
         done
         fi
 
-       if [ -n "$undefined_packages" ]; then
-
-        echo -e "## Others \n" >> releasefile
-
-        for i in $(echo $undefined_packages); do
-
-            get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') $(grep ^$i old.txt | awk -F== '{print $2}')
-	    if [ -n "$homepage" ]; then
-		    echo -e "### [$i]($homepage): $old ~ $new\n" >> releasefile
-	    else
-	            echo -e "### [$i](https://pypi.org/project/$i/): $old ~ $new\n" >> releasefile
-	    fi
-        done
-       fi
 
         if [ -n "$new_packages" ]; then
 
@@ -238,6 +243,48 @@ old_release=$(echo "$curl_result" | jq -r ".name")
 
 fi
 
+
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/constraints.txt?ref=$new_release" > new.txt
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/constraints.txt?ref=$old_release" > old.txt
+
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$new_release" > newdocker
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$old_release" > olddocker
+
+ndocker=$(grep "ENV PLONE_VERSION" newdocker | awk -F'=| ' '{print $3}' | tail -n 1)
+odocker=$(grep "ENV PLONE_VERSION" olddocker | awk -F'=| ' '{print $3}' | tail -n 1)
+
+if [[ ! "$ndocker" == "$odocker" ]];then
+
+   echo -e "# Plone\n" > releasefile
+   valid_curl_get_result https://api.github.com/repos/plone/Plone/tags?per_page=100
+
+   versions=$(echo "$curl_result" | jq -r '.[].name' )
+
+   bdocker=$(echo -e "$ndocker\n$odocker" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1)
+
+   temp="$odocker"
+   if [[ "$bdocker" == "$ndocker" ]]; then
+	      echo -e "## Upgrade $odocker ~ $ndocker \n" >> releasefile
+
+    else
+	      echo -e "## Downgrade $odocker ~ $ndocker \n" >> releasefile
+	      odocker="$ndocker"
+	      ndocker="$temp"
+   fi
+   tags=$(echo -e "$versions" | awk "/^$ndocker$/, /^$odocker$/")
+
+
+   for i in $(echo $tags); do
+	   if [[ ! "$i" == "$temp" ]]; then
+		   echo -e "### Plone [$i](https://plone.org/download/releases/$i" >> releasefile
+           fi
+   done
+   echo "" >> releasefile
+
+fi
+
+
+
 valid_curl_get_result "https://api.github.com/repos/$repo/compare/$old_release...$new_release"
 
 
@@ -246,9 +293,6 @@ commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name 
 
 
 echo "$commits"
-
-curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/constraints.txt?ref=$new_release" > new.txt
-curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/constraints.txt?ref=$old_release" > old.txt
 
 get_release_docs
 

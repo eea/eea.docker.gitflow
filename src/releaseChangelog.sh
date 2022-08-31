@@ -21,7 +21,7 @@ get_package_data()
 
 package="$1"
 new="$2"
-old="${3:-'0.0.0'}"
+old="$3"
 
 curl_result=$(curl -s "https://registry.npmjs.org/$package")
 echo "$package $old --> $new"
@@ -47,6 +47,10 @@ if [ $(echo $new | grep -E '^[0-9]+\.[0-9]+\.[0-9]+.*' | wc -l) -eq 0 ] || [ $(e
     type="undefined"
     return
 fi    
+
+if [ -z "$old" ]; then
+    return
+fi
 
 
 if [[ $(echo -e "$new\n$old" | sort -V | tail -n 1) == "$new" ]]; then
