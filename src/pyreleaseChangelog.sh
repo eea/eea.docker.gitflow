@@ -15,6 +15,8 @@ fi
 
 
 rm -f releasefile
+touch releasefile
+
 
 get_package_data()
 {
@@ -140,11 +142,12 @@ get_release_docs()
 	downgrade_packages=$(for i in $(echo "$common"); do new=$(grep ^$i new.txt | awk -F== '{print $2}'); old=$( grep ^$i old.txt | awk -F== '{print $2}'); if [[ $(echo -e "$new\n$old" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1) == "$old"   ]] && [[ ! "$new" == "$old" ]]; then echo $i; fi; done)
         undefined_packages=""
 
-        echo -e "# Constraints updates\n" >> releasefile
-
+        
+	if [ -n "$upgrade_packages" ] || [ -n "$downgrade_packages" ] || [ -n "$new_packages" ] || [ -n "$old_packages" ]; then
+	  echo -e "# Dependency updates\n" >> releasefile
+        fi
 	
 	if [ -n "$upgrade_packages" ]; then
-        echo -e "## Upgrades \n" >> releasefile
 
 	for i in $(echo "$upgrade_packages"); do
 	    get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') $(grep ^$i old.txt | awk -F== '{print $2}')
@@ -250,6 +253,8 @@ curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/v
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$new_release" > newdocker
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$old_release" > olddocker
 
+if [[ "$repo" == "eea/plone-backend" ]]; then
+
 ndocker=$(grep "ENV PLONE_VERSION" newdocker | awk -F'=| ' '{print $3}' | tail -n 1)
 odocker=$(grep "ENV PLONE_VERSION" olddocker | awk -F'=| ' '{print $3}' | tail -n 1)
 
@@ -276,12 +281,59 @@ if [[ ! "$ndocker" == "$odocker" ]];then
 
    for i in $(echo $tags); do
 	   if [[ ! "$i" == "$temp" ]]; then
-		   echo -e "### Plone [$i](https://plone.org/download/releases/$i" >> releasefile
+		   echo -e "* Plone [$i](https://plone.org/download/releases/$i)" >> releasefile
            fi
    done
    echo "" >> releasefile
 
 fi
+
+else
+
+ndocker=$(grep "FROM eeacms/plone-backend" newdocker | awk -F':' '{print $2}' | tail -n 1)
+odocker=$(grep "FROM eeacms/plone-backend" olddocker | awk -F':' '{print $2}' | tail -n 1)
+
+if [[ ! "$ndocker" == "$odocker" ]];then
+
+   echo -e "# Plone\n" > releasefile
+   valid_curl_get_result https://api.github.com/repos/eea/plone-backend/tags?per_page=100
+
+   versions=$(echo "$curl_result" | jq -r '.[].name' )
+
+   bdocker=$(echo -e "$ndocker\n$odocker" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1)
+
+   temp="$odocker"
+
+   if [[ "$bdocker" == "$ndocker" ]]; then
+	   echo -e "## Upgrade [eeacms/plone-backend](https://github.com/eea/plone-backend): $odocker ~ $ndocker \n" >> releasefile
+
+    else
+	    echo -e "## Downgrade [eeacms/plone-backend](https://github.com/eea/plone-backend): $odocker ~ $ndocker \n" >> releasefile
+              odocker="$ndocker"
+              ndocker="$temp"
+   fi
+   tags=$(echo -e "$versions" | awk "/^$ndocker$/, /^$odocker$/")
+
+
+   for i in $(echo $tags); do
+           if [[ ! "$i" == "$temp" ]]; then
+		   echo -e "### eeacms/plone-backend:[$i](https://github.com/eea/plone-backend/releases/tag/$i)" >> releasefile
+		   curl_result=$(curl -X GET -H "Accept: application/vnd.github+json" -H "Authorization: token $GIT_TOKEN" -s "https://api.github.com/repos/eea/plone-backend/releases/tags/$i")
+		   body=$(echo $curl_result | jq -r '.body' | sed 's/^#/####/g'  )
+		   if [ -n "$body" ] && [[ ! "$body" == "null" ]]; then
+                       echo -e "$body" >> releasefile
+		   fi
+
+           fi
+   done
+   echo "" >> releasefile
+
+fi
+
+
+
+fi
+
 
 
 
@@ -331,13 +383,13 @@ fi
 get_commits $repository $new_tag $old_tag
 
 
-#if [[ ! "$new_tag" == "master" ]]; then
-#valid_curl_get_result "https://api.github.com/repos/$repository/releases/tags/$new_tag"
+if [[ ! "$new_tag" == "master" ]]; then
+valid_curl_get_result "https://api.github.com/repos/$repository/releases/tags/$new_tag"
 
-#id=$(echo "$curl_result" | jq -r ".id")
+id=$(echo "$curl_result" | jq -r ".id")
 
-#echo $curl_result  | jq --rawfile body releasefile '{"body": $body}' > body.json
+echo $curl_result  | jq --rawfile body releasefile '{"body": $body}' > body.json
 
-#curl -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: token $GIT_TOKEN" "https://api.github.com/repos/$repository/releases/$id" -d @body.json
+curl -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: token $GIT_TOKEN" "https://api.github.com/repos/$repository/releases/$id" -d @body.json
 
-#fi
+fi

@@ -295,7 +295,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		echo  "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  \"$body\"}" 
 
 	    else
-	        body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs| grep -Eiv '\- Automated release [0-9\.]+|Add Sonarqube tag using .* addons list|jenkins|yarn' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
+	        body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs --ignore-commit-pattern 'Automated release [0-9\.]+ |Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]|[yY][aA][rR][nN]' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g')
 	    fi
 
             body=$(echo "$body" | sed 's/[R|r]efs #\([0-9]*\)/Refs \[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' )

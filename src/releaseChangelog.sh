@@ -15,6 +15,7 @@ fi
 
 
 rm -f releasefile
+touch releasefile
 
 get_package_data()
 {
@@ -107,11 +108,13 @@ get_release_docs()
 	downgrade_packages=$(for i in $(echo "$common"); do new=$(jq -r ".dependencies[\"$i\"]" new.json); old=$(jq -r ".dependencies[\"$i\"]" old.json); if [[ $(echo -e "$new\n$old" | sort -V | tail -n 1) == "$old"   ]] && [[ ! "$new" == "$old" ]]; then echo $i; fi; done)
         undefined_packages=""
 
-        echo -e "# Dependency updates\n" > releasefile
-
+        
+	if [ -n "$upgrade_packages" ] || [ -n "$downgrade_packages" ] || [ -n "$new_packages" ] || [ -n "$old_packages" ]; then
+          echo -e "# Dependency updates\n" > releasefile
+        fi
 	
 	if [ -n "$upgrade_packages" ]; then
-        echo -e "## Upgrades \n" >> releasefile
+        #echo -e "## Upgrades \n" >> releasefile
 
 	for i in $(echo "$upgrade_packages"); do
             get_package_data $i $(jq -r ".dependencies[\"$i\"]" new.json) $(jq -r ".dependencies[\"$i\"]" old.json)
