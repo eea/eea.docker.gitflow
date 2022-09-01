@@ -300,11 +300,11 @@ $latestTag" | sort --sort=version | tail -n 1 )
 
 
 
-                        rstcheck --report warning $GIT_HISTORYFILE
+                        rstcheck --report-level warning $GIT_HISTORYFILE
                 fi
                 if [ -f "README.rst" ]; then
                         echo "Check README.rst format"
-                        rstcheck --report warning README.rst
+                        rstcheck --report-level warning README.rst
                 fi
                 echo "Passed check: README.rst and $GIT_HISTORYFILE have correct RST format"
 	fi
@@ -478,7 +478,14 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         if [ $(git tag | grep -c "^$version$") -eq 0 ]; then
          echo "Starting the creation of the tag $version on master"
 
-         curl_result=$(curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
+         export GIT_HISTORYFILE
+	 /extractChangelog.sh $version
+         body=$(cat releasefile  | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g' )
+
+
+	 echo "Will release with body: $body"
+
+         curl_result=$(curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"$body\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
          if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
             echo "There was a problem with the release"
