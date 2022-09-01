@@ -427,7 +427,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           fi
 
           if [ $(echo "$egg_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
-              
+
+              echo "Compiling po files to mo"
+              pocompile
+
               echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
               python setup.py sdist --formats=zip
               twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
