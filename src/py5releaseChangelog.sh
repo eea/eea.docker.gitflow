@@ -44,6 +44,9 @@ if [ $( echo $curl_result | grep -i "not found" |wc -l ) -eq 1 ]; then
                 return
 	fi
 	homepage=$(echo -e "$curl_result" | grep -A 1 "Home Page" | grep href | sed 's/.*href="\(.*\)">.*>/\1/')
+	
+	echo $curl_result | grep -A 1 "Home Page"  
+
 	echo "Extracted homepage from eggrepo"
 
 
@@ -103,8 +106,8 @@ versions=$( echo $curl_result | jq -r '.[].tag_name' | tac )
 echo $versions
 
 if [ $(echo -e "$versions" | wc -l) -eq 1 ] && [[ "$versions" == "$new" ]]; then
-        echo "Found only one release, with the version $new"
-        tags=$new
+	echo "Found only one release, with the version $new"
+	tags=$new
         return
 fi
 
@@ -140,13 +143,13 @@ body=$(echo "$curl_result" | jq -r '.body' | sed 's/^#/###/')
 get_release_docs()
 {
 
-	new_packages=$(diff  <(grep '==' new.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) <(grep '==' old.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) | grep "^< " | awk '{print $2}')
-        old_packages=$(diff  <(grep '==' new.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) <(grep '==' old.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) | grep "^> " | awk '{print $2}')
+	new_packages=$(diff  <(grep '=' new.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) <(grep '=' old.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) | grep "^< " | awk '{print $2}')
+        old_packages=$(diff  <(grep '=' new.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) <(grep '=' old.txt | grep -v '^#' | awk -F= '{print $1}' | sort ) | grep "^> " | awk '{print $2}')
 
        
-	common=$(cat new.txt old.txt | grep "==" | grep -v '^#' | awk -F= '{print $1}' | sort | uniq -d)
-	upgrade_packages=$(for i in $(echo "$common"); do new=$(grep ^$i new.txt | awk -F== '{print $2}'); old=$( grep ^$i old.txt | awk -F== '{print $2}'); if [[ $(echo -e "$new\n$old" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1) == "$new"	]] && [[ ! "$new" == "$old" ]] ; then echo $i; fi; done)
-	downgrade_packages=$(for i in $(echo "$common"); do new=$(grep ^$i new.txt | awk -F== '{print $2}'); old=$( grep ^$i old.txt | awk -F== '{print $2}'); if [[ $(echo -e "$new\n$old" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1) == "$old"   ]] && [[ ! "$new" == "$old" ]]; then echo $i; fi; done)
+	common=$(cat new.txt old.txt | grep "=" | grep -v '^#' | awk -F= '{print $1}' | sort | uniq -d)
+	upgrade_packages=$(for i in $(echo "$common"); do new=$(grep ^$i new.txt | awk -F= '{print $2}'); old=$( grep ^$i old.txt | awk -F= '{print $2}'); if [[ $(echo -e "$new\n$old" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1) == "$new"	]] && [[ ! "$new" == "$old" ]] ; then echo $i; fi; done)
+	downgrade_packages=$(for i in $(echo "$common"); do new=$(grep ^$i new.txt | awk -F= '{print $2}'); old=$( grep ^$i old.txt | awk -F= '{print $2}'); if [[ $(echo -e "$new\n$old" | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1) == "$old"   ]] && [[ ! "$new" == "$old" ]]; then echo $i; fi; done)
         undefined_packages=""
 
         
@@ -157,7 +160,7 @@ get_release_docs()
 	if [ -n "$upgrade_packages" ]; then
 
 	for i in $(echo "$upgrade_packages"); do
-	    get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') $(grep ^$i old.txt | awk -F== '{print $2}')
+	    get_package_data $i $(grep ^$i new.txt | awk -F= '{print $2}') $(grep ^$i old.txt | awk -F= '{print $2}')
 	    if [[ $type == "undefined" ]]; then
                echo -e "### [$i](https://pypi.org/project/$i/#changelog): $old ~ $new\n" >> releasefile
             else
@@ -180,8 +183,8 @@ get_release_docs()
         
         for i in $(echo "$downgrade_packages"); do
 
-	    nnew=$(grep ^$i new.txt | awk -F== '{print $2}')
-	    nold=$(grep ^$i old.txt | awk -F== '{print $2}')
+	    nnew=$(grep ^$i new.txt | awk -F= '{print $2}')
+	    nold=$(grep ^$i old.txt | awk -F= '{print $2}')
             get_package_data $i  $nnew  $nold
             if [[ $type == "undefined" ]]; then
                     echo -e "### [$i](https://pypi.org/project/$i/#changelog): $nold ~ $nnew\n" >> releasefile
@@ -204,7 +207,7 @@ get_release_docs()
 
         for i in $(echo $new_packages); do
 
-            get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') 
+            get_package_data $i $(grep ^$i new.txt | awk -F= '{print $2}') 
             if [[ $type == "undefined" ]]; then
                     echo -e "### [$i](https://pypi.org/project/$i/#changelog): $new\n" >> releasefile
             else
@@ -221,7 +224,7 @@ get_release_docs()
 
         for i in $(echo $old_packages); do
 
-            get_package_data $i $(grep ^$i old.txt | awk -F== '{print $2}')
+            get_package_data $i $(grep ^$i old.txt | awk -F= '{print $2}')
             if [[ $type == "undefined" ]]; then
                     echo -e "### [$i](https://pypi.org/project/$i/#changelog): $new\n" >> releasefile
             else
@@ -245,16 +248,20 @@ old_release=$(echo "$curl_result" | jq -r ".name")
 fi
 
 
-curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/constraints.txt?ref=$new_release" > new.txt
-curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/constraints.txt?ref=$old_release" > old.txt
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/src/plone/versions.cfg?ref=$new_release" > new.txt
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/src/plone/versions.cfg?ref=$old_release" > old.txt
+
+sed -i 's/[ ]*=[ ]*/=/g' new.txt old.txt
+
+
 
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$new_release" > newdocker
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$old_release" > olddocker
 
-if [[ "$repo" == "eea/plone-backend" ]]; then
+if [[ "$repo" == "eea/eea.docker.plone" ]]; then
 
-ndocker=$(grep "ENV PLONE_VERSION" newdocker | awk -F'=| ' '{print $3}' | tail -n 1)
-odocker=$(grep "ENV PLONE_VERSION" olddocker | awk -F'=| ' '{print $3}' | tail -n 1)
+ndocker=$(grep "^FROM" newdocker | awk -F':' '{print $2}' | tail -n 1)
+odocker=$(grep "^FROM" olddocker | awk -F':' '{print $2}' | tail -n 1)
 
 if [[ ! "$ndocker" == "$odocker" ]];then
 
@@ -288,13 +295,13 @@ fi
 
 else
 
-ndocker=$(grep "FROM eeacms/plone-backend" newdocker | awk -F':' '{print $2}' | tail -n 1)
-odocker=$(grep "FROM eeacms/plone-backend" olddocker | awk -F':' '{print $2}' | tail -n 1)
+ndocker=$(grep "FROM eeacms/plone" newdocker | awk -F':' '{print $2}' | tail -n 1)
+odocker=$(grep "FROM eeacms/plone" olddocker | awk -F':' '{print $2}' | tail -n 1)
 
 if [[ ! "$ndocker" == "$odocker" ]];then
 
    echo -e "# Plone\n" > releasefile
-   valid_curl_get_result https://api.github.com/repos/eea/plone-backend/tags?per_page=100
+   valid_curl_get_result https://api.github.com/repos/eea/eea.docker.plone/tags?per_page=100
 
    versions=$(echo "$curl_result" | jq -r '.[].name' )
 
@@ -303,10 +310,10 @@ if [[ ! "$ndocker" == "$odocker" ]];then
    temp="$odocker"
 
    if [[ "$bdocker" == "$ndocker" ]]; then
-	   echo -e "## Upgrade [eeacms/plone-backend](https://github.com/eea/plone-backend): $odocker ~ $ndocker \n" >> releasefile
+	   echo -e "## Upgrade [eeacms/plone](https://github.com/eea/eea.docker.plone): $odocker ~ $ndocker \n" >> releasefile
 
     else
-	    echo -e "## Downgrade [eeacms/plone-backend](https://github.com/eea/plone-backend): $odocker ~ $ndocker \n" >> releasefile
+	    echo -e "## Downgrade [eeacms/plone](https://github.com/eea/eea.docker.plone): $odocker ~ $ndocker \n" >> releasefile
               odocker="$ndocker"
               ndocker="$temp"
    fi
@@ -315,8 +322,8 @@ if [[ ! "$ndocker" == "$odocker" ]];then
 
    for i in $(echo $tags); do
            if [[ ! "$i" == "$temp" ]]; then
-		   echo -e "### eeacms/plone-backend:[$i](https://github.com/eea/plone-backend/releases/tag/$i)" >> releasefile
-		   curl_result=$(curl -X GET -H "Accept: application/vnd.github+json" -H "Authorization: token $GIT_TOKEN" -s "https://api.github.com/repos/eea/plone-backend/releases/tags/$i")
+		   echo -e "### eeacms/plone-backend:[$i](https://github.com/eea/eea.docker.plone/releases/tag/$i)" >> releasefile
+		   curl_result=$(curl -X GET -H "Accept: application/vnd.github+json" -H "Authorization: token $GIT_TOKEN" -s "https://api.github.com/repos/eea/eea.docker.plone/releases/tags/$i")
 		   body=$(echo $curl_result | jq -r '.body' | sed 's/^#/####/g'  )
 		   if [ -n "$body" ] && [[ ! "$body" == "null" ]]; then
                        echo -e "$body" >> releasefile

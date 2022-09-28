@@ -172,7 +172,7 @@ get_release_docs()
 
             get_package_data $i $(jq -r ".dependencies[\"$i\"]" new.json) 
             if [ -n "$homepage" ]; then
-	       echo -e "### [$i]($homepage): $new\n" >> releasefile
+	       echo -e "### [$i]($homepage/releases): $new\n" >> releasefile
             else
                echo -e "### [$i](https://www.npmjs.com/package/$i): $new\n" >> releasefile
 
@@ -188,7 +188,7 @@ get_release_docs()
         for i in $(echo $old_packages); do
 
             get_package_data $i $(jq -r ".dependencies[\"$i\"]" old.json)
-            echo -e "### $i: $old\n" >> releasefile
+            echo -e "### $i: $new\n" >> releasefile
         done
          fi
  }
@@ -206,13 +206,47 @@ old_release=$(echo "$curl_result" | jq -r ".name")
 
 fi
 
-valid_curl_get_result "https://api.github.com/repos/$repo/compare/$old_release...$new_release"
-
-commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| "- \(.commit.message) - [\(.commit.author.name) -  [`\(.sha[0:7])`](\(.html_url))]"' )
+curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/CHANGELOG.md" > CHANGELOG
 
 
+max=$(grep -n "^#[#]* \[$old_release\]" CHANGELOG | awk -F: '{print $1}' )
+min_line=$(grep -n "^#[#]* \[$new_release\]" CHANGELOG || grep -n "^#[#]* \[" CHANGELOG | head -n 1 )
+min=$(echo -e "$min_line" | awk -F: '{print $1}' )
 
-echo "$commits"
+
+min=$((min+1))
+max=$((max-1))
+
+sed -n "${min},${max}p" CHANGELOG | awk 'NF' > partfile
+
+remove=$(grep -n "^#[#]* :rocket: Dependency updates" partfile | awk -F: '{print $1}' )
+
+if [ -n "$remove" ]; then
+  if [ "$remove" -gt 1 ]; then
+	  sed -n "1,$((remove-1))p" partfile > commitfile
+  else
+	  cp /dev/null commitfile
+  fi
+   sed -i "1,${remove}d" partfile
+   cont=$(grep -n "^#[#]* " partfile | awk -F: '{print $1}' )
+   if [ -n "$cont" ]; then
+	   sed -i "1,$((cont-1))d" partfile
+	   cat partfile >> commitfile
+   fi
+   mv commitfile partfile
+
+fi
+
+if [ $(grep "^#[#]* " partfile | wc -l) -eq 1 ]; then
+   
+	sed -i '/^#[#]* .* Others/d' partfile
+fi
+
+commits=$(cat partfile)
+
+
+echo -e "$commits"
+
 
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/package.json?ref=$new_release" > new.json
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/package.json?ref=$old_release" > old.json
@@ -221,7 +255,7 @@ get_release_docs
 
 if [ -n "$commits" ] && [[ ! "$commits" == "null" ]]; then
   echo -e "# Internal\n" >> releasefile
-  echo "$commits" >> releasefile
+  echo -e "$commits" >> releasefile
 fi
 
 }
