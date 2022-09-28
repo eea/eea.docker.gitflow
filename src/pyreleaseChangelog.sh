@@ -380,6 +380,19 @@ if [ -z "$new_tag" ]; then
 	new_tag="master"
 fi
 
+if [ -z "$old_tag" ]; then
+
+valid_curl_get_result "https://api.github.com/repos/$repository/releases"
+
+echo -e "$curl_result" > temp
+
+old_tag=$(jq -r -n -f temp | jq -r '.[].tag_name' | grep -A 1 "^${new_tag}$" | tail -n 1)
+
+echo "Calculated old tag"
+echo $old_tag 
+
+fi
+
 
 get_commits $repository $new_tag $old_tag
 

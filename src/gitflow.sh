@@ -188,6 +188,20 @@ $latestTag2" | sort --sort=version | tail -n 1)
     else
 
 
+	    if [[ "$GIT_NAME" == "plone-backend" ]] || [[ "$GIT_NAME" == "eea-website-backend" ]]; then
+                  echo "Will update release text"
+
+		  /pyreleaseChangelog.sh $GIT_ORG/$GIT_NAME $version
+	    fi
+
+            if [[ "$GIT_NAME" == "eea.docker.plone" ]] || [[ "$GIT_NAME" == "eea.docker.plonesaas" ]]; then
+                  echo "Will update release text"
+
+                  /py5releaseChangelog.sh $GIT_ORG/$GIT_NAME $version
+            fi
+
+
+
       echo "Starting the Rancher catalog release"
     
       if [ -z "$RANCHER_CATALOG_PATHS" ]; then
