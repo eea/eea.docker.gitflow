@@ -251,10 +251,17 @@ curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/v
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$new_release" > newdocker
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/Dockerfile?ref=$old_release" > olddocker
 
+
 if [[ "$repo" == "eea/plone-backend" ]]; then
 
 ndocker=$(grep "ENV PLONE_VERSION" newdocker | awk -F'=| ' '{print $3}' | tail -n 1)
 odocker=$(grep "ENV PLONE_VERSION" olddocker | awk -F'=| ' '{print $3}' | tail -n 1)
+
+if [[ "$first_release" == "yes" ]]; then
+   echo -e "# Plone\n" > releasefile
+   echo -e "## Plone [$ndocker](https://plone.org/download/releases/$ndocker)" >> releasefile
+else
+
 
 if [[ ! "$ndocker" == "$odocker" ]];then
 
@@ -286,10 +293,27 @@ if [[ ! "$ndocker" == "$odocker" ]];then
 
 fi
 
+fi
+
 else
 
 ndocker=$(grep "FROM eeacms/plone-backend" newdocker | awk -F':' '{print $2}' | tail -n 1)
 odocker=$(grep "FROM eeacms/plone-backend" olddocker | awk -F':' '{print $2}' | tail -n 1)
+
+if [[ "$first_release" == "yes" ]]; then
+   echo -e "# Plone\n" > releasefile
+
+   echo -e "### eeacms/plone-backend:[$ndocker](https://github.com/eea/plone-backend/releases/tag/$ndocker)" >> releasefile
+   curl_result=$(curl -X GET -H "Accept: application/vnd.github+json" -H "Authorization: token $GIT_TOKEN" -s "https://api.github.com/repos/eea/plone-backend/releases/tags/$ndocker")
+   body=$(echo $curl_result | jq -r '.body' | sed 's/^#/####/g'  )
+   if [ -n "$body" ] && [[ ! "$body" == "null" ]]; then
+       echo -e "$body" >> releasefile
+   fi
+
+
+else
+
+
 
 if [[ ! "$ndocker" == "$odocker" ]];then
 
@@ -328,7 +352,7 @@ if [[ ! "$ndocker" == "$odocker" ]];then
 
 fi
 
-
+fi
 
 fi
 
@@ -382,13 +406,32 @@ fi
 
 if [ -z "$old_tag" ]; then
 
-valid_curl_get_result "https://api.github.com/repos/$repository/releases"
+valid_curl_get_result "https://api.github.com/repos/$repository/releases?per_page=100" || echo "problem with releases github"
 
 echo -e "$curl_result" > temp
 
-old_tag=$(jq -r -n -f temp | jq -r '.[].tag_name' | grep -A 1 "^${new_tag}$" | tail -n 1)
+
+
+if [[ "$new_tag" == "master" ]]; then
+   old_tag=$(jq -r -n -f temp | jq -r '.[].tag_name' | head -n 1)
+else
+   old_tag=$(jq -r -n -f temp | jq -r '.[].tag_name' | grep -A 1 "^${new_tag}$" | grep -v "^${new_tag}$" || echo "")
+fi
+
+page=1
+
+while [ -z "$old_tag" ] || [[ "$old_tag" == "null" ]]; do
+
+  valid_curl_get_result "https://api.github.com/repos/$repository/commits?per_page=100&page=$page"
+  old_tag=$(echo "$curl_result" | jq -r '.[] | select((.parents|length) == 0) | .sha')
+  page=$((page+1))
+  first_release="yes"  
+done
+
+
 
 echo "Calculated old tag"
+
 echo $old_tag 
 
 fi
