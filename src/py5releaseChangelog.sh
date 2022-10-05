@@ -384,7 +384,7 @@ get_release_docs
 
 if [ -n "$commits" ] && [[ ! "$commits" == "null" ]]; then
   echo -e "# Internal\n" >> releasefile
-  echo "$commits" >> releasefile
+  echo "$commits" |  sed 's/#\([0-9]\{5,6\}\)/\[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g'  >> releasefile
 fi
 
 }
