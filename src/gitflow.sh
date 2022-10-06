@@ -192,7 +192,18 @@ $latestTag2" | sort --sort=version | tail -n 1)
 
       echo "-------------------------------------------------------------------------------"
       echo "Starting the release $version"
-      curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\nChanges since last release: https://github.com/${GIT_ORG}/${GIT_NAME}/compare/$latestTag...$version\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
+      
+      data="{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\nChanges since last release: https://github.com/${GIT_ORG}/${GIT_NAME}/compare/$latestTag...$version\", \"draft\": false, \"prerelease\": false }"
+     
+      echo "$data" > body.json
+
+      if [ -f releasefile ]; then
+
+           echo "$data" | jq --rawfile body releasefile '{"body": $body}' > body.json
+      fi
+
+
+      curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data @body.json   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
       if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
         echo "There was a problem with the release"
