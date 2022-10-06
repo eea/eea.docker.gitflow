@@ -177,7 +177,7 @@ $latestTag2" | sort --sort=version | tail -n 1)
                   cat CHANGELOG >> CHANGELOG.md
                   rm CHANGELOG
 
-                  url="${GITHUBURL}/contents/CHANGELOG.md";
+                  url="https://api.github.com/repos/$GIT_ORG/$GIT_NAME/contents/CHANGELOG.md";
 
                   valid_curl_get_result "$url?ref=master" sha
 
