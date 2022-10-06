@@ -166,11 +166,11 @@ $latestTag2" | sort --sort=version | tail -n 1)
                   
 		  /pyreleaseChangelog.sh $GIT_ORG/$GIT_NAME master $latestTag
                   
-		  sed '1,3d'  CHANGELOG.md > CHANGELOG
+		  sed '1,2d'  CHANGELOG.md > CHANGELOG
 
                   echo -e "# Changelog\n\n" > CHANGELOG.md
 
-                  echo -e "## [$version](https://github.com/${GIT_ORG}/${GIT_NAME}/releases/tag/$version) - $(date -u '+%FT%rZ')\n" >> CHANGELOG.md
+                  echo -e "## [$version](https://github.com/${GIT_ORG}/${GIT_NAME}/releases/tag/$version) - $(date -u '+%FT%TZ')\n" >> CHANGELOG.md
 
                   cat releasefile | sed 's/^#/###/g' | sed 's/######[#]*/######/g'  | sed 's/\[#\([0-9]\{5,6\}\)\](https:\/\/taskman.eionet.europa.eu\/issues\/[0-9]\{5,6\})/#\1/g'  >> CHANGELOG.md
  
@@ -197,18 +197,21 @@ $latestTag2" | sort --sort=version | tail -n 1)
      
       echo "$data" > body.json
 
+      cat body.json
+
       if [ -f releasefile ]; then
 
            echo "$data" | jq --rawfile body releasefile '{"body": $body}' > body.json
       fi
 
+      cat body.json
 
-      curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data @body.json   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
+      curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" -d@body.json   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
       if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
         echo "There was a problem with the release"
         echo "https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases"
-	echo "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"Release $version\", \"draft\": false, \"prerelease\": false }"
+	cat body.json
 	echo $curl_result
         exit 1
       fi
