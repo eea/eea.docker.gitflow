@@ -158,7 +158,37 @@ $latestTag2" | sort --sort=version | tail -n 1)
       fi
 			
 
-              
+      if [[ "$GIT_NAME" == "plone-backend" ]] || [[ "$GIT_NAME" == "eea-website-backend" ]]; then
+
+	      if [ $(grep "^## $version" CHANGELOG.md) -eq 0 ]; then
+
+                  echo "Will update changelog"
+                  
+		  /pyreleaseChangelog.sh $GIT_ORG/$GIT_NAME master $latestTag
+                  
+		  sed '1,3d'  CHANGELOG.md > CHANGELOG
+
+                  echo -e "# Changelog\n\n" > CHANGELOG.md
+
+                  echo -e "## [$version](https://github.com/${GIT_ORG}/${GIT_NAME}/releases/tag/$version) - $(date -u '+%FT%rZ')\n" >> CHANGELOG.md
+
+                  cat releasefile | sed 's/^#/###/g' | sed 's/######[#]*/######/g'  | sed 's/\[#\([0-9]\{5,6\}\)\](https:\/\/taskman.eionet.europa.eu\/issues\/[0-9]\{5,6\})/#\1/g'  >> CHANGELOG.md
+ 
+                  cat CHANGELOG >> CHANGELOG.md
+                  rm CHANGELOG
+
+                  url="${GITHUBURL}/contents/CHANGELOG.md";
+
+                  valid_curl_get_result "$url?ref=master" sha
+
+                  sha_file=$(echo $curl_result |  jq -r '.sha // empty')
+
+                  valid_curl_put_result $url "{\"message\": \"docs: Added release $version\", \"sha\": \"${sha_file}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"branch\": \"${GIT_BRANCH}\", \"content\": \"$(printf '%s' $(cat CHANGELOG.md | base64))\"}"
+
+                  echo "$location updated successfully"
+	      fi
+      fi
+
 
       echo "-------------------------------------------------------------------------------"
       echo "Starting the release $version"
