@@ -197,14 +197,10 @@ $latestTag2" | sort --sort=version | tail -n 1)
      
       echo "$data" > body.json
 
-      cat body.json
-
       if [ -f releasefile ]; then
-
-           echo "$data" | jq --rawfile body releasefile '{"body": $body}' > body.json
+           echo "$data" | jq --rawfile body releasefile '.body=$body' > body.json
       fi
 
-      cat body.json
 
       curl_result=$( curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" -d@body.json   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
