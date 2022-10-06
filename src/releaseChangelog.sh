@@ -292,6 +292,8 @@ valid_curl_get_result "https://api.github.com/repos/$repository/releases/tags/$n
 
 id=$(echo "$curl_result" | jq -r ".id")
 
+sed -i 's/######[#]*/######/g' releasefile
+
 echo $curl_result  | jq --rawfile body releasefile '{"body": $body}' > body.json
 
 curl -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: token $GIT_TOKEN" "https://api.github.com/repos/$repository/releases/$id" -d @body.json
