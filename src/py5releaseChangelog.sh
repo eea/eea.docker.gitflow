@@ -105,6 +105,7 @@ url=$(echo "$homepage" | sed 's#/github.com/#/api.github.com/repos/#')"/releases
 
 valid_curl_get_result $url
 
+echo $curl_result
 
 versions=$( echo $curl_result | jq -r '.[].tag_name' | tac )
 
@@ -116,7 +117,7 @@ if [ $(echo -e "$versions" | wc -l) -eq 1 ] && [[ "$versions" == "$new" ]]; then
         return
 fi
 
-tags=$(echo -e "$versions" | awk "/^$old$/, /^$new$/" | tac | grep -v "^$temp$" )
+tags=$(echo -e "$versions" | awk "/^$old$/, /^$new$/" | tac | grep -v "^$temp$" || echo "" )
 
 echo $tags
 

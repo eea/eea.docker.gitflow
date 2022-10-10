@@ -217,20 +217,26 @@ min=$(echo -e "$min_line" | awk -F: '{print $1}' )
 min=$((min+1))
 max=$((max-1))
 
+echo "extracting $min -> $max from Changelog"
 sed -n "${min},${max}p" CHANGELOG | awk 'NF' > partfile
 
 remove=$(grep -n "^#[#]* :rocket: Dependency updates" partfile | awk -F: '{print $1}' )
 
+
 if [ -n "$remove" ]; then
+
+  echo "Found Dependency updates, will remove them, $remove"
   if [ "$remove" -gt 1 ]; then
 	  sed -n "1,$((remove-1))p" partfile > commitfile
   else
 	  cp /dev/null commitfile
   fi
    sed -i "1,${remove}d" partfile
-   cont=$(grep -n "^#[#]* " partfile | awk -F: '{print $1}' )
+   cont=$(grep -n "^#[#]* " partfile | head -n 1 |  awk -F: '{print $1-1}' | awk 'NF' )
    if [ -n "$cont" ]; then
-	   sed -i "1,$((cont-1))d" partfile
+	   echo partfile
+	   echo "found next header from partfile ,line 1,${cont}d"
+	   sed -i "1,${cont}d" partfile
 	   cat partfile >> commitfile
    fi
    mv commitfile partfile
