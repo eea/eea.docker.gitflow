@@ -33,6 +33,8 @@ homepage=$(echo $curl_result | jq -r '.home_page' | sed 's/#.*$//' )
 curl_result=$(curl -s "https://pypi.org/pypi/$package/json")
 
 if [ $( echo $curl_result | grep -i "not found" |wc -l ) -eq 1 ]; then
+        
+	echo "Not found in pypi, checking in eggrepo"
 
 	curl_result=$(curl -s -L "https://eggrepo.eea.europa.eu/d/$package")
 
@@ -53,7 +55,10 @@ if [ $( echo $curl_result | grep -i "not found" |wc -l ) -eq 1 ]; then
 else
 
 	homepage=$(echo $curl_result | jq -r '.info.home_page' | sed 's/#.*$//' )
-        echo "Extracted homepage from pypi"
+        
+	echo $homepage
+	
+	echo "Extracted homepage from pypi"
 
 fi
 
@@ -160,6 +165,7 @@ get_release_docs()
 	if [ -n "$upgrade_packages" ]; then
 
 	for i in $(echo "$upgrade_packages"); do
+            type="upgrade"
 	    get_package_data $i $(grep ^$i new.txt | awk -F= '{print $2}') $(grep ^$i old.txt | awk -F= '{print $2}')
 	    if [[ $type == "undefined" ]]; then
                echo -e "### [$i](https://pypi.org/project/$i/#changelog): $old ~ $new\n" >> releasefile
@@ -182,7 +188,7 @@ get_release_docs()
 	echo -e "## Downgrades \n" >> releasefile
         
         for i in $(echo "$downgrade_packages"); do
-
+            type="downgrade"
 	    nnew=$(grep ^$i new.txt | awk -F= '{print $2}')
 	    nold=$(grep ^$i old.txt | awk -F= '{print $2}')
             get_package_data $i  $nnew  $nold
@@ -206,7 +212,7 @@ get_release_docs()
         echo -e "## New packages\n" >> releasefile
 
         for i in $(echo $new_packages); do
-
+            type="new"
             get_package_data $i $(grep ^$i new.txt | awk -F= '{print $2}') 
             if [[ $type == "undefined" ]]; then
                     echo -e "### [$i](https://pypi.org/project/$i/#changelog): $new\n" >> releasefile
@@ -223,7 +229,7 @@ get_release_docs()
         echo -e "## Removed packages\n" >> releasefile
 
         for i in $(echo $old_packages); do
-
+            type="old"
             get_package_data $i $(grep ^$i old.txt | awk -F= '{print $2}')
             if [[ $type == "undefined" ]]; then
                     echo -e "### [$i](https://pypi.org/project/$i/#changelog): $new\n" >> releasefile

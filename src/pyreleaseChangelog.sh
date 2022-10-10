@@ -44,6 +44,9 @@ if [ $( echo $curl_result | grep -i "not found" |wc -l ) -eq 1 ]; then
                 return
 	fi
 	homepage=$(echo -e "$curl_result" | grep -A 1 "Home Page" | grep href | sed 's/.*href="\(.*\)">.*>/\1/')
+
+	echo $curl_result | grep -A 1 "Home Page"  
+
 	echo "Extracted homepage from eggrepo"
 
 
@@ -157,6 +160,7 @@ get_release_docs()
 	if [ -n "$upgrade_packages" ]; then
 
 	for i in $(echo "$upgrade_packages"); do
+	    type="upgrade"
 	    get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') $(grep ^$i old.txt | awk -F== '{print $2}')
 	    if [[ $type == "undefined" ]]; then
                echo -e "### [$i](https://pypi.org/project/$i/#changelog): $old ~ $new\n" >> releasefile
@@ -179,7 +183,7 @@ get_release_docs()
 	echo -e "## Downgrades \n" >> releasefile
         
         for i in $(echo "$downgrade_packages"); do
-
+            type="downgrade"
 	    nnew=$(grep ^$i new.txt | awk -F== '{print $2}')
 	    nold=$(grep ^$i old.txt | awk -F== '{print $2}')
             get_package_data $i  $nnew  $nold
@@ -203,7 +207,7 @@ get_release_docs()
         echo -e "## New packages\n" >> releasefile
 
         for i in $(echo $new_packages); do
-
+            type="new"
             get_package_data $i $(grep ^$i new.txt | awk -F== '{print $2}') 
             if [[ $type == "undefined" ]]; then
                     echo -e "### [$i](https://pypi.org/project/$i/#changelog): $new\n" >> releasefile
@@ -220,7 +224,7 @@ get_release_docs()
         echo -e "## Removed packages\n" >> releasefile
 
         for i in $(echo $old_packages); do
-
+            type="old"
             get_package_data $i $(grep ^$i old.txt | awk -F== '{print $2}')
             if [[ $type == "undefined" ]]; then
                     echo -e "### [$i](https://pypi.org/project/$i/#changelog): $new\n" >> releasefile
