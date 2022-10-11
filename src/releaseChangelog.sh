@@ -268,7 +268,7 @@ else
    echo "No commits found in Changelog, checking commits directly"
 
    valid_curl_get_result "https://api.github.com/repos/$repo/compare/$old_release...$new_release"
-   commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| "- \(.commit.message) - [\(.commit.author.name) -  [`\(.sha[0:7])`](\(.html_url))]"' )
+   commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| "- \(.commit.message) - [\(.commit.author.name) -  [`\(.sha[0:7])`](\(.html_url))]"' || echo "null" )
    echo "$commits"
 
    if [ -n "$commits" ] && [[ ! "$commits" == "null" ]]; then
