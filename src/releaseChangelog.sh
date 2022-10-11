@@ -262,6 +262,20 @@ get_release_docs
 if [ -n "$commits" ] && [[ ! "$commits" == "null" ]]; then
   echo -e "# Internal\n" >> releasefile
   echo -e "$commits" >> releasefile
+
+else
+
+   echo "No commits found in Changelog, checking commits directly"
+
+   valid_curl_get_result "https://api.github.com/repos/$repo/compare/$old_release...$new_release"
+   commits=$(echo "$curl_result" | jq -r '.commits[] | select (.commit.author.name == "EEA Jenkins" | not ) | select (.commit.message | ( startswith("Merge pull request") or startswith("[JENKINS]")  ) | not )| "- \(.commit.message) - [\(.commit.author.name) -  [`\(.sha[0:7])`](\(.html_url))]"' )
+   echo "$commits"
+
+   if [ -n "$commits" ] && [[ ! "$commits" == "null" ]]; then
+      echo -e "# Internal\n" >> releasefile
+     echo -e "$commits" >> releasefile
+   fi
+
 fi
 
 }
@@ -293,12 +307,15 @@ fi
 
 get_commits $repository $new_tag $old_tag
 
+sed -i 's/######[#]*/######/g' releasefile
+
+
 if [[ ! "$new_tag" == "master" ]]; then
 valid_curl_get_result "https://api.github.com/repos/$repository/releases/tags/$new_tag"
 
 id=$(echo "$curl_result" | jq -r ".id")
 
-sed -i 's/######[#]*/######/g' releasefile
+sed -i 's/#\([0-9]\{5,6\}\)/\[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' releasefile
 
 echo $curl_result  | jq --rawfile body releasefile '{"body": $body}' > body.json
 
