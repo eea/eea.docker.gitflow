@@ -95,9 +95,9 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	#fi
 
 
-        echo "Check if format is x.y.z or x.y.z-beta.[0-9]*"
-        if [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ] && [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$' | wc -l) -eq 0 ]; then
-            echo "Current package.json version $version format is not major.minor.patch nor beta format major.minor.patch-beta.version"
+        echo "Check if format is x.y.z, x.y.z-beta.[0-9]*,  or x.y.z-alpha.[0-9]*"
+        if [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ] && [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$' | wc -l) -eq 0 ] && [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$' | wc -l) -eq 0 ]; then
+            echo "Current package.json version $version format is not major.minor.patch nor beta format major.minor.patch-beta.version nor alpha format major.minor.patch-alpha.version"
 	    echo "Please manually update the format to a correct version ( major.minor.patch ) "
             exit 1
         fi
