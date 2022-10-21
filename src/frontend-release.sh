@@ -184,11 +184,10 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
         version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
 
 
-
-        echo "Check if format is x.y.z"
-        if [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ]; then
-            echo "Version format is not major.minor.patch, will skip automated tag creation, please check the error"
-            exit 1
+        echo "Check if format is x.y.z, x.y.z-beta.[0-9]*,  or x.y.z-alpha.[0-9]*"
+        if [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | wc -l) -eq 0 ] && [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$' | wc -l) -eq 0 ] && [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$' | wc -l) -eq 0 ]; then
+             echo "Version format is not major.minor.patch(-(alpha|beta).version), will skip automated tag creation, please check the error"
+	     exit 1
         fi
 
 
