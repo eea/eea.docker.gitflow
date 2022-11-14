@@ -74,15 +74,20 @@ if [ -n "$RANCHER_CATALOG_READ_VERSION" ]; then
       echo "Did not receive any value, will use the default - $DOCKER_IMAGEVERSION"
   fi
 else
-  if [ -n "${RANCHER_CATALOG_VERSION}" ]; then
-    new_version="${RANCHER_CATALOG_VERSION}"
+  if [ -n "$RANCHER_CATALOG_ADD_MINUS" ]; then
+      echo "catalog version - Adding -1 to existing version: ${old_version}-1"
+      new_version="${old_version}-1"
   else
-     # Auto generate Rancher Catalog next version or use the Docker Image version
-     if [ -n "$RANCHER_CATALOG_NEXT_VERSION" ]; then
-        new_version=$(echo $old_version | awk '{printf "%.1f-dev0", $1 + 0.1}' )
-     else
-        new_version=$DOCKER_IMAGEVERSION
-     fi
+    if [ -n "${RANCHER_CATALOG_VERSION}" ]; then
+      new_version="${RANCHER_CATALOG_VERSION}"
+    else
+       # Auto generate Rancher Catalog next version or use the Docker Image version
+       if [ -n "$RANCHER_CATALOG_NEXT_VERSION" ]; then
+          new_version=$(echo $old_version | awk '{printf "%.1f-dev0", $1 + 0.1}' )
+       else
+          new_version=$DOCKER_IMAGEVERSION
+       fi
+    fi
   fi
 fi
 
