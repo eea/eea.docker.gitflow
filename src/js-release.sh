@@ -130,12 +130,11 @@ $old_version" | sort --sort=version | tail -n 1 )
        
        if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
            yarn add -W $3@$4
+           echo "DEPENDENCIES - Also run deduplicate to fix broken yarn.lock file"
+           yarn-deduplicate yarn.lock
        else
            yarn add $3@$4
        fi
-
-       echo "DEPENDENCIES - Also run deduplicate to fix broken yarn.lock file"
-       yarn-deduplicate yarn.lock
        
        #Yarn takes a lot of time, will try pull, if it fails because of conflicts, start over"
        pull_error=$(git pull 2>&1 | grep Aborting | wc -l)
