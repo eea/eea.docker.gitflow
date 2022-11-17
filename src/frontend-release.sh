@@ -111,9 +111,10 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 
              yarn
 
-             echo "Running yarn-deduplicate"
-
-             yarn-deduplicate yarn.lock
+             if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
+                echo "Running yarn-deduplicate"
+                yarn-deduplicate yarn.lock
+             fi
 
              if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
                 echo "Found changes in yarn.lock, will now update it"
