@@ -128,8 +128,12 @@ $old_version" | sort --sort=version | tail -n 1 )
        echo "DEPENDENCIES - Old version $old_version is smaller than the released version"
        echo "DEPENDENCIES - Will now update the version file and yarn.lock"
        
-       yarn add -W $3@$4
-       
+       if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
+           yarn add -W $3@$4
+       else
+           yarn add $3@$4
+       fi
+
        echo "DEPENDENCIES - Also run deduplicate to fix broken yarn.lock file"
        yarn-deduplicate yarn.lock
        
