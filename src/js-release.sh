@@ -56,8 +56,9 @@ update_package_json()
        
        echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH"
        
-       git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git frontend
-       cd frontend
+       rm -rf /frontend
+       git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git /frontend
+       cd /frontend
        
        if [ $(git branch --all | grep origin/${UPDATE_BRANCH}$ | wc -l) -eq 0 ]; then
           echo "Repository does not contain branch $UPDATE_BRANCH, skipping"
@@ -140,8 +141,6 @@ $old_version" | sort --sort=version | tail -n 1 )
        pull_error=$(git pull 2>&1 | grep Aborting | wc -l)
        if [ $pull_error -ne 0 ]; then
           echo "There is a concurrency problem on repo $1, will cleanup and retry again"
-          cd ..
-          rm -rf frontend
           update_package_json $1 $2 $3 $4 $5
 	  return
        fi
@@ -154,12 +153,8 @@ $old_version" | sort --sort=version | tail -n 1 )
        commit_ok=$(git commit -m "Release $3@$4" | grep -i "changed" | wc -l)
        if [ $commit_ok -eq 1 ]; then
          git push
-	 cd ..
-         rm -rf frontend
        else
          echo "There was a problem with the commit on repo $1, will cleanup and retry again"
-         cd ..
-         rm -rf frontend
          update_package_json $1 $2 $3 $4 $5
 	 return
        fi
@@ -351,6 +346,8 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
         check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
 	
+	current_pwd="$(pwd)"
+	
 	for i in $( echo "$check_frontend" ); do 
 	    update_package_json $i package.json $package_name $version develop
         done
@@ -360,5 +357,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	for i in $( echo "$check_kitkat" ); do 
             update_package_json $i package.json $package_name $version develop
         done
+	
+	cd $current_pwd
 fi
 
