@@ -56,6 +56,7 @@ update_package_json()
        
        echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH"
        
+       cd /
        rm -rf /frontend
        git clone https://$GIT_USER:$GIT_TOKEN@github.com/$1.git /frontend
        cd /frontend
