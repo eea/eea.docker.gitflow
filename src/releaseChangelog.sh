@@ -125,11 +125,15 @@ get_release_docs()
 	    fi
 
 	    echo -e "### [$i: $old ~ $new]($homepage/releases)\n" >> releasefile
-	    for tag in $( echo "$tags"); do
+	    if [ $(echo "$tags" | wc -w ) -lt 20 ]; then
+	      for tag in $( echo "$tags"); do
                    get_release_by_tag $homepage $tag
 		   echo "$body" >> releasefile
                    echo "" >> releasefile 
-            done
+              done
+	    else
+	       echo "Too many tags  $(echo "$tags" | wc -w ) , do not add release notes"  
+	    fi
         done
 	fi
 
