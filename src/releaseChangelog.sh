@@ -224,7 +224,12 @@ max=$((max-1))
 echo "extracting $min -> $max from Changelog"
 sed -n "${min},${max}p" CHANGELOG | awk 'NF' > partfile
 
-remove=$(grep -n "^#[#]* :rocket: Dependency updates" partfile | awk -F: '{print $1}' )
+cat partfile
+echo "grep on Dependency updates"
+
+grep -n "^#[#]* :rocket: Dependency updates" partfile
+
+remove=$(grep -n "^#[#]* :rocket: Dependency updates" partfile | awk -F: '{print $1}' | head -n 1 )
 
 
 if [ -n "$remove" ]; then
