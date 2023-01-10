@@ -227,7 +227,7 @@ sed -n "${min},${max}p" CHANGELOG | awk 'NF' > partfile
 cat partfile
 echo "grep on Dependency updates"
 
-grep -n "^#[#]* :rocket: Dependency updates" partfile
+grep -n "^#[#]* :rocket: Dependency updates" partfile || echo ""
 
 remove=$(grep -n "^#[#]* :rocket: Dependency updates" partfile | awk -F: '{print $1}' | head -n 1 )
 
