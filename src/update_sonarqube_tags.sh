@@ -113,11 +113,29 @@ for package in $(cat /tmp/all_addons); do
                    echo "Could not get Jenkinsfile for $package, on branch develop, skipping package"
 		   continue
 		fi
+
 		echo "Found line setting sonarqube tags"
 		echo $line
-		if [ $( echo $line | grep -w $SONARQUBE_TAG | wc -l ) -eq 0 ]; then
-                	eval $line
+		eval $line
+
+		DELETE_SITE="demo-kitkat.dev2aws.eea.europa.eu prod-www.eea.europa.eu"
+		UPDATE_JENKINSFILE="no"
+                for site in $(echo "$DELETE_SITE"); do
+                    if [ $(echo "$SONARQUBE_TAGS" | grep "$site," | wc -l ) -eq 1 ]; then
+                       UPDATE_JENKINSFILE="yes"
+                       SONARQUBE_TAGS=$(echo "$SONARQUBE_TAGS" | sed "s/$site,//")
+                    fi    
+                    if [ $(echo "$SONARQUBE_TAGS" | grep ",$site" | wc -l ) -eq 1 ]; then
+                       UPDATE_JENKINSFILE="yes"
+                       SONARQUBE_TAGS=$(echo "$SONARQUBE_TAGS" | sed "s/,$site//")
+                    fi   
+                done
+
+		if [ $( echo $SONARQUBE_TAGS | grep -w $SONARQUBE_TAG | wc -l ) -eq 0 ]; then
 			SONARQUBE_TAGS=$SONARQUBE_TAGS","$SONARQUBE_TAG
+                        UPDATE_JENKINSFILE="yes"
+		fi
+	        if [[ "$UPDATE_JENKINSFILE" == "yes" ]]; then	
 			sed -i "s/ SONARQUBE_TAGS *= *.*/ SONARQUBE_TAGS = \"$SONARQUBE_TAGS\"/" $jenkins_file
 			echo "Tag $SONARQUBE_TAG missing, will now add it, setting SONARQUBE_TAGS to $SONARQUBE_TAGS"
 			update_file $package "develop" $jenkins_file
