@@ -49,12 +49,23 @@ update_package_json()
 {
        UPDATE_BRANCH="${5:-master}"
        
+       retry=${6:-0}
+       
+       if [ $retry -gt 3 ]; then
+            echo "Aborting run, there is a problem"
+	    echo "Error after $retry tries to update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH"
+            exit 1
+	    
+       fi
+       
+       let retry=retry+1
+       
        if [[ "$1" == "eea/volto-frontend-template" ]]; then
             echo "Skipping frontend template"
 	    return
        fi
        
-       echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH"
+       echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH for try $retry"
        
        cd /
        rm -rf /frontend
@@ -137,12 +148,12 @@ $old_version" | sort --sort=version | tail -n 1 )
        else
            yarn add $3@$4
        fi
-       
+
        #Yarn takes a lot of time, will try pull, if it fails because of conflicts, start over"
        pull_error=$(git pull 2>&1 | grep Aborting | wc -l)
        if [ $pull_error -ne 0 ]; then
           echo "There is a concurrency problem on repo $1, will cleanup and retry again"
-          update_package_json $1 $2 $3 $4 $5
+          update_package_json $1 $2 $3 $4 $UPDATE_BRANCH $retry
 	  return
        fi
        git status
@@ -153,10 +164,19 @@ $old_version" | sort --sort=version | tail -n 1 )
        fi
        commit_ok=$(git commit -m "Release $3@$4" | grep -i "changed" | wc -l)
        if [ $commit_ok -eq 1 ]; then
-         git push
+         push_ok=$(git push || echo "Error")
+	 
+	 if [[ "$push_ok" == "Error" ]]; then
+           echo "There was a problem with the commit on repo $1, will cleanup and retry again"
+           update_package_json $1 $2 $3 $4 $UPDATE_BRANCH $retry
+	   return	     
+	 fi
+	 
+	 echo -e "$push_ok"
+	 
        else
          echo "There was a problem with the commit on repo $1, will cleanup and retry again"
-         update_package_json $1 $2 $3 $4 $5
+         update_package_json $1 $2 $3 $4 $UPDATE_BRANCH $retry
 	 return
        fi
 }
