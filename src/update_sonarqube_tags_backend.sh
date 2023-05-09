@@ -108,9 +108,10 @@ cat /tmp/package_addons | sort -n | uniq > /tmp/all_addons
 
 
 for package in $(cat /tmp/all_addons); do
+    package="${package//[$'\t\r\n ']}"
     echo "Checking $package" 
     unset check
-    check=$(wget -q --spider https://github.com/eea/$package/blob/master/Jenkinsfile  || wget -q --spider https://github.com/eea/$package/blob/master/Jenkinsfile.eea || echo "Not found")
+    check=$(wget -q --spider "https://github.com/eea/$package/blob/master/Jenkinsfile"  || wget -q --spider "https://github.com/eea/$package/blob/master/Jenkinsfile.eea" || echo "Not found")
 
     if [ -z "$check" ]; then
 
