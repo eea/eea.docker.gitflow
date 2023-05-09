@@ -85,9 +85,10 @@ if [ $(grep "^FROM eeacms/plone-backend" Dockerfile | wc -l ) -eq 1 ]; then
 	
 	echo "Found eeacms/plone-backend source, will extract requirements from it"
 	plonebackendtag=$(grep "^FROM eeacms/plone-backend" Dockerfile  | tr -d ' \n' | awk -F: '{printf("%s",$2)}' | tr -d '\n')
-        echo "Found tag $plonebackendtag, will try to get https://raw.githubusercontent.com/eea/plone-backend/${plonebackendtag}/requirements.txt"
+        plonebackend="https://raw.githubusercontent.com/eea/plone-backend/${plonebackendtag//[$'\t\r\n ']}/requirements.txt"
+        echo "Found tag $plonebackendtag, will try to get $plonebackend"
  	
-	curl -o plone_requirements.txt  -H 'Accept: application/vnd.github.v3.raw' "https://raw.githubusercontent.com/eea/plone-backend/${plonebackendtag}/requirements.txt"
+	curl -o plone_requirements.txt  -H 'Accept: application/vnd.github.v3.raw' "${plonebackend}"
 
         package_addons=$(cat requirements.txt plone_requirements.txt)
 
