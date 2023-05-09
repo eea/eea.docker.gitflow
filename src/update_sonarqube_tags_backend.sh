@@ -8,6 +8,8 @@ elif [ -f ./common_functions ]; then
     source ./common_functions
 fi
 
+GIT_BRANCH=${GIT_BRANCH:-master}
+
 update_file()
 {
 
@@ -64,7 +66,7 @@ echo "List of projects on sonarqube linked with $SONARQUBE_TAG"
 echo $sonarqube_master
 
 if [ ! -f requirements.txt ] && [ -n "$GIT_NAME" ]; then
-	wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/master/requirements.txt"
+	wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/$GIT_BRANCH/requirements.txt"
 	echo "Did not find a requirements.txt file, will download it from github for $GIT_NAME"
 else
 	echo "Found requirements.txt, will now extract the addons from it"
@@ -75,7 +77,7 @@ package_addons=$(cat requirements.txt)
 
 echo "Getting requirements from plone-backend"
 if [ ! -f Dockerfile ] && [ -n "$GIT_NAME" ]; then
-       wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/master/Dockerfile"
+       wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/$GIT_BRANCH/Dockerfile"
         echo "Did not find a Dockerfile file, will download it from github for $GIT_NAME"
 fi
 
