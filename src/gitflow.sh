@@ -159,7 +159,7 @@ $latestTag2" | sort --sort=version | tail -n 1)
       fi
 			
 
-      if [[ "$GIT_NAME" == "plone-backend" ]] || [[ "$GIT_NAME" == "eea-website-backend" ]]; then
+      if [[ "$GIT_NAME" == "plone-backend" ]] || [ $(grep "eeacms/plone-backend:6" Dockerfile | wc -l ) -gt 0 ] && [[ "$GIT_NAME" == *"-backend" ]]; then
 
 	      if [ $(grep "^## $version" CHANGELOG.md | wc -l ) -eq 0 ]; then
 
