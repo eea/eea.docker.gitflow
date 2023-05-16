@@ -46,6 +46,15 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]];
   if [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]]; then
     version=$GIT_BRANCH
     echo "Script is running on tag, so it will skip the release part"
+    if [[ "$GIT_NAME" == "plone-backend" ]] || [ $(grep "eeacms/plone-backend:6" Dockerfile | wc -l ) -gt 0 ] && [[ "$GIT_NAME" == *"-backend" ]]; then
+      echo "Will update release text"
+     /pyreleaseChangelog.sh $GIT_ORG/$GIT_NAME $version
+    fi
+    if [[ "$GIT_NAME" == "eea.docker.plone" ]] || [[ "$GIT_NAME" == "eea.docker.plonesaas" ]]; then
+      echo "Will update release text"
+      /py5releaseChangelog.sh $GIT_ORG/$GIT_NAME $version
+    fi
+	    
     echo "Version is $version"
     git checkout $version
   else    
@@ -228,8 +237,8 @@ $latestTag2" | sort --sort=version | tail -n 1)
         
     else
 
+            if [[ "$GIT_NAME" == "plone-backend" ]] || [ $(grep "eeacms/plone-backend:6" Dockerfile | wc -l ) -gt 0 ] && [[ "$GIT_NAME" == *"-backend" ]]; then
 
-	    if [[ "$GIT_NAME" == "plone-backend" ]] || [[ "$GIT_NAME" == "eea-website-backend" ]]; then
                   echo "Will update release text"
 
 		  /pyreleaseChangelog.sh $GIT_ORG/$GIT_NAME $version
