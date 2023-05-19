@@ -8,12 +8,12 @@
   "github": {
     "release": false,
     "releaseName": "${version}",
-    "releaseNotes": "npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs --ignore-commit-pattern 'Automated release [0-9\\.]\\+ \\|Add Sonarqube tag using .* addons list\\|\\[[jJ][eE][nN][kK][iI][nN][sS]\\|[yY][aA][rR][nN]'"
+    "releaseNotes": "npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs --ignore-commit-pattern 'Automated release [0-9\\.]\\+ \\|Autobuild of storybook docs\\|Add Sonarqube tag using .* addons list\\|\\[[jJ][eE][nN][kK][iI][nN][sS]\\|[yY][aA][rR][nN]'"
   },
   "npm": {
     "publish": false
   },
   "hooks": {
-    "after:bump": "npx auto-changelog --sort-commits date-desc  --commit-limit false -p --template /eea.hbs --ignore-commit-pattern 'Automated release [0-9\\.]\\+ \\|Add Sonarqube tag using .* addons list\\|\\[[jJ][eE][nN][kK][iI][nN][sS]\\|[yY][aA][rR][nN]'"
+    "after:bump": "npx auto-changelog --sort-commits date-desc  --commit-limit false -p --template /eea.hbs --ignore-commit-pattern 'Automated release [0-9\\.]\\+ \\|Autobuild of storybook docs\\|Add Sonarqube tag using .* addons list\\|\\[[jJ][eE][nN][kK][iI][nN][sS]\\|[yY][aA][rR][nN]'"
   }
 }
