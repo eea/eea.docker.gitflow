@@ -573,7 +573,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_constraints plone-backend constraints.txt master
       update_plone_constraints eea-website-backend constraints.txt master
       update_plone_constraints advisory-board-backend constraints.txt master
-      update_plone_constraints forest-backend constraints.txt master
+      update_plone_constraints fise-backend constraints.txt master
       update_plone_constraints bise-backend constraints.txt plone-6
       update_plone_constraints eea.docker.plone.clms constraints.txt develop
 
