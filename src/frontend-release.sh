@@ -119,7 +119,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
              if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
                 echo "Found changes in yarn.lock, will now update it"
                 git add yarn.lock
-                git commit -m "[YARN] Automated update of yarn.lock"
+                git commit -m "chore: [YARN] Automated update of yarn.lock"
              fi
 
              new_version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}')
@@ -130,7 +130,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
              if [ $(git diff README.md | wc -l) -gt 0 ]; then
                 echo "Updating README.md with the next release link"
                 git add  README.md
-                git commit -m "[JENKINS] Automated badge update of README.md"
+                git commit -m "docs: [JENKINS] Automated badge update of README.md"
              fi            
 
              release-it version=$new_version --config /release-it.json --no-git.tag -i patch --ci
@@ -143,16 +143,16 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
              if [ $(git diff README.md | wc -l) -gt 0 ]; then
                 echo "Updating README.md with the next release link"
                 git add  README.md
-                git commit -m "[JENKINS] Automated badge update of README.md"
+                git commit -m "docs: [JENKINS] Automated badge update of README.md"
                 to_push="yes"
 	     fi            
 
              npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
 	     
 	     sh -c "$npx_command"
-	     sed -i '/ Automated release [0-9\.]\+ \|Autobuild of storybook docs\|Add Sonarqube tag using .* addons list\|[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]/d' CHANGELOG.md
+	     sed -i '/ Automated release [0-9\.]\+ \|Autobuild of storybook docs\|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\]\|\[[yY][aA][rR][nN]\]/d' CHANGELOG.md
 	     
-	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -Eiv '\- Automated release [0-9\.]+|Autobuild of storybook docs|Add Sonarqube tag using .* addons list|jenkins|yarn' | wc -l ) -gt 0 ]; then
+	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -Eiv '\- Automated release [0-9\.]+|Autobuild of storybook docs|Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]\]|\[[yY][aA][rR][nN]\]' | wc -l ) -gt 0 ]; then
 		     # there were other commits besides the automated release ones"
  	             git add CHANGELOG.md
 	             git commit -m "Automated release $version"
