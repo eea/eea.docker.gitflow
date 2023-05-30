@@ -118,7 +118,7 @@ for package in $(cat /tmp/all_addons); do
 		echo $line
 		eval $line
 
-		DELETE_SITE="demo-kitkat.dev2aws.eea.europa.eu prod-www.eea.europa.eu"
+		DELETE_SITE="circularity.eea.europa.eu"
 		UPDATE_JENKINSFILE="no"
                 for site in $(echo "$DELETE_SITE"); do
                     if [ $(echo "$SONARQUBE_TAGS" | grep "$site," | wc -l ) -eq 1 ]; then
