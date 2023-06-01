@@ -31,7 +31,7 @@ fi
 
 if [[ "$LANGUAGE" == "javascript" ]]; then
 
-	if [[ ! "${GIT_NAME,,}" =~ ^.*frontend$ ]]; then
+	if [[ ! "${GIT_NAME,,}" =~ ^.*frontend$ ]] && [[ ! "${GIT_NAME,,}" =~ ^.*storybook$ ]]; then
 		exec /js-release.sh $@
 	else
 		exec /frontend-release.sh $@
