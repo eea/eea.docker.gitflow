@@ -89,6 +89,13 @@ if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
   fi
 fi
 
+if [ $(grep -E "DISABLE auto-release:.*${EGG_NAME}" versions.cfg | wc -l) -gt 0 ]; then
+  echo "Found this line in versions.cfg:"
+  grep -E -n "DISABLE auto-release.*${EGG_NAME}" versions.cfg
+  echo "Will not update the version of egg ${EGG_NAME} as auto-release is disabled"
+  return
+fi
+
 if [ $(grep -c "^${EGG_NAME} = $version$" versions.cfg) -eq 1 ]; then
     echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version' on branch $BRANCH_NAME, skipping"
     return
