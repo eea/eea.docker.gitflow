@@ -46,7 +46,7 @@ if [ ! -f $GIT_NAME/package.json ]; then
 fi
 
 
-if [[ ! "${GIT_NAME,,}" =~ ^.*frontend$ ]]; then
+if [[ ! "${GIT_NAME,,}" =~ ^.*frontend$ ]] &&  [[ ! "${GIT_NAME,,}" =~ ^.*storybook$ ]]; then
    rm -rf $GIT_NAME
    echo "Not a frontend package, the check was wrong"
    /docker-entrypoint.sh $@
