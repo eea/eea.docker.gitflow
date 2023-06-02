@@ -212,8 +212,12 @@ fi
 
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$repo/contents/CHANGELOG.md" > CHANGELOG
 
-
 max=$(grep -n "^#[#]* \[$old_release\]" CHANGELOG | awk -F: '{print $1}' )
+
+if [ -z "$max" ]; then
+    max=$(grep -n "^#[#]* $old_release -" CHANGELOG | awk -F: '{print $1}' )
+fi
+
 min_line=$(grep -n "^#[#]* \[$new_release\]" CHANGELOG || grep -n "^#[#]* \[" CHANGELOG | head -n 1 )
 min=$(echo -e "$min_line" | awk -F: '{print $1}' )
 
