@@ -362,7 +362,8 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	    echo "Version format is not major.minor.patch, will skip frontend and kitkat update"
 	    exit 0
 	fi
-
+        
+	archived_repos="eea/circularity-frontend"
         echo "Checking and updating frontend dependencies in org:eea"
 
         check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
@@ -370,13 +371,17 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	current_pwd="$(pwd)"
 	
 	for i in $( echo "$check_frontend" ); do 
-	    update_package_json $i package.json $package_name $version develop
+	    if [ $( echo $archived_repos | grep -w $i | wc -l) -eq 0 ]; then
+	        update_package_json $i package.json $package_name $version develop
+	    fi
         done
 
         check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
        
 	for i in $( echo "$check_kitkat" ); do 
-            update_package_json $i package.json $package_name $version develop
+  	    if [ $( echo $archived_repos | grep -w $i | wc -l) -eq 0 ]; then
+                update_package_json $i package.json $package_name $version develop
+            fi		
         done
 	
 	cd $current_pwd
