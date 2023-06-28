@@ -345,8 +345,6 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		
 		echo "Checking if prepublish script exist"
 		if [ $(cat  package.json | jq '.scripts.prepublish | length') -gt 0 ]; then
-                   nvm use 16
-		   npm -v
 		   echo "Found prepublish script, running it"
 		   yarn 
 		   yarn prepublish
