@@ -186,7 +186,7 @@ git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
 
 git clone $GIT_SRC
 
-if [ ! -f $GIT_NAME/package.json ]  || [ -f $GIT_NAME/setup.py ] || [ -f $GIT_NAME/Dockerfile ]; then
+if [ ! -f $GIT_NAME/package.json ]  || [ -f $GIT_NAME/setup.py ] || [[ ! "${GIT_NAME,,}" =~ ^.*frontend$ ]] || [[ ! "${GIT_NAME,,}" =~ ^.*storybook$ ]]; then
    rm -rf $GIT_NAME
    echo "Not a javascript package, the check was wrong"
    /docker-entrypoint.sh $@
