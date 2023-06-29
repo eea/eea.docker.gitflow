@@ -54,7 +54,7 @@ exit_error=0
 
 bugs=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "bugs") | .value')
 if [ "$bugs" -ne 0 ]; then
-        echo "* Check bugs"
+        echo "* #### Check bugs"
 	echo "There are $bugs bugs in the develop branch ( needs to be 0 )"
 	echo "Please check the sonarqube link and fix them: ${SONAR_HOST_URL}project/issues?resolved=false&types=BUG&inNewCodePeriod=false&id=$GIT_NAME-develop"
 	echo ""
@@ -67,7 +67,7 @@ vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .m
 vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "security_rating") | .value|tonumber')
 
 if [ "$vul_master" -lt "$vul_develop" ]; then
-        echo "* Check vulnerabilities"
+        echo "* #### Check vulnerabilities"
         echo "The security rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch"
         echo "Please check the sonarqube link and fix this: ${SONAR_HOST_URL}project/issues?resolved=false&types=VULNERABILITY&inNewCodePeriod=false&id=$GIT_NAME-develop"
 	echo ""
@@ -80,7 +80,7 @@ vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .m
 vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "sqale_rating") | .value|tonumber')
 
 if [ "$vul_master" -lt "$vul_develop" ]; then
-        echo "* Check maintainability"
+        echo "* #### Check maintainability"
         echo "The maintainability rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch "
         echo "Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=sqale_rating&view=list"
 	echo ""
@@ -96,7 +96,7 @@ vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .m
 vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "duplicated_lines_density") | .value|tonumber * 100')
 
 if [ "$vul_master" -lt "$vul_develop" ]; then
-        echo "* Check duplication"
+        echo "* #### Check duplication"
         echo "The percentage of duplicated lines(*100) is bigger in the develop branch ($vul_develop) than the master ($vul_master) branch"
         echo "Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=duplicated_lines_density&view=list"	
 	echo ""
@@ -109,7 +109,7 @@ vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .m
 vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "coverage") | .value|tonumber * 100')
 
 if [ "$vul_master" -gt "$vul_develop" ]; then
-        echo "* Check coverage"
+        echo "* #### Check coverage"
 	echo "The percentage of coverage (*100) is smaller in the develop branch ($vul_develop) than the master ($vul_master) branch"
         echo "Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=coverage&view=list"
 	echo ""
