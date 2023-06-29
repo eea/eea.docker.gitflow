@@ -23,6 +23,15 @@ export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
 
 
+if [ -n "$NODEJS_VERSION" ]; then
+  echo "Received NODEJS_VERSION $NODEJS_VERSION, will use it instead of default version"
+  if [ $(nvm list "$NODEJS_VERSION" | grep "$NODEJS_VERSION" | wc -l) -eq 0 ]; then
+          echo "Did not find this version installed, will install it"
+          nvm install $NODEJS_VERSION
+  fi
+  nvm use $NODEJS_VERSION
+fi
+
 
 
 GIT_ORG=${GIT_ORG:-'eea'}
