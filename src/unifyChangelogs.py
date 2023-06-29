@@ -124,7 +124,7 @@ def main():
         change = "\n## %s: %s ~ %s" % (package, previous, version)
         print(change, file=out)
 
-        source = sources.get(package, None)
+        . = sources.get(package, None)
         if not source:
             continue
 

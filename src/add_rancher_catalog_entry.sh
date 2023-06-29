@@ -33,9 +33,9 @@ GITHUBURL=https://api.github.com/repos/${GIT_ORG}/${RANCHER_CATALOG_GITNAME}/git
 current_dir=$(pwd)
 
 if [ -f /common_functions ]; then
-    source /common_functions
+    . /common_functions
 elif [ -f ./common_functions ]; then
-    source ./common_functions
+    . ./common_functions
 fi
 
 # clone the repo
@@ -215,7 +215,7 @@ cd ..
 sed -i "s/version: \"$old_version\"/version: \"$new_version\"/g" config.yml
 
 if [ -f 'auto_release.sh' ]; then
-        source auto_release.sh
+        . auto_release.sh
 fi
 
 

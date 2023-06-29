@@ -12,9 +12,9 @@ if [ -z "$TIME_TO_WAIT_START" ]; then
 fi
 
 if [ -f /common_functions ]; then
-    source /common_functions
+    . /common_functions
 elif [ -f ./common_functions ]; then
-    source ./common_functions
+    . ./common_functions
 fi
 
 

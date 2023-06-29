@@ -38,13 +38,26 @@ To run from jenkins:
 1. EGGREPO_URL - URL of Repository for python eggs - default: https://eggrepo.eea.europa.eu/
 1. KGS_GITNAME - Repository name on github for KGS (Docker image for Plone with EEA Common Add-ons) - default: eea.docker.kgs
 1. KGS_VERSIONS_PATH - Location of file from KGS where the version of the egg is configured  - default: src/plone/versions.cfg
+1. NODEJS_VERSION - version of nodejs used in javascript runs
+1. LANGUAGE - if "javascript" will run the javascript releases
+
+### Generic Gitflow variables
+1. GITFLOW_BEHAVIOR - TAG_ONLY to only create tag, and RUN_ON_TAG all release steps after it's already created  
+2. DOCKERHUB_REPO - repository to upgrade
+1. RANCHER_CATALOG_PATHS - where to upgrade in catalog, can be empty to upgrade all existing templates
+1. DEPENDENT_DOCKERFILE_URL - list of paths separated by space with the format: GIT_ORG/GIT_NAME/blob/GIT_BRANCH/Dockerfile
+1. TRIGGER_MAIN_URL - to trigger the dockerhub image build in case it's not triggered ( webhook failure )
+1. RANCHER_CATALOG_ADD_MINUS - true, will add "-1" to the release in the rancher catalog
+1. RANCHER_CATALOG_SAME_VERSION - true, will not release catalog, but modify in the current one
+1. EXTRACT_VERSION_SH - script location that if exits, will run to calculate the next image version
 
 
 ### Jenkins secret variables
 1. EGGREPO_USERNAME, EGGREPO_PASSWORD - user and password for eggrepo
 2. PYPI_USERNAME, PYPI_PASSWORD -  user and password for Pypi
 3. GIT_TOKEN - token used for GitHub API
-
+4. NPM_TOKEN - token used for NPM login
+5. DOCKERHUB_USER, DOCKERHUB_PASS - used in DockerHub login
 
 ### The release steps:
 1. Release on EGGREPO_URL
