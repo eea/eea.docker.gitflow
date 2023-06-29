@@ -1,12 +1,24 @@
-FROM python:3-alpine3.15
+FROM python:3-buster
 LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
 
-RUN apk add --no-cache --virtual .run-deps git python2 bash curl coreutils bc yarn jq make build-base gcc libffi-dev npm libstdc++\
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends jq bc bash curl python2 gcc bc build-essential git \
+# .run-deps git python2 bash curl coreutils bc yarn jq make runc libseccomp build-base gcc libffi-dev npm libstdc++\
  && pip install --upgrade pip \ 
  && pip install docutils twine rstcheck zest.pocompile \
  && pip install -I wheel==0.31.0 \
- && npm install -g release-it yarn-deduplicate 
+ && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
+ && rm -rf /var/lib/apt/lists/*
+ 
+
+RUN export NVM_DIR="$HOME/.nvm" \
+ && . "$NVM_DIR/nvm.sh" \
+ && nvm install 14 \
+ && nvm install 16 \
+ && nvm alias default 16 \
+ && npm install -g yarn release-it yarn-deduplicate 
 
 
 SHELL [ "/bin/bash", "-l", "-c" ]

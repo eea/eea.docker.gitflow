@@ -20,10 +20,13 @@ if [ -z "$GIT_TOKEN" ]; then
 fi
 
 if [ -f /common_functions ]; then
-    source /common_functions
+    . /common_functions
 elif [ -f ./common_functions ]; then
-    source ./common_functions
+    . ./common_functions
 fi
+
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
 
 
 GIT_ORG=${GIT_ORG:-'eea'}

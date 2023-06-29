@@ -12,9 +12,9 @@ fi
 
 
 if [ -f /common_functions ]; then
-    source /common_functions
+    . /common_functions
 elif [ -f ./common_functions ]; then
-    source ./common_functions
+    . ./common_functions
 fi
 
 develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-develop&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" | jq )

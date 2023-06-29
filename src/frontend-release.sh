@@ -19,6 +19,11 @@ if [ -z "$GIT_TOKEN" ]; then
  exit 1
 fi
 
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+
+
+
 
 GIT_ORG=${GIT_ORG:-'eea'}
 GIT_USER=${GIT_USER:-'eea-jenkins'}

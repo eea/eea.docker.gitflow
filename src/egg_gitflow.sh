@@ -8,7 +8,7 @@ cd $GIT_NAME
 
 githubApiUrl="https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}"
 
-source /common_functions
+. /common_functions
 
 
 update_file()

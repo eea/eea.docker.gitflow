@@ -6,9 +6,9 @@ DOCKERHUB_KGSREPO_ESC=$(echo $DOCKERHUB_KGSREPO | sed 's/\//\\\//g')
 DOCKERHUB_WWWREPO_ESC=$(echo $DOCKERHUB_WWWREPO | sed 's/\//\\\//g')
 
 if [ -f /common_functions ]; then
-    source /common_functions
+    . /common_functions
 elif [ -f ./common_functions ]; then
-    source ./common_functions
+    . ./common_functions
 fi
 
 
