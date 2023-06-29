@@ -14,7 +14,7 @@ export GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
 if [[ "$1" == *".sh" ]] || [[ "$1" == "/"* ]] || [[ "$1" == "./"* ]] ; then
 	if [ -f "$1" ]; then
-	    echo "Found script $1 as argument, will now run it"
+	    echo "> Found script $1 as argument, will now run it"
 	    exec $@
 	fi
 fi
