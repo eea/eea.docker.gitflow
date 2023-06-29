@@ -2,6 +2,7 @@ FROM python:3-buster
 LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
 
+
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends jq bc bash curl python2 gcc bc build-essential git \
