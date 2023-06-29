@@ -33,6 +33,7 @@ if [ -n "$NODEJS_VERSION" ]; then
   if [ $(nvm list "$NODEJS_VERSION" | grep "$NODEJS_VERSION" | wc -l) -eq 0 ]; then
 	  echo "Did not find this version installed, will install it"
 	  nvm install $NODEJS_VERSION
+	  npm install -g yarn release-it yarn-deduplicate
   fi
   nvm use $NODEJS_VERSION
 fi
