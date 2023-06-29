@@ -17,13 +17,13 @@ elif [ -f ./common_functions ]; then
     . ./common_functions
 fi
 
-develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-develop&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" | jq )
-master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" | jq  )
+develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-develop&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density")
+master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" )
 
 
 while [ $(echo $develop_stats | grep bugs | wc -l) -eq 0 ] && [ $(echo $develop_stats | grep -i "not found" | wc -l) -eq 0 ]; do
       sleep 10
-      develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-develop&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" | jq )
+      develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-develop&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" )
 done
 
 if [ $(echo $develop_stats | grep -i "not found" | wc -l) -ne 0 ]; then 
@@ -33,11 +33,11 @@ if [ $(echo $develop_stats | grep -i "not found" | wc -l) -ne 0 ]; then
 fi
 
 
-master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" | jq  )
+master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density"  )
 
 while [ $(echo $master_stats | grep bugs | wc -l) -eq 0 ] && [ $(echo $master_stats | grep -i "not found" | wc -l) -eq 0 ]; do
       sleep 10
-      master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" | jq )
+      master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density" )
 done
 
 if [ $(echo $master_stats | grep -i "not found" | wc -l) -ne 0 ]; then
