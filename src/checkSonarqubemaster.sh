@@ -53,8 +53,8 @@ echo "* ### Check bugs"
 
 bugs=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "bugs") | .value')
 if [ "$bugs" -ne 0 ]; then
-	echo "  **FAILURE**"
-	echo "  There are $bugs bugs in the develop branch ( needs to be 0 )"
+	echo "  **FAILURE** - there are $bugs bugs in the develop branch ( needs to be 0 )"
+	echo "  "
 	echo "  Please check the sonarqube link and fix them: ${SONAR_HOST_URL}project/issues?resolved=false&types=BUG&inNewCodePeriod=false&id=$GIT_NAME-develop"
         exit_error=1
 else
@@ -69,9 +69,9 @@ vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .m
 vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "security_rating") | .value|tonumber')
 
 if [ "$vul_master" -lt "$vul_develop" ]; then
-        echo "  **FAILURE**"
-	echo "  The security rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch"
-        echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}project/issues?resolved=false&types=VULNERABILITY&inNewCodePeriod=false&id=$GIT_NAME-develop"
+        echo "  **FAILURE** - the security rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch"
+        echo "  "
+       	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}project/issues?resolved=false&types=VULNERABILITY&inNewCodePeriod=false&id=$GIT_NAME-develop"
         exit_error=1
 else
 	echo "  OK ( $vul_develop <= $vul_master )"
@@ -86,9 +86,9 @@ vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .m
 vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "sqale_rating") | .value|tonumber')
 
 if [ "$vul_master" -lt "$vul_develop" ]; then
-        echo "  **FAILURE**"
-	echo "  The maintainability rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch "
-        echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=sqale_rating&view=list"
+        echo "  **FAILURE** - the maintainability rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch "
+        echo "  "
+	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=sqale_rating&view=list"
         exit_error=1
 else
         echo "  OK ( $vul_develop <= $vul_master )"
@@ -107,9 +107,9 @@ vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .met
 if [ "$vul_master" -lt "$vul_develop" ]; then
         vul_develop=$(echo $vul_develop | awk '{printf("%.2f",$1/100)}')
         vul_master=$(echo $vul_master | awk '{printf("%.2f",$1/100)}')
-        echo "  **FAILURE**"
-	echo "  The percentage of duplicated lines is bigger in the develop branch ($vul_develop) than the master ($vul_master) branch"
-        echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=duplicated_lines_density&view=list"	
+        echo "  **FAILURE** - the percentage of duplicated lines is bigger in the develop branch ($vul_develop) than the master ($vul_master) branch"
+        echo "  "
+	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=duplicated_lines_density&view=list"	
         exit_error=1
 else
 	vul_develop=$(echo $vul_develop | awk '{printf("%.2f",$1/100)}')
@@ -141,9 +141,9 @@ if [ "$vul_master" -gt "$vul_develop" ]; then
           vul_develop=$(echo $vul_develop | awk '{printf("%.2f",$1/100)}')
           vul_master=$(echo $vul_master | awk '{printf("%.2f",$1/100)}')
 
-	  echo "  **FAILURE**"
-	  echo "  The percentage of coverage is smaller in the develop branch ($vul_develop) than the master ($vul_master) branch"
-          echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=coverage&view=list"
+	  echo "  **FAILURE** - The percentage of coverage is smaller in the develop branch ($vul_develop) than the master ($vul_master) branch"
+          echo "  "
+	  echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=coverage&view=list"
           exit_error=1
 	fi
 else
@@ -155,5 +155,5 @@ else
 fi
 
 echo ""
-
+echo "------------------------------------------------------"
 exit $exit_error
