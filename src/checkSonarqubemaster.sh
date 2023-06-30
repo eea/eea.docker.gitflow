@@ -150,10 +150,9 @@ else
         vul_develop=$(echo $vul_develop | awk '{printf("%.2f",$1/100)}')
         vul_master=$(echo $vul_master | awk '{printf("%.2f",$1/100)}')
 
-	echo " OK ( $vul_develop >= $vul_master )"
+	echo "  OK ( $vul_develop >= $vul_master )"
 
 fi
 
 echo ""
-echo "------------------------------------------------------"
 exit $exit_error
