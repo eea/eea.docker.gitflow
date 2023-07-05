@@ -11,6 +11,8 @@ RUN set -eux; \
  && pip install docutils twine rstcheck zest.pocompile \
  && pip install -I wheel==0.31.0 \
  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
+ && curl -L -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 \
+ && chmod 755 /usr/bin/jq \
  && rm -rf /var/lib/apt/lists/*
  
 
