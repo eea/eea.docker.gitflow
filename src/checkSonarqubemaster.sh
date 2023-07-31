@@ -88,7 +88,7 @@ vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .met
 if [ "$vul_master" -lt "$vul_develop" ]; then
         echo "  **FAILURE** - the maintainability rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch "
         echo "  "
-	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=sqale_rating&view=list"
+	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-develop&metric=sqale_rating&view=list"
         exit_error=1
 else
         echo "  OK ( $vul_develop <= $vul_master )"
@@ -109,7 +109,7 @@ if [ "$vul_master" -lt "$vul_develop" ]; then
         vul_master=$(echo $vul_master | awk '{printf("%.2f",$1/100)}')
         echo "  **FAILURE** - the percentage of duplicated lines is bigger in the develop branch ($vul_develop) than the master ($vul_master) branch"
         echo "  "
-	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=duplicated_lines_density&view=list"	
+	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-develop&metric=duplicated_lines_density&view=list"	
         exit_error=1
 else
 	vul_develop=$(echo $vul_develop | awk '{printf("%.2f",$1/100)}')
@@ -143,7 +143,7 @@ if [ "$vul_master" -gt "$vul_develop" ]; then
 
 	  echo "  **FAILURE** - The percentage of coverage is smaller in the develop branch ($vul_develop) than the master ($vul_master) branch"
           echo "  "
-	  echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}/component_measures?id=$GIT_NAME-develop&metric=coverage&view=list"
+	  echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-develop&metric=coverage&view=list"
           exit_error=1
 	fi
 else
