@@ -86,6 +86,7 @@ To run from jenkins:
 4. GIT_USERNAME - User that will do the changes in github, default "EEA Jenkins"
 4. GIT_EMAIL - Email that will do the changes in github, default value set in code
 1. DOCKERHUB_REPO - Dockerhub repository name ( for example eeacms/kgs for KGS )
+1. DOCKERHUB_REPO_SUFIX - If the image is also released with a suffix ( for example will update both IMAGE:VERSION and IMAGE:VERSION-SUFIX) 
 1. RANCHER_CATALOG_PATHS - If given will upgrade only the catalog paths after the release. If not given, will be calculated from the catalog locating all current releases containing `DOCKERHUB_REPO`
 1. RANCHER_CATALOG_SAME_VERSION - If given, will not create new catalog releases, but upgrade the last one found in the catalog with the new release of `DOCKERHUB_REPO`
 1. DEPENDENT_DOCKERFILE_URL - Space separated list of Dockerfiles witch will contain the new release of the `DOCKERHUB_REPO` - 2 types:
