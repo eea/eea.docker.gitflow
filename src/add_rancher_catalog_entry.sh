@@ -207,7 +207,8 @@ fi
 
 cd $nextdir
 
-sed -i "/    image: ${DOCKER_IMAGENAME_ESC}:/ {/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/}" $DOCKER_COMPOSE
+
+sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*${DOCKERHUB_REPO_SUFIX}$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}${DOCKERHUB_REPO_SUFIX}/" -e "/gitflow-disable/! {/image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}${DOCKERHUB_REPO_SUFIX}/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/}" $DOCKER_COMPOSE
 sed -i "/  version: /c\  version: \"$new_version\"" rancher-compose.yml
 
 
