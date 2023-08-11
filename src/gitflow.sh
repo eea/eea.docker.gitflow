@@ -375,7 +375,12 @@ $old_version" | sort  --sort=version | tail -n 1)
 
     echo "-------------------------------------------------------------------------------"
     echo "Starting triggered release(s)"
-
+    
+    if [ $(git branch --contains tags/${GIT_BRANCH} | grep -v HEAD | grep master | wc -l ) -eq 0 ]; then 
+          echo "Skipping triggered release, as the tag was not created from master branch"
+	  exit 0
+    fi
+    
     if [ -n "$TRIGGER_WAIT_FOR_LATEST" ]; then
          git_commit=$(git log -n 1 --pretty=format:"%H")
          echo "Will check if ${DOCKERHUB_REPO}:latest release with commit $git_commit is done before starting the dependent triggers"
