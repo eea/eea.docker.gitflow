@@ -100,9 +100,9 @@ echo "* ### Check duplication"
 
 #check duplicated_lines_density | must be smaller
 
-vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "duplicated_lines_density") | .value|tonumber * 100')
+vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "duplicated_lines_density") | .value|tonumber * 100 | round')
 
-vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "duplicated_lines_density") | .value|tonumber * 100')
+vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "duplicated_lines_density") | .value|tonumber * 100 | round')
 
 if [ "$vul_master" -lt "$vul_develop" ]; then
         vul_develop=$(echo $vul_develop | awk '{printf("%.2f",$1/100)}')
