@@ -82,8 +82,8 @@ echo ""
 echo "* ### Check maintainability"
 
 #check maintainability | code smells | must be <=
-vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "sqale_rating") | .value|tonumber')
-vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "sqale_rating") | .value|tonumber')
+vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "sqale_rating") | .value|tonumber | round')
+vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "sqale_rating") | .value|tonumber | round')
 
 if [ "$vul_master" -lt "$vul_develop" ]; then
         echo "  **FAILURE** - the maintainability rating (1=A) is worse in the develop branch ($vul_develop) than the master ($vul_master) branch "
@@ -124,14 +124,14 @@ echo "* ### Check coverage"
 
 #check coverage | must be better
 
-vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "coverage") | .value|tonumber * 100')
-vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "coverage") | .value|tonumber * 100')
+vul_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "coverage") | .value|tonumber * 100 |round')
+vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "coverage") | .value|tonumber * 100 | round')
 
 
 if [ "$vul_master" -gt "$vul_develop" ]; then
 
 	if [ "$vul_master" -eq 10000 ]; then
-            vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "lines_to_cover") | .value|tonumber')
+            vul_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "lines_to_cover") | .value|tonumber | round')
   
             if [ "$vul_master" -le 20 ]; then 
  		    echo "  WARNING"
