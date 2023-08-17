@@ -122,9 +122,9 @@ def main():
             continue
 
         change = "\n## %s: %s ~ %s" % (package, previous, version)
-        print(change, file=out)
+        out.write(change)
 
-        . = sources.get(package, None)
+        source = sources.get(package, None)
         if not source:
             continue
 
@@ -175,9 +175,9 @@ def main():
                 for child in childlist.children:
                     text = child.astext()
                     text = text.replace("\n","\n" + " "*len(bullet))
-                    print("* {text}".format(text=text), file=out)
+                    out.write("* {text}".format(text=text))
         else:
-            print("* https://pypi.org/project/{package}#changelog".format(package=package), file=out)
+            out.write("* https://pypi.org/project/{package}#changelog".format(package=package))
 
     if format == 'json':
         out.seek(0)
