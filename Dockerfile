@@ -11,6 +11,8 @@ RUN set -eux; \
  && pip install docutils twine rstcheck zest.pocompile \
  && pip install -I wheel==0.31.0 \
  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
+ && curl -L -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 \
+ && chmod 755 /usr/bin/jq \
  && rm -rf /var/lib/apt/lists/*
  
 
@@ -20,8 +22,9 @@ RUN export NVM_DIR="$HOME/.nvm" \
  && npm install -g yarn release-it yarn-deduplicate \
  && nvm install 16 \
  && nvm alias default 16 \
- && npm install -g yarn release-it yarn-deduplicate 
-
+ && npm install -g yarn release-it yarn-deduplicate \
+ # fix gyp that does not work with python 3.11
+ && for i in $(find . -type d -name gyp | grep pylib); do sed -i 's/rU/r/' $i/input.py; done
 
 SHELL [ "/bin/bash", "-l", "-c" ]
 

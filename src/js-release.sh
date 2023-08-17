@@ -152,6 +152,11 @@ $old_version" | sort --sort=version | tail -n 1 )
        fi
        echo "DEPENDENCIES - Old version $old_version is smaller than the released version"
        echo "DEPENDENCIES - Will now update the version file and yarn.lock"
+
+       #does not support node 16, only 14
+       if [ $(cat package.json | jq '.engines.node' | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
+           nvm use 14
+       fi
        
        if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
            yarn add -W $3@$4
@@ -161,6 +166,11 @@ $old_version" | sort --sort=version | tail -n 1 )
            yarn add $3@$4
        fi
 
+       #back to default 16
+       if [ $(cat package.json | jq '.engines.node' | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
+           nvm use 16
+       fi
+       
        #Yarn takes a lot of time, will try pull, if it fails because of conflicts, start over"
        pull_error=$(git pull 2>&1 | grep Aborting | wc -l)
        if [ $pull_error -ne 0 ]; then
