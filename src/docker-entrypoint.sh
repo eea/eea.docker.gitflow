@@ -8,6 +8,7 @@ export GIT_ORG=${GIT_ORG:-'eea'}
 export GIT_USER=${GIT_USER:-'eea-jenkins'}
 export GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 export GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
+export CI=${CI:-'yes'}
 
 
 
