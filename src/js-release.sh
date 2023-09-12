@@ -394,7 +394,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	
 	for i in $( echo "$check_frontend" ); do 
 	    if [ $( echo $archived_repos | grep -w $i | wc -l) -eq 0 ]; then
-	        update_package_json $i package.json $package_name $version develop
+                update_package_json $i package.json $package_name $version develop
 	    fi
         done
 
@@ -405,7 +405,12 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
                 update_package_json $i package.json $package_name $version develop
             fi		
         done
-	
+
+        #remove when migrated to develop branch
+	update_package_json eea/marine-frontend package.json $package_name $version eea-design
+	update_package_json eea/freshwater-frontend package.json $package_name $version eea-design-system
+	update_package_json eea/fise-frontend package.json $package_name $version eea-design-system
+ 
 	cd $current_pwd
 fi
 
