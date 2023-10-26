@@ -5,11 +5,32 @@ valid_curl_get_result()
  check_valid_response=$2
  curl_result=$(curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN" "$get_url")
 
- if [ $( echo $curl_result | jq ".$check_valid_response | length"  ) -eq 0 ]; then
+ if [ $( echo "$curl_result" | jq ".$check_valid_response | length"  ) -eq 0 ]; then
           echo "There was a problem with the GitHub API get request for $get_url"
-          echo $curl_result
+          echo "$curl_result"
           exit 1
  fi
+
+}
+
+valid_curl_get_list_result()
+{
+
+ get_url="$1"
+ check_valid_response="\["
+
+ if [ -n "$GIT_TOKEN" ]; then
+     curl_result=$(curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN" "$get_url")
+ else
+     curl_result=$(curl -s -X GET -L  "$get_url")
+ fi
+
+ if [ $( echo "$curl_result" | grep "$2" | wc -l ) -eq 0 ]; then
+          echo "There was a problem with the GitHub API get request for $get_url"
+          echo "$curl_result"
+          exit 1
+ fi
+
 
 }
 
@@ -21,9 +42,9 @@ valid_curl_post_result()
  echo "$data" > /tmp/curl_data
  curl_result=$(curl -s -X POST -L -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data $post_url)
 
- if [ $( echo $curl_result | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
+ if [ $( echo "$curl_result" | grep -c "\"$check_valid_response\"" ) -eq 0 ]; then
           echo "There was a problem with the GitHub API request for url - $post_url ( check valid response $check_valid_response):"
-          echo $curl_result
+          echo "$curl_result"
           exit 1
  fi
 
@@ -38,9 +59,9 @@ valid_curl_put_result()
 
  result=$(curl -i -s -X PUT -L -H "Authorization: bearer $GIT_TOKEN" --data @/tmp/curl_data "$put_url")
 
- if [ $(echo $result | grep -cE "HTTP/[0-9\.]* 2[0-9][0-9]") -eq 0 ]; then
+ if [ $(echo "$result" | grep -cE "HTTP/[0-9\.]* 2[0-9][0-9]") -eq 0 ]; then
           echo "There was a problem with the GitHub API PUT request for url - $put_url ( did not receive HTTP 2xx ) :"
-          echo $result
+          echo "$result"
           exit 1
  fi
 
@@ -70,7 +91,7 @@ get_dockerhub_buildhistory()
          JWT_DOCKERHUB_TOKEN=
       elif [ $(echo $curl_result | grep -c -i "200 OK") -eq 0 ]; then
          echo "DockebHub error, will retry after 5 minutes"
-         echo $curl_result
+         echo "$curl_result"
          sleep 300
          get_dockerhub_buildhistory $1 $2
          return
@@ -80,9 +101,9 @@ get_dockerhub_buildhistory()
  if [ -z "$JWT_DOCKERHUB_TOKEN" ]; then
       echo "No DockerHub token found, requesting one"
       curl_result=$(curl -s -L -H "Content-Type: application/json" --retry 5 --retry-delay 10 --max-time 15 -X POST -d '{"username": "'${DOCKERHUB_USER}'", "password": "'${DOCKERHUB_PASS}'"}' https://hub.docker.com/v2/users/login/)  || echo "Curl result code $?"
-      if [ $( echo $curl_result | grep -c "token" ) -eq 0 ]; then
+      if [ $( echo "$curl_result" | grep -c "token" ) -eq 0 ]; then
           echo "There was a problem with the GitHub API request:"
-          echo $curl_result
+          echo "$curl_result"
           exit 1
       fi
       export JWT_DOCKERHUB_TOKEN=$(echo $curl_result | jq -r '.token // empty' )
@@ -102,9 +123,9 @@ get_dockerhub_buildhistory()
    fi
  done
  
- if [ $( echo $buildhistory | grep "meta" | wc -l ) -eq 0 ]; then
+ if [ $( echo "$buildhistory" | grep "meta" | wc -l ) -eq 0 ]; then
     echo "Check build history result, it looks like there is a problem"
-    echo $buildhistory
+    echo "$buildhistory"
  fi
 
 }  
