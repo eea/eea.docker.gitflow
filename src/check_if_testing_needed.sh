@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+
 #if any error or no pull requests, will return 1
 #only on succesfull check that finds PR will script return 0
 
@@ -18,8 +19,6 @@ elif [ -f ./common_functions ]; then
     . ./common_functions
 fi
 
-
-
 valid_curl_get_list_result "https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/pulls"
 
 number_prs=$(echo "$curl_result" | jq 'length')
@@ -31,13 +30,12 @@ fi
 
 echo "There are $number_prs pull requests on /${GIT_ORG}/${GIT_NAME}, checking them ..."
 
-
-if [ $(echo "$curl_result" | jq '.[] | select( .head.ref == "$GIT_BRANCH" and .base.ref == "$GIT_PR_TARGET" and .head.repo.full_name == "${GIT_ORG}/${GIT_NAME}" and .base.repo.full_name == "${GIT_ORG}/${GIT_NAME}" ) | .url ' | wc -l) -eq 0 ]; then
+if [ $(echo "$curl_result" | jq ".[] | select( .head.ref == \"$GIT_BRANCH\" and .base.ref == \"$GIT_PR_TARGET\" and .head.repo.full_name == \"${GIT_ORG}/${GIT_NAME}\" and .base.repo.full_name == \"${GIT_ORG}/${GIT_NAME}\" ) | .url " | wc -l) -eq 0 ]; then
 	echo "Did not find any PRs created from branch $GIT_BRANCH to branch $GIT_PR_TARGET"
 	exit 1
 fi
-echo "FOUND PR from $GIT_BRANCH to branch $GIT_PR_TARGET"
-echo "$curl_result" | jq '.[] | select( .head.ref == "$GIT_BRANCH" and .base.ref == "$GIT_PR_TARGET" and .head.repo.full_name == "${GIT_ORG}/${GIT_NAME}" and .base.repo.full_name == "${GIT_ORG}/${GIT_NAME}" ) | .url ' 
+echo "FOUND PR from $GIT_BRANCH to branch $GIT_PR_TARGET:"
+echo "$curl_result" | jq -r ".[] | select( .head.ref == \"$GIT_BRANCH\" and .base.ref == \"$GIT_PR_TARGET\" and .head.repo.full_name == \"${GIT_ORG}/${GIT_NAME}\" and .base.repo.full_name == \"${GIT_ORG}/${GIT_NAME}\" ) | .url "
 
 exit 0
 
