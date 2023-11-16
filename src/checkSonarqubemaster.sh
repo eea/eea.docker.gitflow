@@ -145,7 +145,10 @@ if [ "$metrics_master" -gt "$metrics_develop" ]; then
 
 	  echo "  **FAILURE** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop) than the master ($metrics_master) branch"
           echo "  "
-	  echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
+	  echo "  Please check the 2 sonarqube link and fix this: "
+          echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
+	  echo "  versus"
+          echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=coverage&view=list"
           exit_error=1
 	fi
 else
