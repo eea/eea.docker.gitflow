@@ -141,18 +141,18 @@ if [ "$metrics_master" -gt "$metrics_develop" ]; then
 	    fi
 	else
 	  
-          metrics_develop=$(echo $metrics_develop | awk '{printf("%.2f",$1/100)}')
-          metrics_master=$(echo $metrics_master | awk '{printf("%.2f",$1/100)}')
+          metrics_develop_real=$(echo $metrics_develop | awk '{printf("%.2f",$1/100)}')
+          metrics_master_real=$(echo $metrics_master | awk '{printf("%.2f",$1/100)}')
 	  
           if [ "$metrics_develop" -ge 8000 ]; then
-            echo "  **WARNING** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop) than the master ($metrics_master) branch, but is still over the 80% threshold"
+            echo "  **WARNING** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch, but is still over the 80% threshold"
             echo "  "
 	    echo "  You can check the 2 sonarqube coverage links to review the cause of the decrease: "
             echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
 	    echo "  versus"
             echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=coverage&view=list"
           else
-	    echo "  **FAILURE** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop) than the master ($metrics_master) branch and is under the 80% threshold"
+	    echo "  **FAILURE** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch and is under the 80% threshold"
             echo "  "
 	    echo "  Please check the 2 sonarqube coverage links and fix this: "
             echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
