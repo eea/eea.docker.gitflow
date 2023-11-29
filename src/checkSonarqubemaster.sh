@@ -19,11 +19,11 @@ fi
 
 GIT_BRANCH=${GIT_BRANCH:-'develop'}
 
-develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-${GIT_BRANCH}&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover")
+develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-${GIT_BRANCH}&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover,uncovered_lines")
 
 while [ $(echo $develop_stats | grep bugs | wc -l) -eq 0 ] && [ $(echo $develop_stats | grep -i "not found" | wc -l) -eq 0 ]; do
       sleep 10
-      develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-${GIT_BRANCH}&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover" )
+      develop_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-${GIT_BRANCH}&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover,uncovered_lines" )
 done
 
 if [ $(echo $develop_stats | grep -i "not found" | wc -l) -ne 0 ]; then 
@@ -33,11 +33,11 @@ if [ $(echo $develop_stats | grep -i "not found" | wc -l) -ne 0 ]; then
 fi
 
 
-master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover"  )
+master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover,uncovered_lines"  )
 
 while [ $(echo $master_stats | grep bugs | wc -l) -eq 0 ] && [ $(echo $master_stats | grep -i "not found" | wc -l) -eq 0 ]; do
       sleep 10
-      master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover" )
+      master_stats=$(curl -s "${SONAR_HOST_URL}api/measures/component?component=$GIT_NAME-master&metricKeys=bugs,security_rating,sqale_rating,coverage,duplicated_lines_density,lines_to_cover,uncovered_lines" )
 done
 
 if [ $(echo $master_stats | grep -i "not found" | wc -l) -ne 0 ]; then
@@ -152,13 +152,26 @@ if [ "$metrics_master" -gt "$metrics_develop" ]; then
 	    echo "  versus"
             echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=coverage&view=list"
           else
-	    echo "  **FAILURE** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch and is under the 80% threshold"
-            echo "  "
-	    echo "  Please check the 2 sonarqube coverage links and fix this: "
-            echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
-	    echo "  versus"
-            echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=coverage&view=list"
-            exit_error=1
+            metrics_unc_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "uncovered_lines") | .value|tonumber')
+	    metrics_unc_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "uncovered_lines") | .value|tonumber')
+	    metrics_unc_allowed_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "uncovered_lines") | .value|tonumber + 10')
+            if [ "$metrics_unc_develop" -gt "$metrics_unc_allowed_master" ]; then
+	      echo "  **FAILURE** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch and is under the 80% threshold"
+              echo "  "
+	      echo "  Please check the 2 sonarqube coverage links and fix this: "
+              echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
+	      echo "  versus"
+              echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=coverage&view=list"
+              exit_error=1
+            else
+	      echo "  **WARNING** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch, but there is a smaller than 10 increse of the number of uncovered lines on ${GIT_BRANCH} - $metrics_unc_develop and master - $metrics_unc_master "
+              echo "  "
+	      echo "  You can check the 2 sonarqube coverage links to review the cause of the decrease: "
+              echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
+	      echo "  versus"
+              echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=coverage&view=list"
+          fi  
+     
 	  fi
 	fi
 else
