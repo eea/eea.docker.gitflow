@@ -164,7 +164,7 @@ if [ "$metrics_master" -gt "$metrics_develop" ]; then
               echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=coverage&view=list"
               exit_error=1
             else
-	      echo "  **WARNING** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch, but there is a smaller than 10 increse of the number of uncovered lines on ${GIT_BRANCH} - $metrics_unc_develop and master - $metrics_unc_master "
+	      echo "  **WARNING** - The percentage of coverage is smaller in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch, but there is a smaller than 10 increase of the number of uncovered lines on ${GIT_BRANCH} - $metrics_unc_develop and master - $metrics_unc_master "
               echo "  "
 	      echo "  You can check the 2 sonarqube coverage links to review the cause of the decrease: "
               echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=coverage&view=list"
