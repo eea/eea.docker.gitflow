@@ -569,6 +569,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH} master
       update_plone_config eea.docker.plone src/plone/versions.cfg master
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
+      update_plone_config marine-backend src/plone/versions.cfg master
       update_plone_config bise-backend site.cfg develop
       update_plone_config freshwater-backend site.cfg develop
       
