@@ -584,6 +584,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_constraints fise-backend constraints.txt master
       update_plone_constraints bise-backend constraints.txt plone-6
       update_plone_constraints eea.docker.plone.clms constraints.txt develop
+      update_plone_constraints insitu-backend constraints.txt master
 
     fi
 fi
