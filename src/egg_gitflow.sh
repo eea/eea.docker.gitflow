@@ -145,7 +145,7 @@ echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH, on branch $BRANCH_NA
 curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}"  > constraints.txt
 
 
-if [ $(grep -c "==" constraints.txt) -eq 0 ]; then
+if [ $(grep -c "==" constraints.txt) -eq 0 ] && [ $(grep -c eggrepo constraints.txt) -eq 0 ]; then
    echo "There was a problem getting the constraints file"
    cat constraints.txt
    exit 1
