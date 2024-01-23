@@ -50,7 +50,7 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]];
       echo "Will update release text"
      /pyreleaseChangelog.sh $GIT_ORG/$GIT_NAME $version
     fi
-    if [[ "$GIT_NAME" == "eea.docker.plone" ]] || [[ "$GIT_NAME" == "eea.docker.plonesaas" ]]; then
+    if [[ "$GIT_NAME" == "eea.docker.plone" ]] || [[ "$GIT_NAME" == "eea.docker.plonesaas" ]] || ( [ $(grep "eeacms/plone:5" Dockerfile | wc -l ) -gt 0 ] && [[ "$GIT_NAME" == *"-backend" ]] ); then
       echo "Will update release text"
       /py5releaseChangelog.sh $GIT_ORG/$GIT_NAME $version
     fi
