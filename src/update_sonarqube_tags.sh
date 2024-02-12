@@ -14,7 +14,14 @@ update_file()
      echo "Updating $3 on branch $2 on package $1"
 
      GITHUBURL=https://api.github.com/repos/eea/$1
+     
+     valid_curl_get_result "$GITHUBURL" archived
 
+     if [[ $(echo $curl_result | jq '.archived') == "true" ]]; then
+        echo "Repo $1 is archived, skipping update of sonarqube tags" 
+	return
+     fi
+     
      valid_curl_get_result "$GITHUBURL/contents/$3?ref=$2" sha
 
      sha_file=$(echo $curl_result | jq '.sha')
