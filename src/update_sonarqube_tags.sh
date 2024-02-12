@@ -15,7 +15,7 @@ update_file()
 
      GITHUBURL=https://api.github.com/repos/eea/$1
      
-     valid_curl_get_result "$GITHUBURL" archived
+     valid_curl_get_result "$GITHUBURL" name
 
      if [[ $(echo $curl_result | jq '.archived') == "true" ]]; then
         echo "Repo $1 is archived, skipping update of sonarqube tags" 
