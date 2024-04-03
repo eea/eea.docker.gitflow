@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$changeFile" ]; then
-	if [ -n "$GIT_HISTORYFILE"]; then
+	if [ -n "$GIT_HISTORYFILE" ]; then
 		changeFile="$GIT_HISTORYFILE"
 	else
 		changeFile=$(grep GIT_HISTORYFILE Jenkinsfile | head -n 1 | awk -F= '{print $2}' | tr -d ' ' | tr -d '"')
