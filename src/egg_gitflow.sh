@@ -487,7 +487,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
          export GIT_HISTORYFILE
 	 /extractChangelog.sh $version
-         body=$(cat releasefile  | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g' )
+         body=$(cat releasefile  | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g' | head -n 1 )
 
 
 	 echo "Will release with body: $body"
