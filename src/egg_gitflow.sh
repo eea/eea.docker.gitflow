@@ -496,6 +496,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
          if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
             echo "There was a problem with the release"
+	    echo "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"$body\", \"draft\": false, \"prerelease\": false }" 
             echo $curl_result
             exit 1
          fi
