@@ -103,20 +103,26 @@ echo "* ### Check duplication"
 #check duplicated_lines_density | must be smaller
 
 metrics_develop=$(echo "$develop_stats" | jq  -r '.component.measures[] | select( .metric == "duplicated_lines_density") | .value|tonumber * 100 | round')
-
 metrics_master=$(echo "$master_stats" | jq  -r '.component.measures[] | select( .metric == "duplicated_lines_density") | .value|tonumber * 100 | round')
+metrics_develop_real=$(echo $metrics_develop | awk '{printf("%.2f",$1/100)}')
+metrics_master_real=$(echo $metrics_master | awk '{printf("%.2f",$1/100)}')
 
 if [ "$metrics_master" -lt "$metrics_develop" ]; then
-        metrics_develop=$(echo $metrics_develop | awk '{printf("%.2f",$1/100)}')
-        metrics_master=$(echo $metrics_master | awk '{printf("%.2f",$1/100)}')
-        echo "  **FAILURE** - the percentage of duplicated lines is bigger in the ${GIT_BRANCH} branch ($metrics_develop) than the master ($metrics_master) branch"
+   if [ "$metrics_develop" -lt 500 ]; then
+            echo "  **WARNING** - The percentage of duplication is larger in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch, but is still under the 5% threshold"
+            echo "  "
+	    echo "  You can check the 2 sonarqube duplication links to review the cause of the increase: "
+            echo "  ${GIT_BRANCH}: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=duplicated_lines_density&view=list"
+	    echo "  versus"
+            echo "  master: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-master&metric=duplicated_lines_density&view=list"
+   else
+        echo "  **FAILURE** - the percentage of duplicated lines is bigger in the ${GIT_BRANCH} branch ($metrics_develop_real) than the master ($metrics_master_real) branch"
         echo "  "
 	echo "  Please check the sonarqube link and fix this: ${SONAR_HOST_URL}component_measures?id=$GIT_NAME-${GIT_BRANCH}&metric=duplicated_lines_density&view=list"	
         exit_error=1
+   fi
 else
-	metrics_develop=$(echo $metrics_develop | awk '{printf("%.2f",$1/100)}')
-	metrics_master=$(echo $metrics_master | awk '{printf("%.2f",$1/100)}')
-        echo "  OK ( $metrics_develop <= $metrics_master )"
+        echo "  OK ( $metrics_develop_real <= $metrics_master_real )"
 
 fi
 
