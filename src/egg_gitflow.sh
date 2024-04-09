@@ -489,6 +489,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 	 /extractChangelog.sh $version
          body=$(printf "%s" "$(< releasefile)" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g' )
 
+	 newbody=$(echo "$body\"" )
+         if [ $(echo "$newbody" | wc -l) -gt 1 ]; then
+	    body=$(echo "$newbody" | head -n 1)
+	 fi	    
 
 	 echo "Will release with body: $body"
 
