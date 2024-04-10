@@ -11,6 +11,9 @@ fi
 
 changeFile=${changeFile:-'docs/HISTORY.txt'}
 
+#make sure format is good
+dos2unix $changeFile
+
 rm -f releasefile
 
 if [ -z "$version" ]; then

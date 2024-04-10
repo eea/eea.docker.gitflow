@@ -5,7 +5,7 @@ LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
 RUN set -eux; \
 	apt-get update; \
-	apt-get install -y --no-install-recommends jq bc bash curl python2 gcc bc build-essential git \
+	apt-get install -y --no-install-recommends jq bc bash curl python2 gcc bc build-essential git dos2unix \
 # .run-deps git python2 bash curl coreutils bc yarn jq make runc libseccomp build-base gcc libffi-dev npm libstdc++\
  && pip install --upgrade pip \ 
  && pip install docutils twine rstcheck zest.pocompile \
