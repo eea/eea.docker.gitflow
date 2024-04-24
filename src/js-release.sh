@@ -385,27 +385,28 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	    exit 0
 	fi
         
-	archived_repos="eea/circularity-frontend eea/sustainability-frontend"
+        check_frontend=""
+	page=1
+        result=$(curl -s -H "Authorization: bearer $GIT_TOKEN"  "https://api.github.com/orgs/eea/repos?type=all&per_page=100&page=$page")
+        while [ $(echo -e "$result" | grep name | wc -l )  -ne 0 ]; do
+            check_frontend="$check_frontend "$(echo -e "$result"| jq -r ".[] |  select(.archived|not) | select(.name | endswith(\"-frontend\")) | .full_name")
+            check_frontend="$check_frontend "$(echo -e "$result"| jq -r ".[] |  select(.archived|not) | select(.name | endswith(\"-kitkat\")) | select(.name | startswith(\"volto\")) | .full_name")
+            check_frontend="$check_frontend "$(echo -e "$result"| jq -r ".[] |  select(.archived|not) | select(.name | endswith(\"-policy\")) | select(.name | startswith(\"volto\")) | .full_name")
+            page=$(($page+1))
+            result=$(curl -s -H "Authorization: bearer $GIT_TOKEN" "https://api.github.com/orgs/eea/repos?type=all&per_page=100&page=$page")
+        done
+        echo "List of non-archived frontends, kitkat & policy: $check_frontend"
+ 
         echo "Checking and updating frontend dependencies in org:eea"
 
-        check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
+        #check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
 	
 	current_pwd="$(pwd)"
 	
 	for i in $( echo "$check_frontend" ); do 
-	    if [ $( echo $archived_repos | grep -w $i | wc -l) -eq 0 ]; then
-                update_package_json $i package.json $package_name $version develop
-	    fi
-        done
-
-        check_kitkat=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea kitkat in:name volto in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
-       
-	for i in $( echo "$check_kitkat" ); do 
-  	    if [ $( echo $archived_repos | grep -w $i | wc -l) -eq 0 ]; then
-                update_package_json $i package.json $package_name $version develop
-            fi		
-        done
-
+	        update_package_json $i package.json $package_name $version develop
+	done
+	
         #remove when migrated to develop branch
 	update_package_json eea/marine-frontend package.json $package_name $version eea-design
 	update_package_json eea/freshwater-frontend package.json $package_name $version eea-design-system
