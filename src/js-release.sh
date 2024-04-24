@@ -385,7 +385,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	    exit 0
 	fi
         
-	archived_repos="eea/circularity-frontend"
+	archived_repos="eea/circularity-frontend eea/sustainability-frontend"
         echo "Checking and updating frontend dependencies in org:eea"
 
         check_frontend=$(curl -s  -H "Accept: application/vnd.github.v3+json" -G --data-urlencode "q=org:eea frontend in:name" "https://api.github.com/search/repositories?per_page=100" | jq -r .items[].full_name )
