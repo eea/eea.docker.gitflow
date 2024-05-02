@@ -28,7 +28,7 @@ if [ -n "$NODEJS_VERSION" ]; then
   if [ $(nvm list "$NODEJS_VERSION" | grep "$NODEJS_VERSION" | wc -l) -eq 0 ]; then
           echo "Did not find this version installed, will install it"
           nvm install $NODEJS_VERSION
-          npm install -g yarn release-it yarn-deduplicate
+          npm install -g yarn release-it yarn-deduplicate yo
   fi
   nvm use $NODEJS_VERSION
 fi
@@ -122,8 +122,15 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ] || [ $(git tag | grep ^v${version}$ | wc -l) -eq 1 ] || [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$' | wc -l) -eq 1 ]; then
              echo "Current version is either already released or a beta version"
 	     echo "Start release with changelog update on new version"
-             echo "Update yarn.lock"
+             echo "Starting the update yarn.lock from a clean plone/volto"
 
+             volto_version=$(cat package.json | jq -r '.dependencies["@plone/volto"]')
+	     echo "Found volto version $volto_version"
+       
+             yo @plone/volto --volto=$volto_version --no-interactive clean-frontend
+	     cp clean-frontend/yarn.lock .
+             rm -rf clean-frontend
+             
              yarn
 
              if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
@@ -134,7 +141,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
              if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
                 echo "Found changes in yarn.lock, will now update it"
                 git add yarn.lock
-                git commit -m "chore: [YARN] Automated update of yarn.lock"
+                git commit -m "chore: [YARN] Automated update of yarn.lock using clean volto"
              fi
 
              new_version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}')
