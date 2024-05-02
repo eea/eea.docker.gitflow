@@ -77,7 +77,18 @@ update_package_json()
 	    return
        fi
        
+       
        echo "Running update dependency in $2 on gitrepo $1 for package $3 version $4 on branch $UPDATE_BRANCH for try $retry"
+
+       curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$1/contents/package.json?ref=$UPDATE_BRANCH"  > /tmp/package.json
+       if [ -f /tmp/package.json ] && [ $(grep 'dependencies' /tmp/package.json) -gt 0 ]; then
+        echo "Got package.json file, will now check if $3 is present"
+	if [ $(grep $3 /tmp/package.json) -eq 0 ]; then
+           echo "Did not find $3 in package.json, skipping $1"
+	   return
+        fi
+       fi
+
        
        cd /
        rm -rf /frontend
