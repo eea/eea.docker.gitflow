@@ -19,7 +19,7 @@ RUN set -eux; \
 RUN export NVM_DIR="$HOME/.nvm" \
  && . "$NVM_DIR/nvm.sh" \
  && nvm install 18 \
- && npm install -g yarn release-it yarn-deduplicate yo husky\
+ && npm install -g is-ci yarn release-it yarn-deduplicate yo husky\
  && nvm install 16 \
  && nvm alias default 16 \
  && npm install -g yarn release-it@16 yarn-deduplicate isbinaryfile@4 husky@8\
