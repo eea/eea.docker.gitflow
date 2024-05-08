@@ -22,7 +22,7 @@ RUN export NVM_DIR="$HOME/.nvm" \
  && npm install -g yarn release-it yarn-deduplicate yo husky\
  && nvm install 16 \
  && nvm alias default 16 \
- && npm install -g yarn release-it@16 yarn-deduplicate yo husky@8\
+ && npm install -g yarn release-it@16 yarn-deduplicate yo@4 husky@8\
  # fix gyp that does not work with python 3.11
  && for i in $(find . -type d -name gyp | grep pylib); do sed -i 's/rU/r/' $i/input.py; done
 
