@@ -14,16 +14,15 @@ RUN set -eux; \
  && curl -L -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 \
  && chmod 755 /usr/bin/jq \
  && rm -rf /var/lib/apt/lists/*
- 
+
 
 RUN export NVM_DIR="$HOME/.nvm" \
  && . "$NVM_DIR/nvm.sh" \
  && nvm install 18 \
  && npm install -g yarn release-it yarn-deduplicate yo husky\
- && chown -R node:root /root/.nvm/versions/node \
  && nvm install 16 \
  && nvm alias default 16 \
- && npm install -g yarn release-it@16 yarn-deduplicate isbinaryfile@4 yo@4 husky@8\
+ && npm install -g yarn release-it@16 yarn-deduplicate isbinaryfile@4 husky@8\
  # fix gyp that does not work with python 3.11
  && for i in $(find . -type d -name gyp | grep pylib); do sed -i 's/rU/r/' $i/input.py; done
 

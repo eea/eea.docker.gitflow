@@ -22,6 +22,7 @@ fi
 export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
 
+NODEJS_VERSION=${NODEJS_VERSION:-18}
 
 if [ -n "$NODEJS_VERSION" ]; then
   echo "Received NODEJS_VERSION $NODEJS_VERSION, will use it instead of default version"
