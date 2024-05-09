@@ -123,18 +123,17 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	if [ $(git tag | grep ^${version}$ | wc -l) -eq 1 ] || [ $(git tag | grep ^v${version}$ | wc -l) -eq 1 ] || [ $(echo $version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$' | wc -l) -eq 1 ]; then
              echo "Current version is either already released or a beta version"
 	     echo "Start release with changelog update on new version"
-             echo "Starting the update yarn.lock from a clean plone/volto"
+             #echo "Starting the update yarn.lock from a clean plone/volto"
 
-             volto_version=$(cat package.json | jq -r '.dependencies["@plone/volto"]')
-	     echo "Found volto version $volto_version"
+             #volto_version=$(cat package.json | jq -r '.dependencies["@plone/volto"]')
+	     #echo "Found volto version $volto_version"
        
-             npm install -g yo
 
-	     yo @plone/volto --volto=$volto_version --no-interactive clean-frontend
-	     cp clean-frontend/yarn.lock .
-             rm -rf clean-frontend
+	     #yo @plone/volto --volto=$volto_version --no-interactive clean-frontend
+	     #cp clean-frontend/yarn.lock .
+             #rm -rf clean-frontend
              
-             yarn
+             #yarn
 
              if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
                 echo "Running yarn-deduplicate"
