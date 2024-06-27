@@ -46,9 +46,9 @@ cd $RANCHER_CATALOG_GITNAME/$RANCHER_CATALOG_PATH
 # get latest rancher entry
 
 
-old_version=$(grep "^version: " config.yml | awk 'BEGIN{FS="\""}{print $2}')
+old_version=$(grep "^version: " config.yml | awk -F: '{print $2}' | sed  "s/[' \"]//g")
 
-lastdir=$(grep -l "version: \"$old_version\"" */rancher-compose.yml | awk 'BEGIN{FS="/"}{print $1}' | sort -n | tail -n 1 )
+lastdir=$(grep -l "version: [ '\"]*$old_version[ '\"]*$" */rancher-compose.yml | awk 'BEGIN{FS="/"}{print $1}' | sort -n | tail -n 1 )
 
 biggestdirnr=$(find . -maxdepth 1 -type d | awk  'BEGIN{FS="/"}{print $2}' | sort -n | tail -n 1)
 
