@@ -419,8 +419,6 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	done
 	
         #remove when migrated to develop branch
-	update_package_json eea/marine-frontend package.json $package_name $version eea-design
-	update_package_json eea/freshwater-frontend package.json $package_name $version eea-design-system
 	update_package_json eea/fise-frontend package.json $package_name $version eea-design-system
  
 	cd $current_pwd
