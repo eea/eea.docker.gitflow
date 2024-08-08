@@ -116,26 +116,33 @@ if [ $(grep  "image: $DOCKER_IMAGENAME_ESC:$DOCKER_IMAGEVERSION$"  */$DOCKER_COM
   exit 0
 fi
 
-biggest_version=$(echo "$DOCKER_IMAGEVERSION
-$old_version" | sort --sort=version | tail -n 1 )
-
-if [[ $bigger_version == "$old_version" ]]; then
-  echo "Version ${DOCKER_IMAGEVERSION} is smaller than last version ${old_version}, will skip rancher catalog"
-  cd $current_dir
-  rm -rf $RANCHER_CATALOG_GITNAME
-  exit 0
-fi
 
 
 echo "--------------------------------------------------------"
-if [ $(grep "image: $DOCKER_IMAGENAME_ESC" $lastdir/$DOCKER_COMPOSE | grep -v gitflow-disable | wc -l ) -eq 0 ]; then
-  echo "Did not find in latest $DOCKER_COMPOSE images with $DOCKER_IMAGENAME without gitflow-disable"
+if [ $(grep "image: ${DOCKER_IMAGENAME_ESC}:" $lastdir/$DOCKER_COMPOSE | grep -v gitflow-disable | wc -l ) -eq 0 ]; then
+  echo "Did not find in latest $DOCKER_COMPOSE images with $DOCKER_IMAGENAME without gitflow-disable nor with a version to be upgraded"
   echo "Will skip the creation of new version of rancher catalog!"
   #clean-up
   cd $current_dir
   rm -rf $RANCHER_CATALOG_GITNAME
   exit 0
 fi
+
+
+
+smallest_version=$(grep "image: ${DOCKER_IMAGENAME_ESC}:" $lastdir/$DOCKER_COMPOSE | grep -v gitflow-disable | awk -F: '{print $3}' | sort --sort=version | head -n 1 )
+
+bigger_version=$(echo "$DOCKER_IMAGEVERSION
+$smallest_version" | sort --sort=version | tail -n 1 )
+
+if [[ ! "$bigger_version" == "$DOCKER_IMAGEVERSION" ]]; then
+  echo "Version ${DOCKER_IMAGEVERSION} is smaller than the smallest image version ${smallest_version}, will skip rancher catalog"
+  cd $current_dir
+  rm -rf $RANCHER_CATALOG_GITNAME
+  exit 0
+fi
+
+
 
 
 echo "Checked latest $DOCKER_COMPOSE ($lastdir/$DOCKER_COMPOSE), $DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION is not present, will go on with creating the new rancher catalog version!"
