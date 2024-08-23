@@ -83,7 +83,7 @@ update_package_json()
        curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$1/contents/package.json?ref=$UPDATE_BRANCH"  > /tmp/package.json
        if [ -f /tmp/package.json ] && [ $(grep 'dependencies' /tmp/package.json | wc -l) -gt 0 ]; then
         echo "Got package.json file, will now check if $3 is present"
-	if [ $(grep $3 /tmp/package.json) -eq 0 ]; then
+	if [ $(grep $3 /tmp/package.json | wc -l) -eq 0 ]; then
            echo "Did not find $3 in package.json, skipping $1"
 	   return
         fi
