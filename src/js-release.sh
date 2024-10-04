@@ -415,7 +415,9 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	current_pwd="$(pwd)"
 	
 	for i in $( echo "$check_frontend" ); do 
-	        update_package_json $i package.json $package_name $version develop
+	       if [[ ! "$i" == "eea/fise-frontend" ]]; then
+	          update_package_json $i package.json $package_name $version develop
+	       fi
 	done
 	
         #remove when migrated to develop branch
