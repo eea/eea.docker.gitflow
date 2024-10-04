@@ -415,7 +415,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	current_pwd="$(pwd)"
 	
 	for i in $( echo "$check_frontend" ); do 
-	       if [[ ! "$i" == "eea/fise-frontend" ]]; then
+	       if [[ ! "$i" == "eea/fise-frontend" ]] && [[ ! "$i" == "eea/semanticsearch-frontend" ]]; then
 	          update_package_json $i package.json $package_name $version develop
 	       fi
 	done
