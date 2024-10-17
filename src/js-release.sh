@@ -168,6 +168,14 @@ $old_version" | sort --sort=version | tail -n 1 )
        if [ $(cat package.json | jq '.engines.node' | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
            nvm use 14
        fi
+
+ 
+
+       #does not support node 16, only 18
+       #volto-eea-kitkat needs node 18
+       if [ $(cat package.json | jq '.engines.node' | grep -v 16 | grep 18 | wc -l) -eq 1 ] || [ "$1" == "eea/volto-eea-kitkat" ]; then
+           nvm use 18
+       fi
        
        if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
            yarn add -W $3@$4
