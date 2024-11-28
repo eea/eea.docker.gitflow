@@ -566,16 +566,19 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
        echo "--------------------------------------------------------------------------------------------------------------------"
 
     if [ ! -z "$EGGREPO_PASSWORD$PYPI_PASSWORD" ]; then
+    
+      if [[ "$EGG_NAME" == "Products.Reportek" ]]; then
+        update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
+	#there is no need to check other plones
+        exit 0
+      fi
+      
       # Updating versions.cfg
       update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH} master
       update_plone_config eea.docker.plone src/plone/versions.cfg master
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
       update_plone_config freshwater-backend site.cfg develop
       update_plone_config marine-backend site.cfg develop
-      
-      if [[ "$EGG_NAME" == "Products.Reportek" ]]; then
-        update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
-      fi
       
       #Updating constraints.txt
       update_plone_constraints plone-backend constraints.txt master
