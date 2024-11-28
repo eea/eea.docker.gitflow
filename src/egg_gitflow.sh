@@ -570,7 +570,6 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH} master
       update_plone_config eea.docker.plone src/plone/versions.cfg master
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
-      update_plone_config bise-backend site.cfg develop
       update_plone_config freshwater-backend site.cfg develop
       update_plone_config marine-backend site.cfg develop
       
@@ -583,7 +582,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_constraints eea-website-backend constraints.txt master
       update_plone_constraints advisory-board-backend constraints.txt master
       update_plone_constraints fise-backend constraints.txt master
-      update_plone_constraints bise-backend constraints.txt plone-6
+      update_plone_constraints bise-backend constraints.txt develop
       update_plone_constraints eea.docker.plone.clms constraints.txt develop
       update_plone_constraints insitu-backend constraints.txt master
 
