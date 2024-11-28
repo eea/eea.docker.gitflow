@@ -567,7 +567,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
     if [ ! -z "$EGGREPO_PASSWORD$PYPI_PASSWORD" ]; then
     
-      if [[ "$EGG_NAME" == "Products.Reportek" ]]; then
+      if [[ "$GIT_NAME" == "Products.Reportek" ]]; then
         update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
 	#there is no need to check other plones
         exit 0
