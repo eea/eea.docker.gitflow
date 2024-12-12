@@ -433,19 +433,19 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
              exit 1
           fi
 
-          if [ $(echo "$egg_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ] || [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
+          if [ $(echo "$egg_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ] || [ [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ] && [ $(echo "$egg_releases" | grep -c ">${GIT_NAME}-${version}.tar.gz<") -ne 1 ] ]; then
 
               echo "Compiling po files to mo"
               pocompile
 
-              echo "Starting the release ${GIT_NAME}-${version}.zip on EEA repo"
-              python setup.py sdist --formats=zip
+              echo "Starting the release ${GIT_NAME}-${version}.tar.gz on EEA repo"
+              python setup.py sdist --formats=gztar,zip
               twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
-              echo "Release ${GIT_NAME}-${version}.zip done on ${EGGREPO_URL}"
+              echo "Release ${GIT_NAME}-${version} done on ${EGGREPO_URL}"
 
          else
-             echo "Release ${GIT_NAME}-${version}.zip already exists on EEA repo, skipping"
+             echo "Release ${GIT_NAME}-${version} already exists on EEA repo, skipping"
           fi
           echo "--------------------------------------------------------------------------------------------------------------------"
         fi
@@ -467,15 +467,15 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
           else
 
-            if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ]; then
-               echo "Starting the release ${GIT_NAME}-${version}.zip on PyPi repo"
-               if [ ! -f dist/${GIT_NAME}-${version}.zip ];then
-		       python setup.py sdist --formats=zip
+            if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ] && [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.tar.gz<") -ne 1 ]; then
+               echo "Starting the release ${GIT_NAME}-${version}.tar.gz on PyPi repo"
+               if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
+		       python setup.py sdist --formats=gztar,zip
 	       fi
 	       twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
-               echo "Release ${GIT_NAME}-${version}.zip  done on PyPi"
+               echo "Release ${GIT_NAME}-${version}.tar.gz  done on PyPi"
             else
-              echo "Release ${GIT_NAME}-${version}.zip already exists on PyPi repo, skipping"
+              echo "Release ${GIT_NAME}-${version} already exists on PyPi repo, skipping"
             fi
           fi
           echo "--------------------------------------------------------------------------------------------------------------------"
