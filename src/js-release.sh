@@ -394,8 +394,13 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		
                 npm publish --access=public
 		echo "Waiting for npm to sync their data for yarn before updating frontends"
-		sleep 60
-        fi
+                sleep 20
+		#check if already published
+                while [ $(npm view ${package_name}@$version | wc -l) -eq 0 ]; do
+		  echo "NPM not published yet, sleeping 20s"
+                  sleep 20
+		done
+	fi
 
 
         echo "Check if format is x.y.z"
