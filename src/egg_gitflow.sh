@@ -439,7 +439,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
               pocompile
 
               echo "Starting the release ${GIT_NAME}-${version}.tar.gz on EEA repo"
-              python setup.py sdist --formats=gztar,zip
+              python setup.py sdist --formats=gztar
               twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               echo "Release ${GIT_NAME}-${version} done on ${EGGREPO_URL}"
@@ -470,7 +470,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             if [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.zip<") -ne 1 ] && [ $(echo "$pypi_releases" | grep -c ">${GIT_NAME}-${version}.tar.gz<") -ne 1 ]; then
                echo "Starting the release ${GIT_NAME}-${version}.tar.gz on PyPi repo"
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
-		       python setup.py sdist --formats=gztar,zip
+		       python setup.py sdist --formats=gztar
 	       fi
 	       twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
                echo "Release ${GIT_NAME}-${version}.tar.gz  done on PyPi"
