@@ -433,7 +433,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
              exit 1
           fi
 
-          if [ $(echo "$egg_releases" | grep -E "HTTP/[0-9\.]* 404" | wc -l ) -eq 1 ] || [ [ $(echo "$egg_releases" | grep ">${GIT_NAME}-${version}.zip<" | wc -l ) -ne 1 ] && [ $(echo "$egg_releases" | grep ">${GIT_NAME}-${version}.tar.gz<" | wc -l ) -ne 1 ] ]; then
+          if [ $(echo "$egg_releases" | grep -E "HTTP/[0-9\.]* 404" | wc -l ) -eq 1 ] || [ $(echo $egg_releases | grep -cE ">${GIT_NAME}-${version}\.tar\.gz<|>${GIT_NAME}-${version}\.zip<" ) -ne 1 ]; then
 
               echo "Compiling po files to mo"
               pocompile
@@ -467,7 +467,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
           else
 
-            if [ $(echo "$pypi_releases" | grep ">${GIT_NAME}-${version}.zip<" | wc -l ) -ne 1 ] && [ $(echo "$pypi_releases" | grep ">${GIT_NAME}-${version}.tar.gz<" | wc -l ) -ne 1 ]; then
+            if [ $(echo $egg_releases | grep -cE ">${GIT_NAME}-${version}\.tar\.gz<|>${GIT_NAME}-${version}\.zip<") -ne 1 ]; then
                echo "Starting the release ${GIT_NAME}-${version}.tar.gz on PyPi repo"
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
 		       python setup.py sdist --formats=gztar
