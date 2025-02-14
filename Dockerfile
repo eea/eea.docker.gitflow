@@ -1,7 +1,8 @@
 FROM python:3-buster
 LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
-
+ENV YQ_VERSION=v4.44.6
+ENV JQ_VERSION=1.6
 
 RUN set -eux; \
 	apt-get update; \
@@ -11,8 +12,10 @@ RUN set -eux; \
  && pip install docutils twine rstcheck zest.pocompile \
  && pip install -I wheel==0.31.0 \
  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
- && curl -L -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 \
+ && curl -L -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 \
  && chmod 755 /usr/bin/jq \
+ && wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64.tar.gz -O - | tar xz \
+ && mv yq_linux_amd64 /usr/bin/yq \
  && rm -rf /var/lib/apt/lists/*
 
 
