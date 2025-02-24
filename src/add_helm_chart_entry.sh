@@ -42,7 +42,8 @@ fi
 # clone the repo
 rm -rf $RANCHER_HELM_GITNAME
 git clone $RANCHER_HELM_GITSRC
-cd ${HELM_CHART}
+
+cd ${RANCHER_HELM_GITNAME}
 
 
 
