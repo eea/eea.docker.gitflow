@@ -74,9 +74,17 @@ fi
 
 sed "1,${line}d" README.md > part2
 
-sed -i "/<dl>/a\  <dt>Version $HELM_NEWVERSION</dt>\n  <dd>$HELM_UPGRADE_MESSAGE</dd>\n" part2
+if [ $(grep "<dl>" part2 | wc -l ) -eq 1 ]; then
+    sed -i 's|<[/]*dl>.*||g' part2
+    sed -i  's|[ ]*<dt>\(.*\)</dt>|### \1|g' part2
+    sed -i  's|[ ]*<dd>\(.*\)</dd>|- \1|g' part2
+fi
+
 
 head -n $line README.md > part1
+
+echo -e "\n### Version $HELM_NEWVERSION - $(LANG=en_us_88591 date +"%d %B %Y")\n- $HELM_UPGRADE_MESSAGE" >> part1
+
 
 cat part1 part2 > README.md
 

@@ -53,8 +53,12 @@ list_sources=$(grep -R $DOCKER_IMAGENAME sources/ | awk -F: '{print $1}' | awk -
 
 for i in $(echo $list_sources); do
 
-        export HELM_UPGRADE_MESSAGE="Automated release of ${DOCKER_IMAGENAME}:${DOCKER_IMAGEVERSION}"
-	
+	export HELM_UPGRADE_MESSAGE="Automated release of ${DOCKER_IMAGENAME}:${DOCKER_IMAGEVERSION}"
+       
+	if [ -n "$GIT_NAME" ]; then
+		export HELM_UPGRADE_MESSAGE="Automated release of [${DOCKER_IMAGENAME}:${DOCKER_IMAGEVERSION}](https://github.com/${GIT_ORG}/${GIT_NAME}/releases)"
+	fi
+
 	echo "Checking $i"
         export HELM_VERSION_TYPE="PATCH"
          
