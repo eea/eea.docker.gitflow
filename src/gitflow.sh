@@ -264,6 +264,13 @@ $latestTag2" | sort --sort=version | tail -n 1)
         	/add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH $DOCKERHUB_REPO $version $RANCHER_CATALOG_SAME_VERSION 
       done
 
+      
+      echo "Starting the helm chart entry release"
+
+      /add_helm_chart_entry.sh $DOCKERHUB_REPO $version
+
+
+
     fi
 
 
@@ -407,6 +414,11 @@ $old_version" | sort  --sort=version | tail -n 1)
          for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
                /add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH ${TRIG[0]} $version $RANCHER_CATALOG_SAME_VERSION
          done
+
+         echo "Starting script to add helm charts updates"
+
+         /add_helm_chart_entry.sh ${TRIG[0]} $version
+        
 
          #make sure master is resubmitted if failed
 	 get_dockerhub_buildhistory ${TRIG[0]}

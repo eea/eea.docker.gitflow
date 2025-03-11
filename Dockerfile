@@ -16,8 +16,12 @@ RUN set -eux; \
  && chmod 755 /usr/bin/jq \
  && wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64.tar.gz -O - | tar xz \
  && mv yq_linux_amd64 /usr/bin/yq \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* 
 
+RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 \
+ && chmod 700 get_helm.sh \
+ && ./get_helm.sh \
+ && rm get_helm.sh
 
 RUN export NVM_DIR="$HOME/.nvm" \
  && . "$NVM_DIR/nvm.sh" \
