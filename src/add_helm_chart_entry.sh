@@ -3,7 +3,7 @@
 set -e
 
 GIT_ORG=${GIT_ORG:-'eea'}
-RANCHER_HELM_GITNAME=${RANCHER_CATALOG_GITNAME:-'helm-charts'}
+RANCHER_HELM_GITNAME=${RANCHER_HELM_GITNAME:-'helm-charts'}
 GIT_USER=${GIT_USER:-'eea-jenkins'}
 GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 HELM_INDEX=${HELM_INDEX:-'https://eea.github.io/helm-charts/index.yaml'}
