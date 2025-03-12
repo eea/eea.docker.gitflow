@@ -41,7 +41,15 @@ fi
 # clone the repo
 rm -rf $RANCHER_CATALOG_GITNAME
 git clone $RANCHER_CATALOG_GITSRC
-cd $RANCHER_CATALOG_GITNAME/$RANCHER_CATALOG_PATH
+
+if [ -d $RANCHER_CATALOG_GITNAME/$RANCHER_CATALOG_PATH ]; then
+   cd $RANCHER_CATALOG_GITNAME/$RANCHER_CATALOG_PATH
+else
+   echo "Received RANCHER_CATALOG_PATH a path that does not exist - $RANCHER_CATALOG_PATH, will exit script without changes"
+   echo "Return exit code succesfull for the case of migration from rancher catalog to helm"
+   echo "Please check variable value if is configured correctly"
+   exit 0
+fi
 
 # get latest rancher entry
 
