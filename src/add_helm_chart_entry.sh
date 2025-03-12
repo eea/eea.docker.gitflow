@@ -102,6 +102,7 @@ for i in $(echo $list_sources); do
 
         echo "Will now check if chart $i:$HELM_NEWVERSION is released, then update subcharts"
       
+	rm index.yaml
 	wget $HELM_INDEX
 	timeout=1200
 
