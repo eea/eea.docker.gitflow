@@ -28,9 +28,29 @@ if [ -z "$HELM_UPGRADE_MESSAGE" ] ; then
 	exit 1
 fi
 
+HELM_COMMIT_MESSAGE="${HELM_COMMIT_MESSAGE:-$HELM_UPGRADE_MESSAGE}"
+HELM_ADD_COMMIT_LINK_README="${HELM_ADD_COMMIT_LINK_README:-yes}"
+
 echo "Found differences, will now start the version increase"
 echo "Version will be increased with $HELM_VERSION_TYPE"
-echo "Message is $HELM_UPGRADE_MESSAGE"
+echo "Readme message is $HELM_UPGRADE_MESSAGE"
+echo "Commit message is $HELM_COMMIT_MESSAGE"
+
+readme_link=""
+
+if [[ "$HELM_ADD_COMMIT_LINK_README" == "yes" ]]; then
+  echo "Will now create a commit only with the changes in the chart used in Changelog"
+  git add .
+  git commit -m "$HELM_COMMIT_MESSAGE"
+  commit=$(git rev-parse HEAD)
+  url=$(git config --get remote.origin.url | sed 's|.*github.com[:/]|https://github.com/|' | sed 's|.git$||')/commit/$commit
+  readme_link='['$(git log -1 --pretty=format:'%an')' - [`'$(git rev-parse --short HEAD)'`]('$url')]'
+
+fi
+
+
+
+
 
 
 old_version=$(yq -r '.version' Chart.yaml )
@@ -83,7 +103,7 @@ fi
 
 head -n $line README.md > part1
 
-echo -e "\n### Version $HELM_NEWVERSION - $(LANG=en_us_88591 date +"%d %B %Y")\n- $HELM_UPGRADE_MESSAGE" >> part1
+echo -e "\n### Version $HELM_NEWVERSION - $(LANG=en_us_88591 date +"%d %B %Y")\n- $HELM_UPGRADE_MESSAGE $readme_link" >> part1
 
 
 cat part1 part2 > README.md

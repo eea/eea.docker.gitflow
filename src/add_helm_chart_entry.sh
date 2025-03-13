@@ -8,6 +8,7 @@ GIT_USER=${GIT_USER:-'eea-jenkins'}
 GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 HELM_INDEX=${HELM_INDEX:-'https://eea.github.io/helm-charts/index.yaml'}
 
+
 if [ -z "$GIT_TOKEN" ]; then
    echo "Need GIT_TOKEN environment variable to create releases"
    exit 1
@@ -28,7 +29,7 @@ echo "Checked parameters, will start creating helm chart entry on ${GIT_ORG}/${R
 
 RANCHER_HELM_GITSRC=https://$GIT_USER:$GIT_TOKEN@github.com/${GIT_ORG}/${RANCHER_HELM_GITNAME}.git
 git config --global user.email "${GIT_USER}@users.noreply.github.com"
-git config --global user.email "${GIT_USERNAME}@users.noreply.github.com"
+git config --global user.name "${GIT_USERNAME}"
 
 
 
@@ -125,7 +126,8 @@ for i in $(echo $list_sources); do
 
 	./release_subchart.sh $i
 
-
+       
+	
 
 done
 
