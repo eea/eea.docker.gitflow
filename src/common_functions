@@ -89,7 +89,7 @@ get_dockerhub_buildhistory()
          echo "DockerHub Token has expired, will unset it"
          unset JWT_DOCKERHUB_TOKEN
          JWT_DOCKERHUB_TOKEN=
-      elif [ $(echo $curl_result | grep -c -i "200 OK") -eq 0 ]; then
+      elif [ $(echo $curl_result | grep -c -i "200") -eq 0 ]; then
          echo "DockebHub error, will retry after 5 minutes"
          echo "$curl_result"
          sleep 300
