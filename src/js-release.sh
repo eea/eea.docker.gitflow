@@ -383,15 +383,13 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	if [ -z "$already_published" ]; then
 		
 		echo "Publishing npm package"
-		
+		yarn
 		echo "Checking if prepublish script exist"
 		if [ $(cat  package.json | jq '.scripts.prepublish | length') -gt 0 ]; then
 		   echo "Found prepublish script, running it"
-		   yarn 
 		   yarn prepublish
 		fi
-		
-		
+
                 npm publish --access=public
 		echo "Waiting for npm to sync their data for yarn before updating frontends"
                 sleep 20
