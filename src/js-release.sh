@@ -33,7 +33,7 @@ if [ -n "$NODEJS_VERSION" ]; then
   if [ $(nvm list "$NODEJS_VERSION" | grep "$NODEJS_VERSION" | wc -l) -eq 0 ]; then
 	  echo "Did not find this version installed, will install it"
 	  nvm install $NODEJS_VERSION
-	  npm install -g yarn release-it yarn-deduplicate husky
+	  npm install -g yarn release-it yarn-deduplicate husky rimraf
   fi
   nvm use $NODEJS_VERSION
 fi
@@ -383,12 +383,17 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	if [ -z "$already_published" ]; then
 		
 		echo "Publishing npm package"
-		yarn
 		echo "Checking if prepublish script exist"
 		if [ $(cat  package.json | jq '.scripts.prepublish | length') -gt 0 ]; then
 		   echo "Found prepublish script, running it"
+		   yarn
 		   yarn prepublish
 		fi
+
+                if [ -n "$RUN_YARN_BEFORE_PUBLISH" ]; then
+                   echo "Found variable RUN_YARN_BEFORE_PUBLISH, will now run yarn"
+                   yarn
+                fi
 
                 npm publish --access=public
 		echo "Waiting for npm to sync their data for yarn before updating frontends"

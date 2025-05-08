@@ -59,6 +59,10 @@ To run from jenkins:
 4. NPM_TOKEN - token used for NPM login
 5. DOCKERHUB_USER, DOCKERHUB_PASS - used in DockerHub login
 
+
+### Specific variables
+1. RUN_YARN_BEFORE_PUBLISH - set to anything to run yarn before npm publish 
+
 ### The release steps:
 1. Release on EGGREPO_URL
 2. Create tag on GIT_NAME repo with released version
