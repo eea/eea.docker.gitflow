@@ -34,7 +34,7 @@ curl_result=$(curl -s "https://pypi.org/pypi/$package/json")
 
 if [ $( echo $curl_result | grep -i "not found" |wc -l ) -eq 1 ]; then
         echo "Did not find package in pypi, checking in eggrepo"
-	curl_result=$(curl -s -L "https://eggrepo.eea.europa.eu/d/$package")
+	curl_result=$(curl -s -L "https://eggrepo.eea.europa.eu/d/$package/")
 
 	if [ $( echo $curl_result | grep -i "not found" | wc -l ) -eq 1 ]; then
 
