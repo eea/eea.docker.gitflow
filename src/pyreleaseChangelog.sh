@@ -27,14 +27,14 @@ old="$3"
 
 echo "$package $old --> $new"
 
-homepage=$(echo $curl_result | jq -r '.home_page' | sed 's/#.*$//' )
+# homepage=$(echo $curl_result | jq -r '.home_page' | sed 's/#.*$//' )
 
-
+echo "Checking pypi"
 curl_result=$(curl -s "https://pypi.org/pypi/$package/json")
 
 if [ $( echo $curl_result | grep -i "not found" |wc -l ) -eq 1 ]; then
-
-	curl_result=$(curl -s -L "https://eggrepo.eea.europa.eu/d/$package")
+        echo "Did not find package in pypi, checking in eggrepo"
+	curl_result=$(curl -s -L "https://eggrepo.eea.europa.eu/d/$package/")
 
 	if [ $( echo $curl_result | grep -i "not found" | wc -l ) -eq 1 ]; then
 
@@ -44,22 +44,14 @@ if [ $( echo $curl_result | grep -i "not found" |wc -l ) -eq 1 ]; then
                 return
 	fi
 	homepage=$(echo -e "$curl_result" | grep -A 1 "Home Page" | grep href | sed 's/.*href="\(.*\)">.*>/\1/')
-
 	echo $curl_result | grep -A 1 "Home Page"  
-
 	echo "Extracted homepage from eggrepo"
-
-
 else
-
 	homepage=$(echo $curl_result | jq -r '.info.home_page' | sed 's/#.*$//' )
         echo "Extracted homepage from pypi"
-
 fi
 
-
 echo "$package $old --> $new"
-
 echo $homepage
 
 if [ -z "$homepage" ] || [[ "$homepage" == "null" ]]; then
