@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Running gitflow.sh script"
+
 set -e
 
 if [ -z "$GIT_TOKEN" ]; then
@@ -67,11 +69,12 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]];
     else
       latestTag1=$(git describe --tags --abbrev=0)
       #check in case there are multiple tags per commit
-      latestTag1=$(git log  --tags --decorate=full | grep refs/tags/$latestTag1 | grep -o refs/tags/[^\ ,\)]*  | sed 's#refs/tags/##g' | sort --sort=version | tail -n 1)
+      #ignore beta, alpha tags
+      latestTag1=$(git log  --tags --decorate=full | grep refs/tags/$latestTag1 | grep -o refs/tags/[^\ ,\)]*  | sed 's#refs/tags/##g' | sort --sort=version | grep -v alpha | grep -v beta | tail -n 1)
       valid_curl_get_result "https://api.github.com/repos/$GIT_ORG/$GIT_NAME/releases"
       latestTag2=$(echo "$curl_result" | jq -r '.[] | select (.target_commitish == "master" ) | .tag_name' || echo "")
       latestTag=$(echo "$latestTag1
-$latestTag2" | sort --sort=version | tail -n 1)
+$latestTag2" | grep -v alpha | grep -v beta | sort --sort=version | tail -n 1)
 
       files_changed=$(git --no-pager diff --name-only master $(git merge-base $latestTag  master) | wc -l )
     fi
