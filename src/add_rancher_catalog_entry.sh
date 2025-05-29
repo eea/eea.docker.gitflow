@@ -222,8 +222,11 @@ fi
 
 cd $nextdir
 
-
-sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*${DOCKERHUB_REPO_SUFIX}$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}${DOCKERHUB_REPO_SUFIX}/" -e "/gitflow-disable/! {/image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}${DOCKERHUB_REPO_SUFIX}/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/}" $DOCKER_COMPOSE
+if [ -n "$DOCKERHUB_REPO_PREFIX" ]; then
+     sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:\(${DOCKERHUB_REPO_PREFIX}\).*$/    image: ${DOCKER_IMAGENAME_ESC}:\1${DOCKER_IMAGEVERSION}/" -e "/gitflow-disable/! {/image: ${DOCKER_IMAGENAME_ESC}:\(${DOCKERHUB_REPO_PREFIX}\)${DOCKER_IMAGEVERSION}/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/}" docker-compose.yml
+else
+   sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*${DOCKERHUB_REPO_SUFIX}$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}${DOCKERHUB_REPO_SUFIX}/" -e "/gitflow-disable/! {/image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}${DOCKERHUB_REPO_SUFIX}/! s/    image: ${DOCKER_IMAGENAME_ESC}:.*/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/}" $DOCKER_COMPOSE
+fi
 sed -i "/  version: /c\  version: \"$new_version\"" rancher-compose.yml
 
 
