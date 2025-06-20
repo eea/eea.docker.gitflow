@@ -20,6 +20,13 @@ if [ -z "$RANCHER_ENVID" ] || [ -z "$template" ]; then
    exit 1
 fi
 
+if [[ "$BRANCH_NAME" == **alpha** ]] || [[ "$BRANCH_NAME" == **beta** ]] || [[ "$BRANCH_NAME" == **rc** ]] ; then     
+   echo "Skipping upgrade, as branch contains alpha, beta or rc" 
+   exit 0
+fi
+
+
+
 echo "Getting the latest catalog entry for $template"
 
 rm -rf eea.rancher.catalog
