@@ -125,7 +125,7 @@ for package in $(cat /tmp/all_addons); do
 		echo $line
 		eval $line
 
-		DELETE_SITE="ask.copernicus.eu clms.land.copernicus.eu insitu-frontend.eionet.europa.eu www.industry.eea.europa.eu"
+		DELETE_SITE="clms.land.copernicus.eu insitu-frontend.eionet.europa.eu www.industry.eea.europa.eu"
 		UPDATE_JENKINSFILE="no"
                 for site in $(echo "$DELETE_SITE"); do
                     if [ $(echo "$SONARQUBE_TAGS" | grep "$site," | wc -l ) -eq 1 ]; then
