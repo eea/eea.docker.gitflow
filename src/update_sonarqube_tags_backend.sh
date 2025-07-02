@@ -137,6 +137,21 @@ for package in $(cat /tmp/all_addons); do
 		echo "Found line setting sonarqube tags"
 		echo $line
 		eval $line
+
+
+		DELETE_SITE="ask.copernicus.eu clms.land.copernicus.eu insitu-frontend.eionet.europa.eu www.industry.eea.europa.eu"
+		UPDATE_JENKINSFILE="no"
+                for site in $(echo "$DELETE_SITE"); do
+                    if [ $(echo "$SONARQUBE_TAGS" | grep "$site," | wc -l ) -eq 1 ]; then
+                       UPDATE_JENKINSFILE="yes"
+                       SONARQUBE_TAGS=$(echo "$SONARQUBE_TAGS" | sed "s/$site,//")
+                    fi    
+                    if [ $(echo "$SONARQUBE_TAGS" | grep ",$site" | wc -l ) -eq 1 ]; then
+                       UPDATE_JENKINSFILE="yes"
+                       SONARQUBE_TAGS=$(echo "$SONARQUBE_TAGS" | sed "s/,$site//")
+                    fi   
+                done
+  
 		if [ $( echo $SONARQUBE_TAGS | grep -w $SONARQUBE_TAG | wc -l ) -eq 0 ]; then
 			SONARQUBE_TAGS=$SONARQUBE_TAGS","$SONARQUBE_TAG
                         UPDATE_JENKINSFILE="yes"
