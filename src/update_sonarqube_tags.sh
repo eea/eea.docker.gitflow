@@ -128,6 +128,7 @@ for package in $(cat /tmp/all_addons); do
 		DELETE_SITE="ask.copernicus.eu clms.land.copernicus.eu insitu-frontend.eionet.europa.eu www.industry.eea.europa.eu"
 		UPDATE_JENKINSFILE="no"
                 for site in $(echo "$DELETE_SITE"); do
+		    echo "Checking if $site is in $SONARQUBE_TAGS"
                     if [ $(echo "$SONARQUBE_TAGS" | grep "$site," | wc -l ) -eq 1 ]; then
                        UPDATE_JENKINSFILE="yes"
                        SONARQUBE_TAGS=$(echo "$SONARQUBE_TAGS" | sed "s/$site,//")
