@@ -57,6 +57,8 @@ export GIT_USER=${GIT_USER:-'eea-jenkins'}
 export GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 export GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
+export GIT_BRANCH=${GIT_BRANCH:-'refs/heads/master'}
+
 
 project_result=$(curl -s "${SONAR_HOST_URL}api/components/search_projects?filter=tags%20%3D%20$SONARQUBE_TAG" | grep components )
 
@@ -71,7 +73,7 @@ echo "List of projects on sonarqube linked with $SONARQUBE_TAG"
 echo $sonarqube_master
 
 if [ ! -f package.json ] && [ -n "$GIT_NAME" ]; then
-	wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/master/package.json"
+	wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/$GIT_BRANCH/package.json"
 	echo "Did not find a package.json file, will download it from github for $GIT_NAME"
 else
 	echo "Found package.json, will now extract the addons from it"
