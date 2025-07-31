@@ -577,7 +577,6 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH} master
       update_plone_config eea.docker.plone src/plone/versions.cfg master
       update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
-      update_plone_config freshwater-backend site.cfg develop
       update_plone_config marine-backend site.cfg develop
       
       #Updating constraints.txt - Nightly release from master
@@ -591,6 +590,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 
       #Updating constraints.txt - PR to master from develop
       update_plone_constraints bise-backend constraints.txt develop
+      update_plone_constraints freshwater-backend constraints.txt develop
 
     fi
 fi
