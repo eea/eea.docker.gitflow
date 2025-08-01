@@ -7,7 +7,7 @@ ENV JQ_VERSION=1.6
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends jq bc bash curl python2 gcc bc build-essential git dos2unix \
-# .run-deps git python2 bash curl coreutils bc yarn jq make runc libseccomp build-base gcc libffi-dev npm libstdc++\
+# .run-deps git bash curl coreutils bc yarn jq make runc libseccomp build-base gcc libffi-dev npm libstdc++\
  && pip install --upgrade pip \ 
  && pip install docutils twine rstcheck zest.pocompile \
  && pip install -I wheel==0.31.0 \
