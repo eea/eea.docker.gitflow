@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.9
 LABEL maintainer="EEA: IDM2 A-Team <eea-edw-a-team-alerts@googlegroups.com>"
 
 ENV YQ_VERSION=v4.44.6
