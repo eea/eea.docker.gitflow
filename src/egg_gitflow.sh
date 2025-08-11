@@ -472,7 +472,16 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
 		       python setup.py sdist --formats=gztar
 	       fi
-	       twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
+		       release_done="no"
+		       while [[ "$release_done" == "no" ]]; do
+	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
+			      if [ $? -ne 124 ]; then
+		              release_done="yes"
+				  else
+	                  sleep 10
+	                  echo "Received timeout while trying to upload package to pypi, will now retry"
+				  fi
+ 		       done
                echo "Release ${GIT_NAME}-${version}.tar.gz  done on PyPi"
             else
               echo "Release ${GIT_NAME}-${version} already exists on PyPi repo, skipping"
