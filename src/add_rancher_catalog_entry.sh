@@ -161,8 +161,11 @@ echo "--------------------------------------------------------"
 
 # get sha from master
 valid_curl_get_result ${GITHUBURL}/refs/heads/master object.sha
-sha_master=$(echo $curl_result |  jq -r '.object.sha // empty' )
+echo "Refs heads master"
+echo $curl_result
 
+sha_master=$(echo $curl_result |  jq -r '.object.sha // empty' )
+echo "Sha_master $sha_master"
 # Create new Rancher Catalog entry
 if [ -z "$RANCHER_CATALOG_SAME_VERSION" ]; then
 
