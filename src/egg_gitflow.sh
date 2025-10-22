@@ -596,9 +596,9 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_constraints fise-backend constraints.txt master
       update_plone_constraints ied-backend constraints.txt master
       update_plone_constraints freshwater-backend constraints.txt master
+      update_plone_constraints bise-backend constraints.txt master
 
       #Updating constraints.txt - PR to master from develop
-      update_plone_constraints bise-backend constraints.txt develop
       update_plone_constraints marine-backend constraints.txt develop
     fi
 fi
