@@ -447,9 +447,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 			  
 			  if [ ! -f dist/${GIT_NAME}-${version}\.tar\.gz ]; then
 			     echo "Doing the release on the old naming format too"
-			     find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec mv {} dist/${GIT_NAME}-${version}.tar.gz  \;
-    		     twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
-                 twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
+			     find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec cp {} dist/${GIT_NAME}-${version}.tar.gz  \;
+    		     twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
+                 twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
+				 rm dist/${GIT_NAME}-${version}.tar.gz
      		  fi
 			  echo "Release ${GIT_NAME}-${version} done on ${EGGREPO_URL}"
 
