@@ -440,6 +440,10 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
               echo "Starting the release ${GIT_NAME}-${version}.tar.gz on EEA repo"
               python setup.py sdist --formats=gztar
+			  # copy for backwards compatibility
+			  if [ ! -f dist/${GIT_NAME}-${version}\.tar\.gz ]; then
+			     find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec cp {} dist/${GIT_NAME}-${version}.tar.gz  \;
+    		  fi
               twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
               echo "Release ${GIT_NAME}-${version} done on ${EGGREPO_URL}"
