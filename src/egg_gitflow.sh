@@ -484,7 +484,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 	       fi
 		       release_done="no"
 		       while [[ "$release_done" == "no" ]]; do
+                set +e
 	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
+                set -e
 			      if [ $? -ne 124 ]; then
 		              release_done="yes"
 				  else
