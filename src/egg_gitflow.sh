@@ -477,7 +477,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
           else
 
-            if [ $(echo $egg_releases | grep -cE ">${GIT_NAME}-${version}\.tar\.gz<|>${GIT_NAME}-${version}\.zip<") -ne 1 ]; then
+            if [ $(echo $pypi_releases | grep -cE ">${GIT_NAME}-${version}\.tar\.gz<|>${GIT_NAME}-${version}\.zip<") -ne 1 ]; then
                echo "Starting the release ${GIT_NAME}-${version}.tar.gz on PyPi repo"
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
 		       python setup.py sdist --formats=gztar
