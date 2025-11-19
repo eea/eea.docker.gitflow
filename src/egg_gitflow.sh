@@ -447,10 +447,11 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 			  
 			  if [ ! -f dist/${GIT_NAME}-${version}\.tar\.gz ]; then
 			     echo "Doing the release on the old naming format too"
+			     #copy release under old format
 			     find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec cp {} dist/${GIT_NAME}-${version}.tar.gz  \;
-    		     twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
-                 twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
-				 rm dist/${GIT_NAME}-${version}.tar.gz
+		             twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
+                             twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
+			     rm dist/${GIT_NAME}-${version}.tar.gz
      		  fi
 			  echo "Release ${GIT_NAME}-${version} done on ${EGGREPO_URL}"
 
@@ -485,6 +486,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 		       release_done="no"
 		       while [[ "$release_done" == "no" ]]; do
                 set +e
+                      find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec mv {} dist/${GIT_NAME}-${version}.tar.gz  \;
+
 	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
                 set -e
 			      if [ $? -ne 124 ]; then
