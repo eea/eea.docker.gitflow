@@ -489,7 +489,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                       #find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec mv {} dist/${GIT_NAME}-${version}.tar.gz  \;
 
 		      twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
-
+                      keyring --disable
 	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
                 set -e
 			      if [ $? -ne 124 ]; then
