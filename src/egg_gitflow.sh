@@ -488,7 +488,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                 set +e
                       find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec mv {} dist/${GIT_NAME}-${version}.tar.gz  \;
 
-	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --repository ${GIT_NAME}  dist/*
+	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
                 set -e
 			      if [ $? -ne 124 ]; then
 		              release_done="yes"
