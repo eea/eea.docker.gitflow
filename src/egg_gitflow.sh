@@ -481,6 +481,8 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
             if [ $(echo $pypi_releases | grep -cE ">${GIT_NAME}-${version}\.tar\.gz<|>${GIT_NAME}-${version}\.zip<") -ne 1 ]; then
                echo "Starting the release ${GIT_NAME}-${version}.tar.gz on PyPi repo"
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
+		       #try
+                       sed -i "s/name=NAME/name=${GIT_NAME//./_}/"  setup.py 
 		       python setup.py sdist --formats=gztar
 	       fi
 		       release_done="no"
