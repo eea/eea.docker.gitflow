@@ -486,7 +486,9 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 		       release_done="no"
 		       while [[ "$release_done" == "no" ]]; do
                 set +e
-                      find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec mv {} dist/${GIT_NAME}-${version}.tar.gz  \;
+                      #find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec mv {} dist/${GIT_NAME}-${version}.tar.gz  \;
+
+		      twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
 
 	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
                 set -e
