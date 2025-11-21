@@ -483,7 +483,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
 		       python setup.py sdist --formats=gztar
 	       fi
-	       if [ -n "$PYPI_TOKEN ]; then
+	       if [ -n "$PYPI_TOKEN" ]; then
                        echo "[distutils]
 index-servers =
     pypi
