@@ -483,23 +483,20 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
 		       python setup.py sdist --formats=gztar
 	       fi
-		       if [ -n "$PYPI_TOKEN ]; then
-               echo "[distutils]
+	       if [ -n "$PYPI_TOKEN ]; then
+                       echo "[distutils]
 index-servers =
     pypi
 
 [pypi]
 username = __token__
-password = $PYPI_TOKEN
-" > ~/.pypirc
-               cat ~/.pypirc 
+password = ${PYPI_TOKEN" > ~/.pypirc
+
+                           cat ~/.pypirc 
 			   timeout 290 twine upload --verbose  dist/*
- 		       
-			   else
-			   
-			   timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
- 		       fi
-			   done
+		else
+			timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
+ 		fi
                echo "Release ${GIT_NAME}-${version}.tar.gz  done on PyPi"
             else
               echo "Release ${GIT_NAME}-${version} already exists on PyPi repo, skipping"
