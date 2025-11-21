@@ -485,13 +485,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 	           fi
 		   
                if [ -n "$PYPI_TOKEN" ]; then
-	               echo "[distutils]
-index-servers =
-    pypi
-
-[pypi]
-username = __token__
-password = ${PYPI_TOKEN" > ~/.pypirc
+	            sed "s/PYPI_TOKEN/$PYPI_TOKEN/" /pypirc_template > ~/.pypirc
                     cat ~/.pypirc
                     timeout 290 twine upload --verbose  dist/*
                 else
