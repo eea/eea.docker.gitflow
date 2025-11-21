@@ -461,7 +461,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           echo "--------------------------------------------------------------------------------------------------------------------"
         fi
 
-        if [ ! -z "$PYPI_USERNAME$PYPI_PASSWORD" ]; then
+        if [ -n "$PYPI_USERNAME$PYPI_PASSWORD$PYPI_TOKEN" ]; then
           echo "Checking if version is released on PyPi"
 
           pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${GIT_NAME}/")
@@ -483,22 +483,23 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
 		       python setup.py sdist --formats=gztar
 	       fi
-		       release_done="no"
-		       while [[ "$release_done" == "no" ]]; do
-                set +e
-                      #find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec mv {} dist/${GIT_NAME}-${version}.tar.gz  \;
+		       if [ -n "$PYPI_TOKEN ]; then
+               echo "[distutils]
+index-servers =
+    pypi
 
-		      twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
-                      keyring --disable
-	              timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
-                set -e
-			      if [ $? -ne 124 ]; then
-		              release_done="yes"
-				  else
-	                  sleep 10
-	                  echo "Received timeout while trying to upload package to pypi, will now retry"
-				  fi
- 		       done
+[pypi]
+username = __token__
+password = $PYPI_TOKEN
+" > ~/.pypirc
+               cat ~/.pypirc 
+			   timeout 290 twine upload --verbose  dist/*
+ 		       
+			   else
+			   
+			   timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
+ 		       fi
+			   done
                echo "Release ${GIT_NAME}-${version}.tar.gz  done on PyPi"
             else
               echo "Release ${GIT_NAME}-${version} already exists on PyPi repo, skipping"
