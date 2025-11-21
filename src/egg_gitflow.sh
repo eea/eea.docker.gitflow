@@ -461,7 +461,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
           echo "--------------------------------------------------------------------------------------------------------------------"
         fi
 
-        if [ -n "$PYPI_USERNAME$PYPI_PASSWORD$PYPI_TOKEN" ]; then
+        if [ ! -z "$PYPI_USERNAME$PYPI_PASSWORD$PYPI_TOKEN" ]; then
           echo "Checking if version is released on PyPi"
 
           pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${GIT_NAME}/")
@@ -482,21 +482,22 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
                echo "Starting the release ${GIT_NAME}-${version}.tar.gz on PyPi repo"
                if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
 		       python setup.py sdist --formats=gztar
-	       fi
-	       if [ -n "$PYPI_TOKEN" ]; then
-                       echo "[distutils]
+	           fi
+		   
+               if [ -n "$PYPI_TOKEN" ]; then
+	               echo "[distutils]
 index-servers =
     pypi
 
 [pypi]
 username = __token__
 password = ${PYPI_TOKEN" > ~/.pypirc
+                    cat ~/.pypirc
+                    timeout 290 twine upload --verbose  dist/*
+                else
+                    timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
+                fi
 
-                           cat ~/.pypirc 
-			   timeout 290 twine upload --verbose  dist/*
-		else
-			timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
- 		fi
                echo "Release ${GIT_NAME}-${version}.tar.gz  done on PyPi"
             else
               echo "Release ${GIT_NAME}-${version} already exists on PyPi repo, skipping"
