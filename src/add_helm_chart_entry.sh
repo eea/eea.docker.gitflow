@@ -55,7 +55,11 @@ cd ${RANCHER_HELM_GITNAME}
 
 echo "Checked parameters, will start creating helm chart entry on ${GIT_ORG}/${RANCHER_HELM_GITNAME}, helm chart ${HELM_CHART} for ${DOCKER_IMAGENAME}:${DOCKER_IMAGEVERSION}"
 
-list_sources=$(grep -R $DOCKER_IMAGENAME sources/ | awk -F: '{print $1}' | awk -F"/" '{print $2}' | uniq )
+if [ -n "$HELM_CHART" ]; then
+	list_sources=$HELM_CHART
+else
+	list_sources=$(grep -R $DOCKER_IMAGENAME sources/ | awk -F: '{print $1}' | awk -F"/" '{print $2}' | uniq )
+fi
 
 for i in $(echo $list_sources); do
 
@@ -70,20 +74,31 @@ for i in $(echo $list_sources); do
         export HELM_VERSION_TYPE="PATCH"
          
 	cd sources/$i
-	if [[ "$( yq '.image.repository' values.yaml )" == "$DOCKER_IMAGENAME" ]]; then
+	if [[ "$( yq '.image.repository' values.yaml )" == "$DOCKER_IMAGENAME" ]] || [[ "$HELM_UPGRADE_APPVERSION" == "yes" ]] ; then
 
-		echo "Found $DOCKER_IMAGENAME as main application image"
-	        yq -i ".appVersion = \"$DOCKER_IMAGEVERSION\""  Chart.yaml
-                export HELM_VERSION_TYPE="MINOR"
+		echo "Found $DOCKER_IMAGENAME as main application image or received HELM_UPGRADE_APPVERSION parameter"
+                old_version=$( yq -i ".appVersion" Chart.yaml)
+
+	        if [[ $(is_smaller "$old_version" "$DOCKER_IMAGEVERSION") == "False" ]]; then
+	            echo "Current version of Chart - $old_version is bigger than $DOCKER_IMAGEVERSION , so will skip upgrade"
+		else
+		    echo "Current version of Chart  $old_version is smaller than $DOCKER_IMAGEVERSION , starting upgrade" 
+	            yq -i ".appVersion = \"$DOCKER_IMAGEVERSION\""  Chart.yaml
+                    export HELM_VERSION_TYPE="MINOR"
+		fi
 
 	fi
 
-        #comments are not allowed in values.yaml
-        sed -i "s|$DOCKER_IMAGENAME:[0-9]+.*|$DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION|g" values.yaml
 
+        if [[ "$HELM_UPGRADE_APPVERSION" == "yes" ]]; then
+                echo "Received HELM_UPGRADE_APPVERSION parameter, will not upgrade version in values nor templates, as helm chart will use appVersion as default tag"
+	else
+		#comments are not allowed in values.yaml
+		sed -i "s|$DOCKER_IMAGENAME:[0-9]+.*|$DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION|g" values.yaml
 
-        # don't update version when gitflow-disable is on the same line
-        sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:[0-9].*$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/"  templates/*.yaml
+		# don't update version when gitflow-disable is on the same line
+		sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:[0-9].*$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/"  templates/*.yaml
+	fi
 
 	if [ $( git diff . | wc -l ) -gt 0 ]; then
       	  ../../increase_version_helm.sh

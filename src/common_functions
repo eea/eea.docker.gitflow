@@ -128,4 +128,15 @@ get_dockerhub_buildhistory()
     echo "$buildhistory"
  fi
 
-}  
+}
+
+is_smaller() {
+
+  result=$(python3 -c "from packaging import version; print(version.parse('$1') < version.parse('$2'))" 2>/dev/null) || true
+
+  if [ -n "$result" ]; then
+    echo "$result"
+  else
+    [ "$(printf '%s\n%s' "$1" "$2" | sort -V | head -n1)" = "$1" ] && echo "True" || echo "False"
+  fi
+}
