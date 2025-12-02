@@ -77,14 +77,16 @@ for i in $(echo $list_sources); do
 	if [[ "$( yq '.image.repository' values.yaml )" == "$DOCKER_IMAGENAME" ]] || [[ "$HELM_UPGRADE_APPVERSION" == "yes" ]] ; then
 
 		echo "Found $DOCKER_IMAGENAME as main application image or received HELM_UPGRADE_APPVERSION parameter"
-                old_version=$( yq -i ".appVersion" Chart.yaml)
+                old_version=$( yq ".appVersion" Chart.yaml)
 
 	        if [[ $(is_smaller "$old_version" "$DOCKER_IMAGEVERSION") == "False" ]]; then
 	            echo "Current version of Chart - $old_version is bigger than $DOCKER_IMAGEVERSION , so will skip upgrade"
 		else
 		    echo "Current version of Chart  $old_version is smaller than $DOCKER_IMAGEVERSION , starting upgrade" 
-	            yq -i ".appVersion = \"$DOCKER_IMAGEVERSION\""  Chart.yaml
-                    export HELM_VERSION_TYPE="MINOR"
+	            
+		    yq -i ".appVersion = \"$DOCKER_IMAGEVERSION\""  Chart.yaml
+                    
+		    export HELM_VERSION_TYPE="MINOR"
 		fi
 
 	fi
