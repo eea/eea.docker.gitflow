@@ -28,18 +28,23 @@ GIT_USER=${GIT_USER:-'eea-jenkins'}
 GIT_USERNAME=${GIT_USERNAME:-'EEA Jenkins'}
 GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
+
+
 #forces script to only update main version
 export HELM_UPGRADE_APPVERSION="yes"
 
 export GITHUB_TOKEN="${GIT_TOKEN}"
 
 RANCHER_HELM_GITNAME=${RANCHER_HELM_GITNAME:-'helm-charts'}
+RANCHER_FLEET_GITNAME=${RANCHER_FLEET_GIT:='eea-fleet'}
+RANCHER_FLEET_GITSRC=https://$GIT_USER:$GITHUB_TOKEN@github.com/${GIT_ORG}/${RANCHER_FLEET_GITNAME}.git
+
 
 # just in case
 rm -rf Chart.yaml 
 wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
 
-current_version=$( grep 'appVersion' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
+current_version=$( grep '^appVersion:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
 
 
 echo "Current app version of $HELM_CHART helm chart is $current_version)"
@@ -58,4 +63,47 @@ fi
 echo "Starting update helm chart script"
 
 /add_helm_chart_entry.sh   $DOCKER_IMAGENAME ${RELEASE_PREFIX}${last_release}${RELEASE_SUFFIX}
+
+cd /
+
+wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
+
+new_version=$( grep '^version:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
+
+# FLEET_LOCATIONS - list of paths in the fleet repo, separated by space
+if [ -n "$FLEET_LOCATIONS" ]; then
+	cd /
+        wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
+        new_version=$( grep '^version:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
+        echo "Received FLEET_LOCATIONS parameter, will now update the fleet files with $HELM_CHART:$new_version"
+        git clone RANCHER_FLEET_GITSRC
+	cd RANCHER_FLEET_GITNAME
+        echo "Starting update of fleet yamls from ${GIT_ORG}/${RANCHER_FLEET_GITNAME}" 
+	for fleet in $FLEET_LOCATIONS; do
+		echo "Starting update on $fleet/fleet.yaml"
+ 	        old_version=$( yq ".helm.version" $fleet/fleet.yaml)
+
+                if [[ $(is_smaller "$old_version" "$new_version") == "False" ]]; then
+                    echo "Current version of HELM Chart - $old_version is bigger than $new_version , so will skip upgrade"
+                else
+                    echo "Current version of HELM Chart  $old_version is smaller than $new_version , starting upgrade" 
+	            yq -i ".helm.version = $new_version"  $fleet/fleet.yaml
+		fi
+	done
+        
+        git diff .
+        if [ $( git diff . | wc -l ) -gt 0 ]; then
+            git add .	
+            git commit -m "chore: Automated update on $HELM_CHART:$new_version"
+	    git push
+        else
+	    echo "Nothing to update"
+	fi
+	
+fi
+
+
+
+
+
 
