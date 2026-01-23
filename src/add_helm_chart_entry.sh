@@ -85,8 +85,13 @@ for i in $(echo $list_sources); do
 		    echo "Current version of Chart  $old_version is smaller than $DOCKER_IMAGEVERSION , starting upgrade" 
 	            
 		    yq -i ".appVersion = \"$DOCKER_IMAGEVERSION\""  Chart.yaml
-                    
-		    export HELM_VERSION_TYPE="MINOR"
+
+		    if [[ "$DOCKER_IMAGEVERSION" == *"beta"* ]]; then
+			   echo "New version is beta, will create a PATCH release"
+			   export HELM_VERSION_TYPE="PATCH"
+            else
+		       export HELM_VERSION_TYPE="MINOR"
+			fi
 		fi
 
 	fi
