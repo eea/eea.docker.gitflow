@@ -59,7 +59,7 @@ if [ -z $project_result ]; then
 	echo "There is a problem with the sonarqube response"
 	curl "${SONAR_HOST_URL}api/components/search_projects?filter=tags%20%3D%20$SONARQUBE_TAG"
 else       
-	sonarqube_master=$(echo $project_result | jq '.components[] | select(.name | endswith("-master")) | .name[:-7]')
+	sonarqube_master=$(echo $project_result | jq '.components[] | .key')
 fi
 
 echo "List of projects on sonarqube linked with $SONARQUBE_TAG"
@@ -164,12 +164,12 @@ for package in $(cat /tmp/all_addons); do
 			echo "Tag $SONARQUBE_TAG already exists, skipping Jenkinsfile update"
 		fi
 		rm $jenkins_file
-		result=$(curl -XPOST -u "${SONARQUBE_TOKEN}:" "${SONAR_HOST_URL}api/project_tags/set?project=$package-master&tags=${SONARQUBE_TAGS},master")
+		result=$(curl -XPOST -u "${SONARQUBE_TOKEN}:" "${SONAR_HOST_URL}api/project_tags/set?project=$package&tags=${SONARQUBE_TAGS}")
 		if [ $(echo $result | grep error | wc -l ) -ne 0 ]; then
 			echo "Receive error when trying to update SonarQube tags"
 			echo $result
 		else
-			echo "Sonarqube tag updated succesfully on sonarqube, project $package-master"
+			echo "Sonarqube tag updated succesfully on sonarqube, project $package"
 		fi
 
 	else
