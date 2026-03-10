@@ -394,8 +394,9 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
                    echo "Found variable RUN_YARN_BEFORE_PUBLISH, will now run yarn"
                    yarn
                 fi
-
-                npm publish --access=public
+	    echo "-----------------------------------------------------------------"
+        echo "Will now run npm publish command:"
+                npm publish --access=public --verbose
 		echo "Waiting for npm to sync their data for yarn before updating frontends"
                 sleep 20
 		#check if already published
