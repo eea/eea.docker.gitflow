@@ -596,7 +596,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 	    if [[ "$GIT_BRANCH" == "master" ]]; then
           update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
 		else
-		  update_plone_config eea.docker.reportek.base-dr-instance requirements.txt z5
+		  update_plone_constraints eea.docker.reportek.base-dr-instance requirements.txt z5
 		fi
 	#there is no need to check other plones
         exit 0
