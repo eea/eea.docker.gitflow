@@ -408,11 +408,15 @@ fi
 if [[ "$GIT_BRANCH" == "master" ]] || [[ " $GIT_RELEASE_BRANCHES " == *" $GIT_BRANCH "* ]]; then
 
         echo "Running release on branch $GIT_BRANCH"
+		git checkout $GIT_BRANCH
 		
         #check if release already exists
         if [ ! -f $GIT_VERSIONFILE ]; then
             GIT_VERSIONFILE="src/$GIT_VERSIONFILE"
         fi
+		echo "GIT_VERSIONFILE is $GIT_VERSIONFILE"
+		cat $GIT_VERSIONFILE
+		
         version=$(printf '%s' $(cat $GIT_VERSIONFILE))
 
         if [[ "$version" == *"-dev"* ]]; then 
