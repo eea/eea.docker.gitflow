@@ -405,8 +405,10 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
 fi
 
 
-if [[ "$GIT_BRANCH" == "master" ]]; then
+if [[ "$GIT_BRANCH" == "master" ]] || [[ " $GIT_RELEASE_BRANCHES " == *" $GIT_BRANCH "* ]]; then
 
+        echo "Running release on branch $GIT_BRANCH"
+		
         #check if release already exists
         if [ ! -f $GIT_VERSIONFILE ]; then
             GIT_VERSIONFILE="src/$GIT_VERSIONFILE"
@@ -416,7 +418,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
         if [[ "$version" == *"-dev"* ]]; then 
 	      echo "Version file not updated, still contains -dev, error" 
 	      exit 1
-	fi
+  	    fi
 
         echo "--------------------------------------------------------------------------------------------------------------------"
 
@@ -502,7 +504,7 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
         #check if tag exiss
         if [ $(git tag | grep -c "^$version$") -eq 0 ]; then
-         echo "Starting the creation of the tag $version on master"
+         echo "Starting the creation of the tag $version on $GIT_BRANCH"
          export GIT_HISTORYFILE
 
 	 /extractChangelog.sh $version
@@ -511,16 +513,16 @@ if [[ "$GIT_BRANCH" == "master" ]]; then
 
 	 echo "Will release with body: $body"
 
-         curl_result=$(curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"$body\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
+         curl_result=$(curl -i -s -X POST -H "Authorization: bearer $GIT_TOKEN" --data "{\"tag_name\": \"$version\", \"target_commitish\": \"$GIT_BRANCH\", \"name\": \"$version\", \"body\":  \"$body\", \"draft\": false, \"prerelease\": false }"   https://api.github.com/repos/${GIT_ORG}/${GIT_NAME}/releases )
 
          if [ $( echo $curl_result | grep -cE "HTTP/[0-9\.]* 201" ) -eq 0 ]; then
             echo "There was a problem with the release"
-	    echo "{\"tag_name\": \"$version\", \"target_commitish\": \"master\", \"name\": \"$version\", \"body\":  \"$body\", \"draft\": false, \"prerelease\": false }" 
+	    echo "{\"tag_name\": \"$version\", \"target_commitish\": \"$GIT_BRANCH\", \"name\": \"$version\", \"body\":  \"$body\", \"draft\": false, \"prerelease\": false }" 
             echo $curl_result
             exit 1
          fi
 
-         echo "Release $version succesfully created"
+         echo "Release $version succesfully created on $GIT_BRANCH"
 
         else
           echo "Tag $version already created, skipping"
@@ -587,7 +589,11 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
     if [ ! -z "$EGGREPO_PASSWORD$PYPI_PASSWORD" ]; then
     
       if [[ "$GIT_NAME" == "Products.Reportek" ]]; then
-        update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
+	    if [[ "$GIT_BRANCH" == "master" ]]; then
+          update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
+		else
+		  update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg z5
+		fi
 	#there is no need to check other plones
         exit 0
       fi
