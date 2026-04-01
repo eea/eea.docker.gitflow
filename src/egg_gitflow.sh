@@ -618,6 +618,8 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_constraints freshwater-backend constraints.txt master
       update_plone_constraints bise-backend constraints.txt master
       update_plone_constraints marine-backend constraints.txt master
+      update_plone_constraints msfd-backend constraints.txt master
+	  
     fi
 fi
 
