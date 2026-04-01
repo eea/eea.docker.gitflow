@@ -90,7 +90,7 @@ if [ $(grep "^FROM eeacms/plone-backend" Dockerfile | wc -l ) -eq 1 ]; then
  	
 	curl -o plone_requirements.txt  -H 'Accept: application/vnd.github.v3.raw' "${plonebackend}"
 
-        package_addons=$(cat requirements.txt plone_requirements.txt)
+        package_addons=$(cat requirements.txt plone_requirements.txt | grep -vE '^[ ]*#' | grep -v "https" | grep -v '^$')
 
 fi
 
