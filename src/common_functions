@@ -130,6 +130,14 @@ get_dockerhub_buildhistory()
 
 }
 
+pad_letter_in_versions() {
+    if [[ "${1##*-}" =~ ^[a-zA-Z] ]]; then
+      echo "${1%-*}-00${1##*-}"
+    else 
+      echo $1
+    fi
+}
+
 is_smaller() {
 
   result=$(python3 -c "from packaging import version; print(version.parse('$1') < version.parse('$2'))" 2>/dev/null) || true
@@ -137,6 +145,10 @@ is_smaller() {
   if [ -n "$result" ]; then
     echo "$result"
   else
-    [ "$(printf '%s\n%s' "$1" "$2" | sort -V | head -n1)" = "$1" ] && echo "True" || echo "False"
+    #not a version, will add 0 before any letters so we can sort it after 
+    x1=$(pad_letter_in_versions $1)
+    x2=$(pad_letter_in_versions $2)
+    
+    [ "$(printf '%s\n%s' "$x1" "$x2" | sort -V | head -n1)" = "$x1" ] && echo "True" || echo "False"
   fi
 }
