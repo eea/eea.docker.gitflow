@@ -27,9 +27,13 @@ RUN export NVM_DIR="$HOME/.nvm" \
  && . "$NVM_DIR/nvm.sh" \
  && nvm install 18 \
  && npm install -g is-ci yarn release-it yarn-deduplicate yo husky rimraf\
+ && nvm install 22 \
+ && npm install -g is-ci yarn release-it yarn-deduplicate yo husky rimraf\
  && nvm install 16 \
- && nvm alias default 16 \
  && npm install -g yarn release-it@16 yarn-deduplicate isbinaryfile@4 husky@8\
+ && nvm install 20 \
+ && npm install -g is-ci yarn release-it yarn-deduplicate yo husky rimraf\
+ && nvm alias default 20 \
  # fix gyp that does not work with python 3.11
  && for i in $(find . -type d -name gyp | grep pylib); do sed -i 's/rU/r/' $i/input.py; done
 
