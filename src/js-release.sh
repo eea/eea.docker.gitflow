@@ -164,17 +164,26 @@ $old_version" | sort --sort=version | tail -n 1 )
        echo "DEPENDENCIES - Old version $old_version is smaller than the released version"
        echo "DEPENDENCIES - Will now update the version file and yarn.lock"
 
-       #does not support node 16, only 14
-       if [ $(cat package.json | jq '.engines.node' | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
+       #does not support node 20, only 14
+       if [ $(cat package.json | jq '.engines.node' | grep -v 20 | grep -v 18 | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
            nvm use 14
        fi
-
- 
-
-       #does not support node 16, only 18
-       #volto-eea-kitkat needs node 18
-       if [ $(cat package.json | jq '.engines.node' | grep -v 16 | grep 18 | wc -l) -eq 1 ] || [ "$1" == "eea/volto-eea-kitkat" ]; then
+        #does not support node 20, only 16
+       if [ $(cat package.json | jq '.engines.node' | grep -v 20 | grep -v 18 | grep 16 | wc -l) -eq 1 ]; then
+           nvm use 16
+       fi
+       #does not support node 20, only 18
+       if [ $(cat package.json | jq '.engines.node' | grep -v 20 | grep 18 | wc -l) -eq 1 ]; then
            nvm use 18
+       fi
+        #does not support node 20, only 22
+       if [ $(cat package.json | jq '.engines.node' | grep -v 20 |  grep 22 | wc -l) -eq 1 ]; then
+           nvm use 22
+       fi
+
+	   #volto-eea-kitkat needs node 20
+       if [ "$1" == "eea/volto-eea-kitkat" ]; then
+           nvm use 20
        fi
        
        if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
