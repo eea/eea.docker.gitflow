@@ -70,7 +70,7 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ "$GITFLOW_BEHAVIOR" == "RUN_ON_TAG" ]];
       latestTag1=$(git describe --tags --abbrev=0)
       #check in case there are multiple tags per commit
       #ignore beta, alpha tags
-      latestTag1=$(git log  --tags --decorate=full | grep refs/tags/$latestTag1 | grep -o refs/tags/[^\ ,\)]*  | sed 's#refs/tags/##g' | sort --sort=version | grep -v alpha | grep -v beta | tail -n 1)
+      latestTag1=$(git log  --tags --decorate=full | grep refs/tags/$latestTag1 | grep -o refs/tags/[^\ ,\)]*  | sed 's#refs/tags/##g' | grep -v alpha | grep -v beta | head -n 1)
       valid_curl_get_result "https://api.github.com/repos/$GIT_ORG/$GIT_NAME/releases"
       latestTag2=$(echo "$curl_result" | jq -r '.[] | select (.target_commitish == "master" ) | .tag_name' || echo "")
       latestTag=$(echo "$latestTag1
