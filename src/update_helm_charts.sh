@@ -51,6 +51,7 @@ fi
 releases=$(curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN"  $GITHUB_RELEASES )
 
 if [ -n "$GITHUB_RELEASE_REGEXP" ]; then
+   echo "Will filter out releases with this regexp $GITHUB_RELEASE_REGEXP"
    last_release=$( echo "$releases" | jq -r --arg re "$GITHUB_RELEASE_REGEXP" --arg name "$type" '.[] | .[$name] | select(test($re))' | head -n 1 )
 else
    last_release=$(echo "$releases" |  jq -r --arg name "$type"  '.[] | .[$name] ' | head -n 1)
@@ -80,7 +81,7 @@ cd /
 
 
 if [ -n "$HELM_CHART" ]; then 
-
+  rm -f Chart.yaml
   wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
   new_version=$( grep '^version:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" ) 
   # FLEET_LOCATIONS - list of paths in the fleet repo, separated by space
