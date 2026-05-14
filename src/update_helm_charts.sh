@@ -51,8 +51,8 @@ echo "Current app version of $HELM_CHART helm chart is $current_version)"
 
 releases=$(curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN"  $GITHUB_RELEASES )
 
-if [ -n "$RELEASE_REGEXP" ]; then
-   last_release=$( echo "$releases" | jq -r --arg re "$RELEASE_REGEXP" '.[].tag_name | select(test($re))' | head -n 1 )
+if [ -n "$GITHUB_RELEASE_REGEXP" ]; then
+   last_release=$( echo "$releases" | jq -r --arg re "$GITHUB_RELEASE_REGEXP" '.[].tag_name | select(test($re))' | head -n 1 )
 else
    last_release=$(echo "$releases" |  jq -r '.[].tag_name' | head -n 1)
 fi
