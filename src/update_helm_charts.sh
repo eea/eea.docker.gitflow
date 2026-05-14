@@ -59,26 +59,28 @@ fi
 
 echo "Last release in github is $last_release"
 
+mkdir -p /artifacts
 
-if [ -n "$HELM_CHART" ]; then 
-  # just in case 
-  rm -rf Chart.yaml 
-  wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
-  current_version=$( grep '^appVersion:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
-  echo "Current app version of $HELM_CHART helm chart is $current_version)"
-
-  if [[ "${RELEASE_PREFIX}${last_release}${RELEASE_SUFFIX}" == "$current_version" ]]; then
-  	echo "It is already updated in Helm Charts, finishing"
-        exit 0
-  fi
+if [ -n $DOCKER_ARTIFACT ]; then
+   echo $last_release > /artifacts/$DOCKER_ARTIFACT
 fi
+
+if [ -n $DOCKER_ARTIFACT_CONTENT ]; then
+   if [[ "$DOCKER_ARTIFACT_CONTENT" == "$last_release" ]]; then
+     echo "Last succesfull job has already updated to $last_release"
+	 echo "Exiting"
+	 exit 0
+   else
+	echo "Last succesfull job has this artifact - $DOCKER_ARTIFACT_CONTENT and it is different from last release - $last_release"
+   fi
+fi
+
 
 echo "Starting update helm chart script"
 
 /add_helm_chart_entry.sh   $DOCKER_IMAGENAME ${RELEASE_PREFIX}${last_release}${RELEASE_SUFFIX}
 
 cd /
-
 
 if [ -n "$HELM_CHART" ]; then 
   rm -f Chart.yaml
