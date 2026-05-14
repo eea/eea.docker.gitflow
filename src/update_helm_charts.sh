@@ -30,8 +30,8 @@ GIT_EMAIL=${GIT_EMAIL:-'eea-jenkins@users.noreply.github.com'}
 
 
 
-#forces script to only update main version
-export HELM_UPGRADE_APPVERSION="yes"
+#forces script to only update main version by default
+export HELM_UPGRADE_APPVERSION="${HELM_UPGRADE_APPVERSION:-yes}"
 
 export GITHUB_TOKEN="${GIT_TOKEN}"
 
@@ -39,28 +39,37 @@ RANCHER_HELM_GITNAME=${RANCHER_HELM_GITNAME:-'helm-charts'}
 RANCHER_FLEET_GITNAME=${RANCHER_FLEET_GIT:='eea-fleet'}
 RANCHER_FLEET_GITSRC=https://$GIT_USER:$GITHUB_TOKEN@github.com/${GIT_ORG}/${RANCHER_FLEET_GITNAME}.git
 
-
-# just in case
-rm -rf Chart.yaml 
-wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
-
-current_version=$( grep '^appVersion:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
-
-
-echo "Current app version of $HELM_CHART helm chart is $current_version)"
+if [[ "$GITHUB_RELEASES" =~ /releases$ ]]; then
+  type="tag_name"
+elif [[ "$GITHUB_RELEASES" =~ /tags$ ]]; then
+  type="name"
+else
+  echo "Unsupported endpoint: $GITHUB_RELEASES" >&2
+  exit 1
+fi
 
 releases=$(curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN"  $GITHUB_RELEASES )
 
 if [ -n "$GITHUB_RELEASE_REGEXP" ]; then
-   last_release=$( echo "$releases" | jq -r --arg re "$GITHUB_RELEASE_REGEXP" '.[].tag_name | select(test($re))' | head -n 1 )
+   last_release=$( echo "$releases" | jq -r --arg re "$GITHUB_RELEASE_REGEXP" --arg name "$type" '.[] | .[$name] | select(test($re))' | head -n 1 )
 else
-   last_release=$(echo "$releases" |  jq -r '.[].tag_name' | head -n 1)
+   last_release=$(echo "$releases" |  jq -r --arg name "$type"  '.[] | .[$name] ' | head -n 1)
 fi
-echo "Last release in github is $last_release)"
 
-if [[ "${RELEASE_PREFIX}${last_release}${RELEASE_SUFFIX}" == "$current_version" ]]; then
-	echo "It is already updated in Helm Charts, finishing"
+echo "Last release in github is $last_release"
+
+
+if [ -n "$HELM_CHART" ]; then 
+  # just in case 
+  rm -rf Chart.yaml 
+  wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
+  current_version=$( grep '^appVersion:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
+  echo "Current app version of $HELM_CHART helm chart is $current_version)"
+
+  if [[ "${RELEASE_PREFIX}${last_release}${RELEASE_SUFFIX}" == "$current_version" ]]; then
+  	echo "It is already updated in Helm Charts, finishing"
         exit 0
+  fi
 fi
 
 echo "Starting update helm chart script"
@@ -69,13 +78,14 @@ echo "Starting update helm chart script"
 
 cd /
 
-wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
 
-new_version=$( grep '^version:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
+if [ -n "$HELM_CHART" ]; then 
 
-# FLEET_LOCATIONS - list of paths in the fleet repo, separated by space
-if [ -n "$FLEET_LOCATIONS" ]; then
-	cd /
+  wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
+  new_version=$( grep '^version:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" ) 
+  # FLEET_LOCATIONS - list of paths in the fleet repo, separated by space
+  if [ -n "$FLEET_LOCATIONS" ]; then
+  	cd /
         wget https://raw.githubusercontent.com/$GIT_ORG/$RANCHER_HELM_GITNAME/refs/heads/main/sources/$HELM_CHART/Chart.yaml
         new_version=$( grep '^version:' Chart.yaml | awk '{print $2}' | sed 's/"//g' | sed "s/'//g" )
         echo "Received FLEET_LOCATIONS parameter, will now update the fleet files with $HELM_CHART:$new_version"
@@ -101,8 +111,9 @@ if [ -n "$FLEET_LOCATIONS" ]; then
 	    git push
         else
 	    echo "Nothing to update"
-	fi
-	
+ 	fi
+  fi
+
 fi
 
 
