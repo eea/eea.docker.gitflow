@@ -74,7 +74,7 @@ for i in $(echo $list_sources); do
         export HELM_VERSION_TYPE="PATCH"
          
 	cd sources/$i
-	if [[ "$( yq '.image.repository' values.yaml )" == "$DOCKER_IMAGENAME" ]] || [[ "$HELM_UPGRADE_APPVERSION" == "yes" ]] ; then
+	if [[ "$( yq '.image.repository' values.yaml )" == "$DOCKER_IMAGENAME" ]] || [[ "$( yq '.global.image.repository' values.yaml )" == "$DOCKER_IMAGENAME" ]] || [[ "$HELM_UPGRADE_APPVERSION" == "yes" ]] ; then
 
 		echo "Found $DOCKER_IMAGENAME as main application image or received HELM_UPGRADE_APPVERSION parameter"
                 old_version=$( yq ".appVersion" Chart.yaml)
