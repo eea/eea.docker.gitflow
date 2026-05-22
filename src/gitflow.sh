@@ -255,17 +255,15 @@ $latestTag2" | grep -v alpha | grep -v beta | sort --sort=version | tail -n 1)
 
 
 
-      echo "Starting the Rancher catalog release"
+      # echo "Starting the Rancher catalog release"
     
-      if [ -z "$RANCHER_CATALOG_PATHS" ]; then
+      # if [ -z "$RANCHER_CATALOG_PATHS" ]; then
+      #      get_catalog_paths $DOCKERHUB_REPO
+      #  fi
     
-  	  get_catalog_paths $DOCKERHUB_REPO
-       
-      fi
-    
-      for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
-        	/add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH $DOCKERHUB_REPO $version $RANCHER_CATALOG_SAME_VERSION 
-      done
+      # for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
+      #   	/add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH $DOCKERHUB_REPO $version $RANCHER_CATALOG_SAME_VERSION 
+      # done
 
       
       echo "Starting the helm chart entry release"
