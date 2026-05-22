@@ -43,9 +43,15 @@ new_version="${HELM_NEWVERSION}"
 
 echo "Starting update of fleet yamls from ${GIT_ORG}/${RANCHER_FLEET_GITNAME}" 
 
+if [ ! -d ${RANCHER_FLEET_GITNAME} ]; then
+     git clone $RANCHER_FLEET_GITSRC
+     cd ${RANCHER_FLEET_GITNAME}
+else
+     cd ${RANCHER_FLEET_GITNAME}
+     git pull
+fi
 
-git clone $RANCHER_FLEET_GITSRC
-cd ${RANCHER_FLEET_GITNAME}
+
 
 for i in $(find apps/ -name fleet.yaml); do 
 	
@@ -61,7 +67,7 @@ for i in $(find apps/ -name fleet.yaml); do
               echo "Current version of HELM Chart - $old_version is bigger than $new_version , so will skip upgrade"
         else
               echo "Current version of HELM Chart  $old_version is smaller than $new_version , starting upgrade" 
-              yq -i ".helm.version = $new_version"  $fleet/fleet.yaml
+              yq -i ".helm.version = $new_version"  $i
 
   	fi
     fi
