@@ -411,12 +411,12 @@ $old_version" | sort  --sort=version | tail -n 1)
 
 	 /dockerhub_release_wait.sh ${TRIG[0]} $version ${TRIG[1]}
 
+     
+      #   get_catalog_paths ${TRIG[0]}
 
-         get_catalog_paths ${TRIG[0]}
-
-         for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
-               /add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH ${TRIG[0]} $version $RANCHER_CATALOG_SAME_VERSION
-         done
+      #   for RANCHER_CATALOG_PATH in ${RANCHER_CATALOG_PATHS}; do
+      #         /add_rancher_catalog_entry.sh $RANCHER_CATALOG_PATH ${TRIG[0]} $version $RANCHER_CATALOG_SAME_VERSION
+      #   done
 
          echo "Starting script to add helm charts updates"
 
