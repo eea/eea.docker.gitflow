@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-------------------------------------------------------------------------------"
+
 echo "Starting script that checks github releases on official images and updates them in our helm-charts"
 
 
@@ -119,8 +121,6 @@ if [ -n "$HELM_CHART" ]; then
 
 fi
 
-
-
-
+echo "-------------------------------------------------------------------------------"
 
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-------------------------------------------------------------------------------"
+
 echo "Starting script that updated fleet.yaml files on latest helm chart $HELM_CHART"
 
 
@@ -85,6 +87,7 @@ echo "git diff:"
 
 cd ..
 
+echo "-------------------------------------------------------------------------------"
 
 
 
