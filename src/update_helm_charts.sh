@@ -103,7 +103,7 @@ if [ -n "$HELM_CHART" ]; then
                     echo "Current version of HELM Chart - $old_version is bigger than $new_version , so will skip upgrade"
                 else
                     echo "Current version of HELM Chart  $old_version is smaller than $new_version , starting upgrade" 
-	            yq -i ".helm.version = $new_version"  $fleet/fleet.yaml
+	            yq -i ".helm.version = \"$new_version\""  $fleet/fleet.yaml
 		fi
 	done
         

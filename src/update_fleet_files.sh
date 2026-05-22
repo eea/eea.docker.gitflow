@@ -67,7 +67,7 @@ for i in $(find apps/ -name fleet.yaml); do
               echo "Current version of HELM Chart - $old_version is bigger than $new_version , so will skip upgrade"
         else
               echo "Current version of HELM Chart  $old_version is smaller than $new_version , starting upgrade" 
-              yq -i ".helm.version = $new_version"  $i
+              yq -i ".helm.version = \"$new_version\""  $i
 
   	fi
     fi
