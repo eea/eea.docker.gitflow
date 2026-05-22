@@ -149,7 +149,7 @@ for i in $(echo $list_sources); do
     export HELM_NEWVERSION
 	export HELM_CHART=$i
 
-	./update_fleet_files.sh
+	/update_fleet_files.sh
 	
 	echo "Updating related charts from helm-charts, if found"
 
