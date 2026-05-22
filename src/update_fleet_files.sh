@@ -83,7 +83,7 @@ echo "git diff:"
 	    echo "Nothing to update"
  	fi
 
-
+cd ..
 
 
 
