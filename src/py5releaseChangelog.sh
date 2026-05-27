@@ -101,7 +101,7 @@ fi
 
 echo $type
 
-url=$(echo "$homepage" | sed 's#/github.com/#/api.github.com/repos/#')"/releases?per_page=100"
+url=$(echo "$homepage" | sed 's#^git+##' | sed 's#/github.com/#/api.github.com/repos/#')"/releases?per_page=100"
 
 valid_curl_get_result $url
 
@@ -136,7 +136,7 @@ get_release_by_tag()
 repo="$1"
 tag="$2"
 
-url=$(echo "$repo" | sed 's#/github.com/#/api.github.com/repos/#')"/releases/tags/$tag"
+url=$(echo "$repo" | sed 's#^git+##' | sed 's#/github.com/#/api.github.com/repos/#')"/releases/tags/$tag"
 echo $url
 
 valid_curl_get_result $url

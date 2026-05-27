@@ -31,7 +31,7 @@ homepage=$(echo $curl_result | jq -r '.homepage' | sed 's/#.*$//' )
 
 if [ -z "$homepage" ] || [[ "$homepage" == "null" ]] || [[ ! "$homepage" == "https://github.com"* ]]; then
         echo "Extracting from repository"
-        homepage=$(echo $curl_result | jq -r '.repository.url' | sed 's#git+ssh://git@#https://#' | sed 's#\.git##' )
+        homepage=$(echo $curl_result | jq -r '.repository.url' | sed 's#^git+##' | sed 's#ssh://git@#https://#' | sed 's#\.git##' )
 
 fi
 
@@ -88,7 +88,7 @@ get_release_by_tag()
 repo="$1"
 tag="$2"
 
-url=$(echo "$repo" | sed 's#/github.com/#/api.github.com/repos/#')"/releases/tags/$tag"
+url=$(echo "$repo" | sed 's#^git+##' | sed 's#/github.com/#/api.github.com/repos/#')"/releases/tags/$tag"
 echo $url
 
 valid_curl_get_result $url
