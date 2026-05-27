@@ -93,7 +93,7 @@ echo $url
 
 valid_curl_get_result $url
 echo $curl_result
-body=$(echo "$curl_result" | jq -r '.body' | sed 's/^#/###/')
+body=$(echo "$curl_result" | jq -r '.body // empty' | sed 's/^#/###/')
 
 }
 
