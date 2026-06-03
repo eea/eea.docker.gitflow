@@ -143,14 +143,14 @@ for i in $(echo $list_sources); do
         echo "Will now check if chart $i:$HELM_NEWVERSION is released, then update subcharts"
       
 	rm -rf index.yaml
-	wget $HELM_INDEX
+	wget -q $HELM_INDEX
 	timeout=1200
 
 	while [ $(yq '.entries.'$i'[] | select ( .version == "'$HELM_NEWVERSION'") ' index.yaml | wc -l ) -eq 0 ] && [ $timeout -gt 0 ]; do
 		  sleep 20
 		  let timeout=timeout-20
 		  rm -rf index.yaml
-                  wget $HELM_INDEX
+          wget -q $HELM_INDEX
         done
             
 	if [ $timeout -le 0 ]; then
