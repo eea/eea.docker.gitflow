@@ -107,8 +107,21 @@ for i in $(echo $list_sources); do
 		#comments are not allowed in values.yaml
 		sed -i "s|$DOCKER_IMAGENAME:[0-9]+.*|$DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION|g" values.yaml
 
-		# don't update version when gitflow-disable is on the same line
-		sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:[0-9].*$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/"  templates/*.yaml
+       if [ -n "$DOCKER_ADDITIONAL_SUFIX" ]; then
+
+		 # don't update version when gitflow-disable is on the same line
+		 # to be able to update version and version<sufix>
+		 sed -i -e "/gitflow-disable/! {/${DOCKER_IMAGENAME_ESC}:[0-9].*${DOCKER_ADDITIONAL_SUFIX}/! s/    image: ${DOCKER_IMAGENAME_ESC}:[0-9].*$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/}"  templates/*.yaml
+		 sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:[0-9].*${DOCKER_ADDITIONAL_SUFIX}$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}${DOCKER_ADDITIONAL_SUFIX}/"  templates/*.yaml
+
+
+	   else
+
+		 # don't update version when gitflow-disable is on the same line
+		 sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:[0-9].*$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/"  templates/*.yaml
+
+       fi
+		
 	fi
 
 	if [ $( git diff . | wc -l ) -gt 0 ]; then
