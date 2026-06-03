@@ -90,8 +90,8 @@ for i in $(echo $list_sources); do
 	            
 		    yq -i ".appVersion = \"$DOCKER_IMAGEVERSION\""  Chart.yaml
 
-		    if [[ "$DOCKER_IMAGEVERSION" == *"beta"* ]]; then
-			   echo "New version is beta, will create a PATCH release"
+		    if [[ "$DOCKER_IMAGEVERSION" == *"beta"* ]] || [[ "$DOCKER_IMAGEVERSION" == *"alpha"* ]] ; then
+			   echo "New version is beta or alpha, so we will create a PATCH release"
 			   export HELM_VERSION_TYPE="PATCH"
             else
 		       export HELM_VERSION_TYPE="MINOR"
@@ -147,18 +147,22 @@ for i in $(echo $list_sources); do
 
 	echo "The index was updated with the release"
 
-
-    echo "Starting update on fleet files"
+    if [[ "${HELM_VERSION_TYPE}" == "MINOR" ]]; then
 	
-    export HELM_NEWVERSION
-	export HELM_CHART=$i
-
-	/update_fleet_files.sh
+		echo "Starting update on fleet files"
 	
-	echo "Updating related charts from helm-charts, if found"
+    	export HELM_NEWVERSION
+		export HELM_CHART=$i
 
-	./release_subchart.sh $i
-   	
+		/update_fleet_files.sh
+	
+		echo "Updating related charts from helm-charts, if found"
+
+		./release_subchart.sh $i
+
+	else
+	   echo "Release is alpha/beta, skipping fleet update and subchart update"
+	fi
 
 done
 
