@@ -160,8 +160,9 @@ for i in $(echo $list_sources); do
 
 	echo "The index was updated with the release"
 
-    if [[ "${HELM_VERSION_TYPE}" == "MINOR" ]]; then
-	
+    if [[ "$DOCKER_IMAGEVERSION" == *"beta"* ]] || [[ "$DOCKER_IMAGEVERSION" == *"alpha"* ]]; then
+	   echo "Release is alpha/beta, skipping fleet update and subchart update"
+	else	
 		echo "Starting update on fleet files"
 	
     	export HELM_NEWVERSION
@@ -172,9 +173,6 @@ for i in $(echo $list_sources); do
 		echo "Updating related charts from helm-charts, if found"
 
 		./release_subchart.sh $i
-
-	else
-	   echo "Release is alpha/beta, skipping fleet update and subchart update"
 	fi
 
 done
