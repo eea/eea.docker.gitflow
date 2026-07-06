@@ -118,7 +118,7 @@ for i in $(echo $list_sources); do
 	   else
 
 		 # don't update version when gitflow-disable is on the same line
-		 sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:[0-9].*$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/"  templates/*.yaml
+		 sed -i -e "/gitflow-disable/! s/    image: ${DOCKER_IMAGENAME_ESC}:[v|V]*[0-9].*$/    image: ${DOCKER_IMAGENAME_ESC}:${DOCKER_IMAGEVERSION}/"  templates/*.yaml
 
        fi
 		
