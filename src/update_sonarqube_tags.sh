@@ -62,7 +62,7 @@ export GIT_BRANCH=${GIT_BRANCH:-'refs/heads/master'}
 
 project_result=$(curl -s "${SONAR_HOST_URL}api/components/search_projects?filter=tags%20%3D%20$SONARQUBE_TAG" | grep components )
 
-if [ -z $project_result ]; then
+if [ -z "$project_result" ]; then
 	echo "There is a problem with the sonarqube response"
 	curl "${SONAR_HOST_URL}api/components/search_projects?filter=tags%20%3D%20$SONARQUBE_TAG"
 else       
