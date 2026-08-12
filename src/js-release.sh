@@ -33,7 +33,7 @@ if [ -n "$NODEJS_VERSION" ]; then
   if [ $(nvm list "$NODEJS_VERSION" | grep "$NODEJS_VERSION" | wc -l) -eq 0 ]; then
 	  echo "Did not find this version installed, will install it"
 	  nvm install $NODEJS_VERSION
-	  npm install -g yarn release-it yarn-deduplicate husky rimraf
+	  npm install -g yarn release-it yarn-deduplicate husky rimraf pnpm
   fi
   nvm use $NODEJS_VERSION
 fi
@@ -54,6 +54,22 @@ check_and_push()
 	git add package.json
         git commit -m "Release $2@$3 - resolutions"
         git push
+  fi
+}
+
+# Detect package manager from package.json's packageManager field
+detect_package_manager()
+{
+  if [ -f package.json ]; then
+    local pm
+    pm=$(jq -r '.packageManager // empty' package.json 2>/dev/null)
+    if echo "$pm" | grep -q pnpm; then
+      echo "pnpm"
+    else
+      echo "yarn"
+    fi
+  else
+    echo "yarn"
   fi
 }
 
@@ -162,7 +178,7 @@ $old_version" | sort --sort=version | tail -n 1 )
                  return
        fi
        echo "DEPENDENCIES - Old version $old_version is smaller than the released version"
-       echo "DEPENDENCIES - Will now update the version file and yarn.lock"
+       echo "DEPENDENCIES - Will now update the version file and lock file"
 
        #does not support node 20, only 14
        if [ $(cat package.json | jq '.engines.node' | grep -v 20 | grep -v 18 | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
@@ -185,8 +201,14 @@ $old_version" | sort --sort=version | tail -n 1 )
        if [ "$1" == "eea/volto-eea-kitkat" ]; then
            nvm use 20
        fi
-       
-       if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
+
+       # Detect package manager (pnpm vs yarn)
+       PACKAGE_MANAGER=$(detect_package_manager)
+
+       if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
+           echo "DEPENDENCIES - Using pnpm to update $3@$4"
+           pnpm add $3@$4
+       elif [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
            yarn add -W $3@$4
            echo "DEPENDENCIES - Also run deduplicate to fix broken yarn.lock file"
            yarn-deduplicate yarn.lock
@@ -209,8 +231,14 @@ $old_version" | sort --sort=version | tail -n 1 )
        git status
        git diff
        git add package.json
-       if [ $(grep "yarn.lock" .gitignore | wc -l ) -eq 0 ]; then
-           git add yarn.lock
+       if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
+           if [ $(grep "pnpm-lock.yaml" .gitignore | wc -l ) -eq 0 ] && [ -f pnpm-lock.yaml ]; then
+               git add pnpm-lock.yaml
+           fi
+       else
+           if [ $(grep "yarn.lock" .gitignore | wc -l ) -eq 0 ]; then
+               git add yarn.lock
+           fi
        fi
        commit_ok=$(git commit -m "Release $3@$4" | grep -i "changed" | wc -l)
        if [ $commit_ok -eq 1 ]; then
@@ -303,9 +331,9 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	     npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
 	     
 	     sh -c "$npx_command"
-	     sed -i '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]/d' CHANGELOG.md
+	     sed -i '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' CHANGELOG.md
 
-	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -Eiv '\- Automated release [0-9\.]+|Add Sonarqube tag using .* addons list|\[jenkins|yarn' | wc -l ) -gt 0 ]; then
+	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -Eiv '\- Automated release [0-9\.]+|Add Sonarqube tag using .* addons list|\[jenkins|yarn|pnpm' | wc -l ) -gt 0 ]; then
 
 		     # there were other commits besides the automated release ones"
  	             git add CHANGELOG.md
@@ -390,18 +418,29 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	fi
         
 	if [ -z "$already_published" ]; then
-		
+			
 		echo "Publishing npm package"
 		echo "Checking if prepublish script exist"
 		if [ $(cat  package.json | jq '.scripts.prepublish | length') -gt 0 ]; then
 		   echo "Found prepublish script, running it"
-		   yarn
-		   yarn prepublish
+		   PACKAGE_MANAGER=$(detect_package_manager)
+		   if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
+			   pnpm install
+			   pnpm prepublish
+		   else
+			   yarn
+			   yarn prepublish
+		   fi
 		fi
 
                 if [ -n "$RUN_YARN_BEFORE_PUBLISH" ]; then
-                   echo "Found variable RUN_YARN_BEFORE_PUBLISH, will now run yarn"
-                   yarn
+                   echo "Found variable RUN_YARN_BEFORE_PUBLISH, will now install"
+                   PACKAGE_MANAGER=$(detect_package_manager)
+                   if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
+                     pnpm install
+                   else
+                     yarn
+                   fi
                 fi
 	    echo "-----------------------------------------------------------------"
         echo "Will now run npm publish command:"
