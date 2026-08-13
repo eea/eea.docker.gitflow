@@ -29,7 +29,7 @@ if [ -n "$NODEJS_VERSION" ]; then
   if [ $(nvm list "$NODEJS_VERSION" | grep "$NODEJS_VERSION" | wc -l) -eq 0 ]; then
           echo "Did not find this version installed, will install it"
           nvm install $NODEJS_VERSION
-          npm install -g yarn release-it yarn-deduplicate yo
+          npm install -g yarn release-it yarn-deduplicate yo pnpm
   fi
   nvm use $NODEJS_VERSION
 fi
@@ -135,15 +135,26 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
              
              #yarn
 
-             if [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
+             # Detect if repo uses pnpm
+             if [ $(jq -r '.packageManager // empty' package.json 2>/dev/null | grep -c pnpm) -eq 1 ]; then
+                echo "Repo uses pnpm, skipping yarn-deduplicate"
+             elif [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
                 echo "Running yarn-deduplicate"
                 yarn-deduplicate yarn.lock
              fi
 
-             if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
-                echo "Found changes in yarn.lock, will now update it"
-                git add yarn.lock
-                git commit -m "chore: [YARN] Automated update of yarn.lock using clean volto"
+             if [ $(jq -r '.packageManager // empty' package.json 2>/dev/null | grep -c pnpm) -eq 1 ]; then
+                if [ $(git diff pnpm-lock.yaml | wc -l) -gt 0 ]; then
+                   echo "Found changes in pnpm-lock.yaml, will now update it"
+                   git add pnpm-lock.yaml
+                   git commit -m "chore: [PNPM] Automated update of pnpm-lock.yaml"
+                fi
+             else
+                if [ $(git diff yarn.lock | wc -l) -gt 0 ]; then
+                   echo "Found changes in yarn.lock, will now update it"
+                   git add yarn.lock
+                   git commit -m "chore: [YARN] Automated update of yarn.lock using clean volto"
+                fi
              fi
 
              new_version=$(echo $version | awk -F'[.\-]' '{ print $1"."$2+1".0"}')
@@ -174,9 +185,9 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
              npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
 	     
 	     sh -c "$npx_command"
-	     sed -i '/ Automated release [0-9\.]\+ \|Autobuild of storybook docs\|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\]\|\[[yY][aA][rR][nN]\]/d' CHANGELOG.md
+	     sed -i '/ Automated release [0-9\.]\+ \|Autobuild of storybook docs\|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\]\|\[[yY][aA][rR][nN]\]\|\[[pP][nN][pP][mM]\]/d' CHANGELOG.md
 	     
-	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -Eiv '\- Automated release [0-9\.]+|Autobuild of storybook docs|Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]\]|\[[yY][aA][rR][nN]\]' | wc -l ) -gt 0 ]; then
+	     if [ $(git diff CHANGELOG.md | tail -n +5 | grep ^+ | grep -Eiv '\- Automated release [0-9\.]+|Autobuild of storybook docs|Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]\]|\[[yY][aA][rR][nN]\]|\[[pP][nN][pP][mM]\]' | wc -l ) -gt 0 ]; then
 		     # there were other commits besides the automated release ones"
  	             git add CHANGELOG.md
 	             git commit -m "Automated release $version"
