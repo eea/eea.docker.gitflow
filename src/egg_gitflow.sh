@@ -603,9 +603,9 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       fi
       
       # Updating versions.cfg
-      update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH} master
-      update_plone_config eea.docker.plone src/plone/versions.cfg master
-      update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
+      #update_plone_config ${KGS_GITNAME} ${KGS_VERSIONS_PATH} master
+      #update_plone_config eea.docker.plone src/plone/versions.cfg master
+      #update_plone_config eea.docker.plonesaas src/plone/versions.cfg master
       
       #Updating constraints.txt - Nightly release from master
       update_plone_constraints plone-backend constraints.txt master
