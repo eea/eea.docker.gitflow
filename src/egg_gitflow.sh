@@ -429,7 +429,7 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ " $GIT_RELEASE_BRANCHES " == *" $GIT_BR
         if [ ! -z "$EGGREPO_USERNAME$EGGREPO_PASSWORD" ]; then
 
           echo "Checking if version is released on EGGREPO"
-          egg_releases=$(curl -s -i "${EGGREPO_URL}d/${GIT_NAME,,}/")
+          egg_releases=$(curl -s -i "${EGGREPO_URL}simple")
 
 
           if [ $(echo "$egg_releases" | grep -Ec "HTTP/[0-9\.]* (200|404)") -eq 0 ]; then
