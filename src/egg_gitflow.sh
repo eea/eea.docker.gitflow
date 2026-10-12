@@ -305,13 +305,14 @@ $latestTag" | sort --sort=version | tail -n 1 )
 				#exit 0
 			fi
 
-
-
                         rstcheck --report-level warning $GIT_HISTORYFILE
+						rst2html --halt=warning $GIT_HISTORYFILE > /dev/null
+
                 fi
                 if [ -f "README.rst" ]; then
                         echo "Check README.rst format"
                         rstcheck --report-level warning README.rst
+						rst2html --halt=warning README.rst > /dev/null
                 fi
                 echo "Passed check: README.rst and $GIT_HISTORYFILE have correct RST format"
 	fi
