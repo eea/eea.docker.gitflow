@@ -331,7 +331,7 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
 	     npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
 	     
 	     sh -c "$npx_command"
-	     sed -i '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' CHANGELOG.md
+	     sed -i '/ Automated release [0-9\.]\+ \|Autobuild of storybook docs\|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' CHANGELOG.md
 
 	     if [ $(git diff CHANGELOG.md | wc -l ) -gt 0 ]; then
 
@@ -392,7 +392,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		echo  "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  \"$body\"}" 
 
 	    else
-	        body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs --ignore-commit-pattern 'Automated release [0-9\.]+ |Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]|[yY][aA][rR][nN]|[pP][nN][pP][mM]' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g'  | sed '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' )
+	        body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs --ignore-commit-pattern 'Automated release [0-9\.]+ |Autobuild of storybook docs|Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]|[yY][aA][rR][nN]|[pP][nN][pP][mM]' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g'  | sed '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' )
 	    fi
 
             body=$(echo "$body" | sed 's/[R|r]efs #\([0-9]*\)/Refs \[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' )
