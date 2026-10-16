@@ -73,7 +73,7 @@ echo "List of projects on sonarqube linked with $SONARQUBE_TAG"
 echo $sonarqube_master
 
 if [ ! -f package.json ] && [ -n "$GIT_NAME" ]; then
-	wget -q "https://raw.githubusercontent.com/eea/$GIT_NAME/$GIT_BRANCH/package.json"
+	curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN" -o package.json "https://raw.githubusercontent.com/eea/$GIT_NAME/$GIT_BRANCH/package.json"
 	echo "Did not find a package.json file, will download it from github for $GIT_NAME"
 else
 	echo "Found package.json, will now extract the addons from it"
@@ -93,7 +93,7 @@ echo "$package_addons" > /tmp/package_addons
 for package in $package_addons; do
      if [[ $package =~ volto-[a-z\-]*kitkat ]]; then
 	     echo "Found $package ( kitkat type), will add it's addons"
-	     wget -q "https://raw.githubusercontent.com/eea/$package/develop/package.json"
+	     curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN" -o package.json "https://raw.githubusercontent.com/eea/$package/develop/package.json"
              cat package.json | jq -r '.addons[] | select(.|startswith("@eeacms") or startswith("volto-slate:"))' | sed 's|@eeacms/||' | sed 's|:[a-zA-Z,]*||' >> /tmp/package_addons 
              rm package.json
      fi
@@ -109,11 +109,12 @@ for package in $(cat /tmp/all_addons); do
 		echo "Did not find the package in sonarqube with the $SONARQUBE_TAG tag, will try to set it"
 		jenkins_file=Jenkinsfile
                 rm -f /tmp/Jenkinsfile  
-		wget -q "https://raw.githubusercontent.com/eea/$package/develop/$jenkins_file"
-
+		
+		curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN" -o $jenkins_file "https://raw.githubusercontent.com/eea/$package/develop/$jenkins_file" 
+		
 		if [ $? -ne 0 ]; then
                     jenkins_file=Jenkinsfile.eea
-                    wget -q "https://raw.githubusercontent.com/eea/$package/develop/$jenkins_file"
+                    curl -s -X GET -L -H "Authorization: bearer $GIT_TOKEN" -o $jenkins_file "https://raw.githubusercontent.com/eea/$package/develop/$jenkins_file"
                 fi
 
 		line=$(grep "^ *SONARQUBE_TAGS *= *" $jenkins_file | sed 's/ //g' )
