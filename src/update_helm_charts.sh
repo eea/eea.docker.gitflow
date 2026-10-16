@@ -40,6 +40,14 @@ export GITHUB_TOKEN="${GIT_TOKEN}"
 RANCHER_HELM_GITNAME=${RANCHER_HELM_GITNAME:-'helm-charts'}
 RANCHER_FLEET_GITNAME=${RANCHER_FLEET_GIT:='eea-fleet'}
 RANCHER_FLEET_GITSRC=https://$GIT_USER:$GITHUB_TOKEN@github.com/${GIT_ORG}/${RANCHER_FLEET_GITNAME}.git
+new_image_version=""
+
+if [ -n "$DOCKERHUB_TAGS" ]; then
+
+     last_release=$(curl -s "$DOCKERHUB_TAGS" | jq --arg re "$DOCKERHUB_REGEXP" -r '.results[] | .name |  select(test($re))' | head -n 1)
+	 echo "Last release in docker hub is $last_release"
+     new_image_version=$last_release
+else
 
 if [[ "$GITHUB_RELEASES" =~ /releases$ ]]; then
   type="tag_name"
@@ -60,27 +68,30 @@ else
 fi
 
 echo "Last release in github is $last_release"
+new_image_version=${RELEASE_PREFIX}${last_release}${RELEASE_SUFFIX}
+fi
 
+echo "Found new version $new_image_version"
 mkdir -p /artifacts
 
 if [ -n $DOCKER_ARTIFACT ]; then
-   echo $last_release > /artifacts/$DOCKER_ARTIFACT
+   echo $new_image_version > /artifacts/$DOCKER_ARTIFACT
 fi
 
 if [ -n $DOCKER_ARTIFACT_CONTENT ]; then
-   if [[ "$DOCKER_ARTIFACT_CONTENT" == "$last_release" ]]; then
-     echo "Last succesfull job has already updated to $last_release"
+   if [[ "$DOCKER_ARTIFACT_CONTENT" == "$new_image_version" ]]; then
+     echo "Last succesfull job has already updated to $new_image_version"
 	 echo "Exiting"
 	 exit 0
    else
-	echo "Last succesfull job has this artifact - $DOCKER_ARTIFACT_CONTENT and it is different from last release - $last_release"
+	echo "Last succesfull job has this artifact - $DOCKER_ARTIFACT_CONTENT and it is different from last release - $new_image_version"
    fi
 fi
 
 
 echo "Starting update helm chart script"
 
-/add_helm_chart_entry.sh   $DOCKER_IMAGENAME ${RELEASE_PREFIX}${last_release}${RELEASE_SUFFIX}
+/add_helm_chart_entry.sh   $DOCKER_IMAGENAME ${new_image_version}
 
 cd /
 
