@@ -11,8 +11,8 @@ if [ -z "$GIT_TOKEN" ]; then
 fi
 
 #mandatory to get
-if [ -z "$HELM_CHART" ] || [ -z "$DOCKER_IMAGENAME" ] || [ -z "$GITHUB_RELEASES" ]; then
-  echo "This script needs HELM_CHART, DOCKER_IMAGENAME and GITHUB_RELEASES to work"
+if [ -z "$HELM_CHART" ] || [ -z "$DOCKER_IMAGENAME" ] ; then
+  echo "This script needs HELM_CHART, DOCKER_IMAGENAME to work"
   echo "RELEASE_PREFIX and RELEASE_SUFFIX are not mandatory"
 fi
 
