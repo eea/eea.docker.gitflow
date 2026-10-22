@@ -197,9 +197,9 @@ $old_version" | sort --sort=version | tail -n 1 )
            nvm use 22
        fi
 
-	   #volto-eea-kitkat needs node 20
+	   #volto-eea-kitkat needs node 22
        if [ "$1" == "eea/volto-eea-kitkat" ]; then
-           nvm use 20
+           nvm use 22
        fi
 
        # Detect package manager (pnpm vs yarn)
