@@ -53,8 +53,24 @@ update_versionfile()
 }
 
 
-calculate_version() 
-{ 
+get_egg_name()
+{
+ # read the name from setup.py, fallback to GIT_NAME
+ local name=""
+ if [ -f setup.py ]; then
+   name=$(python setup.py --name 2>/dev/null | tail -n 1)
+ fi
+ echo "${name:-$GIT_NAME}"
+}
+
+egg_name_regex()
+{
+ # pip treats - _ . as the same separator, use with case insensitive matching
+ echo "$1" | sed -E 's/[-_.]+/[-_.]+/g'
+}
+
+calculate_version()
+{
  echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; 
 }
 
@@ -62,13 +78,14 @@ update_plone_config()
 {
 PLONE_GITNAME=$1
 VERSIONS_PATH=$2
-EGG_NAME=${GIT_NAME}
+# matches the egg name with any of the - _ . separators, eg. eea.foo, eea_foo, eea-foo
+local egg_re=$(egg_name_regex "$EGG_NAME")
 BRANCH_NAME=master
 
 if [ -n "$3" ]; then
     BRANCH_NAME=$3
 fi
-    
+
 
 echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH, on branch $BRANCH_NAME"
 
@@ -81,27 +98,27 @@ if [ $(grep -c "\[versions\]" versions.cfg) -eq 0 ]; then
    exit 1
 fi
 
-if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
-  EGG_NAME=$(echo ${GIT_NAME} | sed 's/_/-/')
-  if [ $(grep -c "^${EGG_NAME} =" versions.cfg) -eq 0 ]; then
-    echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH} on branch $BRANCH_NAME, skipping upgrade"
-    return
-  fi
-fi
-
-if [ $(grep -E "DISABLE auto-release:.*${EGG_NAME}[ ]*$" versions.cfg | wc -l) -gt 0 ]; then
-  echo "Found this line in versions.cfg:"
-  grep -E -n "DISABLE auto-release.*${EGG_NAME}[ ]*$" versions.cfg
-  echo "Will not update the version of egg ${EGG_NAME} as auto-release is disabled"
+if [ $(grep -ciE "^${egg_re} =" versions.cfg) -eq 0 ]; then
+  echo "Could not find ${EGG_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH} on branch $BRANCH_NAME, skipping upgrade"
   return
 fi
 
-if [ $(grep -c "^${EGG_NAME} = $version$" versions.cfg) -eq 1 ]; then
-    echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version' on branch $BRANCH_NAME, skipping"
+# all the names the egg is written with in the file, eg. eea.foo and eea_foo
+local egg_name=$(grep -iE "^${egg_re} =" versions.cfg | awk '{print $1}' | sort -u | xargs)
+
+if [ $(grep -iE "DISABLE auto-release:.*${egg_re}[ ]*$" versions.cfg | wc -l) -gt 0 ]; then
+  echo "Found this line in versions.cfg:"
+  grep -iE -n "DISABLE auto-release.*${egg_re}[ ]*$" versions.cfg
+  echo "Will not update the version of egg ${egg_name} as auto-release is disabled"
+  return
+fi
+
+if [ $(grep -iE "^${egg_re} =" versions.cfg | grep -vc " = $version$") -eq 0 ]; then
+    echo "${PLONE_GITNAME} versions file already updated with '${egg_name} = $version' on branch $BRANCH_NAME, skipping"
     return
 fi
 
-old_version=$( grep  "^${EGG_NAME} =" versions.cfg | awk '{print $3}')
+old_version=$( grep -iE "^${egg_re} =" versions.cfg | grep -v " = $version$" | head -n 1 | awk '{print $3}')
 if [ $(calculate_version $version) -gt $(calculate_version $old_version) ]; then 
    check_version_bigger="OK"
 fi
@@ -114,17 +131,17 @@ if [[ ! $check_version_bigger == "OK" ]]; then
       echo "${version} is smaller than the version from ${PLONE_GITNAME} - ${old_version}, skipping"
       return
 fi
-echo "Updating ${PLONE_GITNAME} versions file on branch $BRANCH_NAME with released version on ${EGG_NAME}"
+echo "Updating ${PLONE_GITNAME} versions file on branch $BRANCH_NAME with released version on ${egg_name}"
 
 valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}" sha
 
 sha_versionfile=$(echo $curl_result |  jq -r '.sha // empty')
 
-sed -i "s/^${EGG_NAME} =.*/${EGG_NAME} = $version/" versions.cfg 
+sed -i -E "s/^(${egg_re}) =.*/\1 = $version/I" versions.cfg
 
 valid_curl_put_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\",\"branch\": \"${BRANCH_NAME}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat versions.cfg | base64))\"}" 
 
-echo "${PLONE_GITNAME} versions file on branch $BRANCH_NAME updated succesfully with '${EGG_NAME} = $version'"
+echo "${PLONE_GITNAME} versions file on branch $BRANCH_NAME updated succesfully with '${egg_name} = $version'"
 
 }
 
@@ -132,13 +149,14 @@ update_plone_constraints()
 {
 PLONE_GITNAME=$1
 VERSIONS_PATH=$2
-EGG_NAME=${GIT_NAME}
+# matches the egg name with any of the - _ . separators, eg. eea.foo, eea_foo, eea-foo
+local egg_re=$(egg_name_regex "$EGG_NAME")
 BRANCH_NAME=master
 
 if [ -n "$3" ]; then
     BRANCH_NAME=$3
 fi
-    
+
 
 echo "Starting the update of $PLONE_GITNAME $VERSIONS_PATH, on branch $BRANCH_NAME"
 
@@ -151,20 +169,20 @@ if [ $(grep -c "==" constraints.txt) -eq 0 ] && [ $(grep -c eggrepo constraints.
    exit 1
 fi
 
-if [ $(grep -c "^${EGG_NAME}==" constraints.txt) -eq 0 ]; then
-  EGG_NAME=$(echo ${GIT_NAME} | sed 's/_/-/')
-  if [ $(grep -c "^${EGG_NAME}==" constraints.txt) -eq 0 ]; then
-    echo "Could not find ${GIT_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH} on branch $BRANCH_NAME, skipping upgrade"
-    return
-  fi
+if [ $(grep -ciE "^${egg_re}==" constraints.txt) -eq 0 ]; then
+  echo "Could not find ${EGG_NAME} release in ${PLONE_GITNAME} in ${VERSIONS_PATH} on branch $BRANCH_NAME, skipping upgrade"
+  return
 fi
 
-if [ $(grep -c "^${EGG_NAME}==$version$" constraints.txt) -eq 1 ]; then
-    echo "${PLONE_GITNAME} versions file already updated with '${EGG_NAME} = $version' on branch $BRANCH_NAME, skipping"
+# all the names the egg is written with in the file, eg. eea.foo and eea_foo
+local egg_name=$(grep -iE "^${egg_re}==" constraints.txt | awk -F'==' '{print $1}' | sort -u | xargs)
+
+if [ $(grep -iE "^${egg_re}==" constraints.txt | grep -vc "==$version$") -eq 0 ]; then
+    echo "${PLONE_GITNAME} versions file already updated with '${egg_name}==$version' on branch $BRANCH_NAME, skipping"
     return
 fi
 
-old_version=$( grep  "^${EGG_NAME}==" constraints.txt | awk -F='=' '{print $2}')
+old_version=$( grep -iE "^${egg_re}==" constraints.txt | grep -v "==$version$" | head -n 1 | awk -F'==' '{print $2}')
 if [ $(calculate_version $version) -gt $(calculate_version $old_version) ]; then 
    check_version_bigger="OK"
 fi
@@ -177,19 +195,22 @@ if [[ ! $check_version_bigger == "OK" ]]; then
       echo "${version} is smaller than the version from ${PLONE_GITNAME} - ${old_version}, skipping"
       return
 fi
-echo "Updating ${PLONE_GITNAME} contstraints file on branch $BRANCH_NAME with released version on ${EGG_NAME}"
+echo "Updating ${PLONE_GITNAME} contstraints file on branch $BRANCH_NAME with released version on ${egg_name}"
 
 valid_curl_get_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}?ref=${BRANCH_NAME}" sha
 
 sha_versionfile=$(echo $curl_result |  jq -r '.sha // empty')
 
-sed -i "s/^${EGG_NAME}==.*/${EGG_NAME}==$version/" constraints.txt
+sed -i -E "s/^(${egg_re})==.*/\1==$version/I" constraints.txt
 
 valid_curl_put_result "https://api.github.com/repos/${GIT_ORG}/${PLONE_GITNAME}/contents/${VERSIONS_PATH}" "{\"message\": \"Release ${GIT_NAME} $version\", \"sha\": \"${sha_versionfile}\",\"branch\": \"${BRANCH_NAME}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat constraints.txt | base64))\"}" 
 
-echo "${PLONE_GITNAME} contstraints file on branch $BRANCH_NAME updated succesfully with '${EGG_NAME}==$version'"
+echo "${PLONE_GITNAME} contstraints file on branch $BRANCH_NAME updated succesfully with '${egg_name}==$version'"
 
 }
+
+EGG_NAME=$(get_egg_name)
+echo "Using egg name ${EGG_NAME}"
 
 if [ ! -z "$GIT_CHANGE_ID" ]; then
         GIT_BRANCH=PR-${GIT_CHANGE_ID}
@@ -427,6 +448,26 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ " $GIT_RELEASE_BRANCHES " == *" $GIT_BR
 
         echo "--------------------------------------------------------------------------------------------------------------------"
 
+        if [ ! -z "$EGGREPO_USERNAME$EGGREPO_PASSWORD$PYPI_USERNAME$PYPI_PASSWORD$PYPI_TOKEN" ]; then
+          echo "Compiling po files to mo"
+          pocompile
+
+          python setup.py sdist --formats=gztar
+          # sdist name depends on setuptools version, eg. eea_foo-1.0.tar.gz (new) or eea.foo-1.0.tar.gz (old)
+          dist_file=$(cd dist && ls *-${version}.tar.gz | head -n 1)
+          echo "Built dist/${dist_file}"
+          # new format - lowercase, with - _ . replaced by _ ; old format - name from setup.py
+          new_dist_file=$(echo "$EGG_NAME" | sed -E 's/[-_.]+/_/g' | tr '[:upper:]' '[:lower:]')-${version}.tar.gz
+          old_dist_file=${EGG_NAME}-${version}.tar.gz
+          # make sure both formats exist, whatever the setuptools version
+          for file in ${new_dist_file} ${old_dist_file}; do
+            if [ ! -f dist/${file} ]; then
+              cp dist/${dist_file} dist/${file}
+            fi
+          done
+          echo "--------------------------------------------------------------------------------------------------------------------"
+        fi
+
         if [ ! -z "$EGGREPO_USERNAME$EGGREPO_PASSWORD" ]; then
 
           echo "Checking if version is released on EGGREPO"
@@ -435,73 +476,57 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ " $GIT_RELEASE_BRANCHES " == *" $GIT_BR
 
           if [ $(echo "$egg_releases" | grep -Ec "HTTP/[0-9\.]* (200|404)") -eq 0 ]; then
              echo "There was a problem with the EGG repository - HTTP response code not 200 or 404"
-             echo "Please check ${EGGREPO_URL}d/${GIT_NAME,,}/"
+             echo "Please check ${EGGREPO_URL}d/${EGG_NAME,,}/"
              echo "$egg_releases"
              exit 1
           fi
 
-          if [ $(echo "$egg_releases" | grep -E "HTTP/[0-9\.]* 404" | wc -l ) -eq 1 ] || [ $(echo $egg_releases | grep -cE ">${GIT_NAME}-${version}\.tar\.gz<|>${GIT_NAME}-${version}\.zip<" ) -ne 1 ]; then
-
-              echo "Compiling po files to mo"
-              pocompile
-
-              echo "Starting the release ${GIT_NAME}-${version}.tar.gz on EEA repo"
-              python setup.py sdist --formats=gztar
-			  # copy for backwards compatibility
-			  
-			  twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
-              twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/*
-			  
-			  if [ ! -f dist/${GIT_NAME}-${version}\.tar\.gz ]; then
-			     echo "Doing the release on the old naming format too"
-			     #copy release under old format
-			     find dist/ -name *-${version}.tar.gz ! -name ${GIT_NAME}-${version}.tar.gz  -exec cp {} dist/${GIT_NAME}-${version}.tar.gz  \;
-		             twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
-                             twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${GIT_NAME}-${version}.tar.gz
-			     rm dist/${GIT_NAME}-${version}.tar.gz
-     		  fi
-			  echo "Release ${GIT_NAME}-${version} done on ${EGGREPO_URL}"
-
-         else
-             echo "Release ${GIT_NAME}-${version} already exists on EEA repo, skipping"
-          fi
+          # release both formats, old plones still need the old one
+          for file in $(echo ${new_dist_file} ${old_dist_file} | xargs -n 1 | sort -u); do
+            if [ $(echo "$egg_releases" | grep -cF ">${file}<") -eq 0 ]; then
+              echo "Starting the release ${file} on EEA repo"
+              twine register -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${file}
+              twine upload -u ${EGGREPO_USERNAME} -p ${EGGREPO_PASSWORD} --repository-url ${EGGREPO_URL} dist/${file}
+              echo "Release ${file} done on ${EGGREPO_URL}"
+            else
+              echo "Release ${file} already exists on EEA repo, skipping"
+            fi
+          done
           echo "--------------------------------------------------------------------------------------------------------------------"
         fi
 
         if [ ! -z "$PYPI_USERNAME$PYPI_PASSWORD$PYPI_TOKEN" ]; then
           echo "Checking if version is released on PyPi"
 
-          pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${GIT_NAME}/")
+          pypi_releases=$(curl -i -sL "${PYPI_CHECK_URL}${EGG_NAME}/")
 
 
           if [ $(echo "$pypi_releases" | grep -Ec "HTTP/[0-9\.]* (200|404)") -eq 0 ]; then
              echo "There was a problem with the PIPY repository - HTTP response code not 200 or 404"
-             echo "Please check ${PYPI_CHECK_URL}${GIT_NAME}/"
+             echo "Please check ${PYPI_CHECK_URL}${EGG_NAME}/"
              echo "$pypi_releases"
              exit 1
           fi
 
           if [ $(echo "$pypi_releases" | grep -cE "HTTP/[0-9\.]* 404") -eq 1 ]; then
-            echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${GIT_NAME}/"
+            echo "Egg will not be released on PyPi because it does not have any releases - ${PYPI_CHECK_URL}${EGG_NAME}/"
           else
 
-            if [ $(echo $pypi_releases | grep -cE ">${GIT_NAME}-${version}\.tar\.gz<|>${GIT_NAME}-${version}\.zip<") -ne 1 ]; then
-               echo "Starting the release ${GIT_NAME}-${version}.tar.gz on PyPi repo"
-               if [ ! -f dist/${GIT_NAME}-${version}.tar.gz ];then
-		       python setup.py sdist --formats=gztar
-	           fi
-		   
+            # PyPi accepts only one sdist per release, so any name format means it is released
+            if [ $(echo "$pypi_releases" | grep -ciE ">$(egg_name_regex "$EGG_NAME")-${version}\.(tar\.gz|zip)<") -eq 0 ]; then
+               echo "Starting the release ${new_dist_file} on PyPi repo"
+
                if [ -n "$PYPI_TOKEN" ]; then
 	            sed "s/PYPI_TOKEN/$PYPI_TOKEN/" /pypirc_template > ~/.pypirc
                     cat ~/.pypirc
-                    timeout 290 twine upload --verbose  dist/*
+                    timeout 290 twine upload --verbose  dist/${new_dist_file}
                 else
-                    timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/*
+                    timeout 290 twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD}  --verbose  dist/${new_dist_file}
                 fi
 
-               echo "Release ${GIT_NAME}-${version}.tar.gz  done on PyPi"
+               echo "Release ${new_dist_file} done on PyPi"
             else
-              echo "Release ${GIT_NAME}-${version} already exists on PyPi repo, skipping"
+              echo "Release ${EGG_NAME}-${version} already exists on PyPi repo, skipping"
             fi
           fi
           echo "--------------------------------------------------------------------------------------------------------------------"
