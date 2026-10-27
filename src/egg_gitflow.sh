@@ -619,11 +619,9 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
     if [ ! -z "$EGGREPO_PASSWORD$PYPI_PASSWORD" ]; then
     
       if [[ "$GIT_NAME" == "Products.Reportek" ]]; then
-	    if [[ "$GIT_BRANCH" == "master" ]]; then
-          update_plone_config eea.docker.reportek.base-dr-instance src/versions.cfg testing
-		else
-		  update_plone_constraints eea.docker.reportek.base-dr-instance requirements.txt z5
-		fi
+	    # base-dr-instance pin lives in requirements.txt;
+	    # a release lands on "testing" first, and is promoted to master after it was verified
+	    update_plone_constraints eea.docker.reportek.base-dr-instance requirements.txt testing
 	#there is no need to check other plones
         exit 0
       fi
@@ -645,6 +643,7 @@ $(sed '1,2'd $GIT_HISTORYFILE)" > $GIT_HISTORYFILE
       update_plone_constraints bise-backend constraints.txt master
       update_plone_constraints marine-backend constraints.txt master
       update_plone_constraints msfd-backend constraints.txt master
+	  update_plone_constraints waterhub-backend constraints.txt master
 	  
     fi
 fi
