@@ -295,20 +295,22 @@ $latestTag2" | grep -v alpha | grep -v beta | sort --sort=version | tail -n 1)
 
 		DEPENDENT_DOCKERFILE_TIMEOUT=${DEPENDENT_DOCKERFILE_TIMEOUT:-60}
 		DOCKERFILE_RETRY=${DEPENDENT_DOCKERFILE_RETRY:-10}
+		# image can be referenced directly (FROM repo:tag) or via a build arg (ARG NAME=repo:tag + FROM ${NAME})
+		IMAGE_LINE_REGEX="^(FROM |ARG [A-Za-z0-9_]+=)${DOCKERHUB_REPO}"
 
 		while [ $DOCKERFILE_RETRY -gt 0 ]
 		do
 
 	 		curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "${GITHUBURL}/contents/${DOCKERFILE_PATH}?ref=${DEP[3]}"  > /tmp/Dockerfile
 
-			if [ $(grep -c "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile) -eq 0 ]; then
+			if [ $(grep -cE "${IMAGE_LINE_REGEX}" /tmp/Dockerfile) -eq 0 ]; then
               	             echo "There was a problem getting the Dockerfile or it does not contain a ${DOCKERHUB_REPO} reference"
                 	     cat /tmp/Dockerfile
 	         	     exit 1
 	                fi
  
 	  		if [[ "$GITFLOW_BEHAVIOR" == "TAG_ONLY" ]]; then
-                		if [ $(grep -c "^FROM ${DOCKERHUB_REPO}:$version$" /tmp/Dockerfile) -eq 1 ]; then
+                		if [ $(grep -cE "${IMAGE_LINE_REGEX}:$version$" /tmp/Dockerfile) -gt 0 ]; then
                 		       echo "Dependent dockerfile is already updated to $version"
 				       DOCKERFILE_RETRY=-100
 	      			else
@@ -318,7 +320,7 @@ $latestTag2" | grep -v alpha | grep -v beta | sort --sort=version | tail -n 1)
 	                        fi
 
                         else
-                              if [ $(grep -c "^FROM ${DOCKERHUB_REPO}:$version$" /tmp/Dockerfile) -eq 1 ]; then
+                              if [ $(grep -cE "${IMAGE_LINE_REGEX}:$version$" /tmp/Dockerfile) -gt 0 ]; then
                                      echo "Dockerfile already updated, skipping"
                                      DOCKERFILE_RETRY=-100
 			      else
@@ -338,7 +340,7 @@ $latestTag2" | grep -v alpha | grep -v beta | sort --sort=version | tail -n 1)
 		fi
 
 
-                old_version=$( grep  "^FROM ${DOCKERHUB_REPO}" /tmp/Dockerfile  | awk -F':| ' '{print $3}')
+                old_version=$( grep -E "${IMAGE_LINE_REGEX}" /tmp/Dockerfile | head -n 1 | awk -F':| ' '{print $3}')
                 
 	        echo "Dockerfile current version is - $old_version"	
 		if [[ "$old_version" == "latest" ]]; then 
@@ -360,7 +362,7 @@ $old_version" | sort  --sort=version | tail -n 1)
 
                 sha_dockerfile=$(echo $curl_result |  jq -r '.sha // empty')
 
-                sed -i "s#^FROM ${DOCKERHUB_REPO}.*#FROM ${DOCKERHUB_REPO}\:$version#g" /tmp/Dockerfile
+                sed -i -E "s#${IMAGE_LINE_REGEX}.*#\1${DOCKERHUB_REPO}:$version#g" /tmp/Dockerfile
 
                 valid_curl_put_result "$GITHUBURL/contents/${DOCKERFILE_PATH}" "{\"message\": \"Release ${DOCKERHUB_REPO} $version\", \"sha\": \"${sha_dockerfile}\", \"branch\": \"${DEP[3]}\", \"committer\": { \"name\": \"${GIT_USERNAME}\", \"email\": \"${GIT_EMAIL}\" }, \"content\": \"$(printf '%s' $(cat /tmp/Dockerfile | base64))\"}"
 
