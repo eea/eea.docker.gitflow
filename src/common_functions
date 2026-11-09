@@ -131,11 +131,10 @@ get_dockerhub_buildhistory()
 }
 
 pad_letter_in_versions() {
-    if [[ "${1##*-}" =~ ^[a-zA-Z] ]]; then
-      echo "${1%-*}-00${1##*-}"
-    else 
-      echo $1
-    fi
+    # Pad every dash-separated segment that starts with a letter (not only the
+    # last one), so both versions are padded at the same positions and sort -V
+    # compares like with like, e.g. -eea.0.0.120-patch.5 vs -eea.0.0.121
+    echo "$1" | sed -E 's/-([a-zA-Z])/-00\1/g'
 }
 
 is_smaller() {
@@ -144,6 +143,9 @@ is_smaller() {
 
   if [ -n "$result" ]; then
     echo "$result"
+  elif [ "$1" == "$2" ]; then
+    # equal versions are not smaller (same as the packaging branch)
+    echo "False"
   else
     #not a version, will add 0 before any letters so we can sort it after 
     x1=$(pad_letter_in_versions $1)
