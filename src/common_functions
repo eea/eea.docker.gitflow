@@ -154,3 +154,64 @@ is_smaller() {
     [ "$(printf '%s\n%s' "$x1" "$x2" | sort -V | head -n1)" = "$x1" ] && echo "True" || echo "False"
   fi
 }
+
+# Prints the directory of the npm package released by a repository. Volto 19
+# add-ons keep a "-dev" shell package at the repository root and the published
+# package in packages/<name>; classic repositories keep it at the root.
+resolve_package_dir()
+{
+  root_dir=${1:-.}
+  root_name=$(jq -r '.name // empty' "$root_dir/package.json" 2>/dev/null)
+
+  if [[ "$root_name" != *-dev ]]; then
+    echo "$root_dir"
+    return
+  fi
+
+  expected_name=${root_name%-dev}
+
+  for candidate in "$root_dir"/packages/*/package.json; do
+    if [ ! -f "$candidate" ]; then
+      continue
+    fi
+
+    if [ "$(jq -r '.name // empty' "$candidate")" = "$expected_name" ]; then
+      dirname "$candidate"
+      return
+    fi
+  done
+
+  echo "$root_dir"
+}
+
+# Keeps the "-dev" shell package version in sync with the released package.
+sync_shell_version()
+{
+  shell_package=$1
+  version=$2
+  current_version=$(jq -r '.version // empty' "$shell_package" 2>/dev/null)
+
+  if [ "$current_version" = "$version" ]; then
+    return
+  fi
+
+  echo "Syncing $shell_package version from $current_version to $version"
+  jq ".version = \"$version\"" "$shell_package" > "$shell_package.tmp"
+  mv "$shell_package.tmp" "$shell_package"
+}
+
+# Drops the workspace protocol from a manifest, as the published package cannot
+# reference the pnpm workspace of its repository.
+strip_workspace_protocol()
+{
+  manifest=$1
+
+  jq '
+    reduce ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"][] as $section (.;
+      if (.[$section] | type) == "object"
+      then .[$section] |= with_entries(select((.value | type) != "string" or (.value | startswith("workspace:") | not)))
+      else . end
+    )
+  ' "$manifest" > "$manifest.tmp"
+  mv "$manifest.tmp" "$manifest"
+}

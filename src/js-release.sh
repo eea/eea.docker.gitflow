@@ -51,7 +51,7 @@ check_and_push()
   if [[ "$1" == "yes" ]]; then
         echo "RESOLUTIONS - Updating version on $2@$3 in package.json"
         git diff
-	git add package.json
+	git add "${DEPENDENT_PKG_JSON:-package.json}"
         git commit -m "Release $2@$3 - resolutions"
         git push
   fi
@@ -98,11 +98,7 @@ update_package_json()
 
        curl -s -X GET  -H "Authorization: bearer $GIT_TOKEN"  -H "Accept: application/vnd.github.VERSION.raw" "https://api.github.com/repos/$1/contents/package.json?ref=$UPDATE_BRANCH"  > /tmp/package.json
        if [ -f /tmp/package.json ] && [ $(grep 'dependencies' /tmp/package.json | wc -l) -gt 0 ]; then
-        echo "Got package.json file, will now check if $3 is present"
-	if [ $(grep $3 /tmp/package.json | wc -l) -eq 0 ]; then
-           echo "Did not find $3 in package.json, skipping $1"
-	   return
-        fi
+        echo "Got package.json file, will now check the resolved package after the clone"
        fi
 
        
@@ -123,8 +119,21 @@ update_package_json()
 	  return
        fi
        
+       DEPENDENT_PKG_DIR=$(resolve_package_dir .)
+       DEPENDENT_PKG_DIR=${DEPENDENT_PKG_DIR#./}
+       DEPENDENT_PKG_JSON="$DEPENDENT_PKG_DIR/package.json"
+
+       if [ "$DEPENDENT_PKG_DIR" != "." ]; then
+          echo "Using the nested package from $DEPENDENT_PKG_DIR"
+       fi
+
+       if [ $(grep -c "$3" "$DEPENDENT_PKG_JSON") -eq 0 ]; then
+          echo "Did not find $3 in $DEPENDENT_PKG_JSON, skipping $1"
+	  return
+       fi
+
        # check resolutions 
-       old_version=$(jq -r ".resolutions | .\"$3\"" package.json )
+       old_version=$(jq -r ".resolutions | .\"$3\"" "$DEPENDENT_PKG_JSON" )
        biggest_version=$(echo "$4
 $old_version" | sort --sort=version | tail -n 1 )
 
@@ -141,13 +150,13 @@ $old_version" | sort --sort=version | tail -n 1 )
        else
           echo "RESOLUTIONS - Old version $old_version is smaller than the released version"
           echo "RESOLUTIONS - Will now update the package.json file"
-          jq ".resolutions[\"$3\"] = \"$4\"" package.json > newpackage.json
-	  mv newpackage.json package.json
+          jq ".resolutions[\"$3\"] = \"$4\"" "$DEPENDENT_PKG_JSON" > newpackage.json
+	  mv newpackage.json "$DEPENDENT_PKG_JSON"
 	  to_push="yes"
        fi
        
        
-       old_version=$(jq -r ".dependencies | .\"$3\"" package.json )
+       old_version=$(jq -r ".dependencies | .\"$3\"" "$DEPENDENT_PKG_JSON" )
        
        if [ -z "$old_version" ] || [[ "$old_version" == "None" ]] || [[ "$old_version" == "null" ]] ; then
        	       check_and_push $to_push $3 $4
@@ -181,19 +190,19 @@ $old_version" | sort --sort=version | tail -n 1 )
        echo "DEPENDENCIES - Will now update the version file and lock file"
 
        #does not support node 20, only 14
-       if [ $(cat package.json | jq '.engines.node' | grep -v 20 | grep -v 18 | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
+       if [ $(cat "$DEPENDENT_PKG_JSON" | jq '.engines.node' | grep -v 20 | grep -v 18 | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
            nvm use 14
        fi
         #does not support node 20, only 16
-       if [ $(cat package.json | jq '.engines.node' | grep -v 20 | grep -v 18 | grep 16 | wc -l) -eq 1 ]; then
+       if [ $(cat "$DEPENDENT_PKG_JSON" | jq '.engines.node' | grep -v 20 | grep -v 18 | grep 16 | wc -l) -eq 1 ]; then
            nvm use 16
        fi
        #does not support node 20, only 18
-       if [ $(cat package.json | jq '.engines.node' | grep -v 20 | grep 18 | wc -l) -eq 1 ]; then
+       if [ $(cat "$DEPENDENT_PKG_JSON" | jq '.engines.node' | grep -v 20 | grep 18 | wc -l) -eq 1 ]; then
            nvm use 18
        fi
         #does not support node 20, only 22
-       if [ $(cat package.json | jq '.engines.node' | grep -v 20 |  grep 22 | wc -l) -eq 1 ]; then
+       if [ $(cat "$DEPENDENT_PKG_JSON" | jq '.engines.node' | grep -v 20 |  grep 22 | wc -l) -eq 1 ]; then
            nvm use 22
        fi
 
@@ -205,7 +214,16 @@ $old_version" | sort --sort=version | tail -n 1 )
        # Detect package manager (pnpm vs yarn)
        PACKAGE_MANAGER=$(detect_package_manager)
 
-       if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
+       if [ "$DEPENDENT_PKG_DIR" != "." ]; then
+           echo "DEPENDENCIES - Updating $3 to $4 in $DEPENDENT_PKG_JSON"
+           jq ".dependencies[\"$3\"] = \"$4\"" "$DEPENDENT_PKG_JSON" > newpackage.json
+           mv newpackage.json "$DEPENDENT_PKG_JSON"
+           if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
+               pnpm install --lockfile-only || echo "Could not refresh pnpm-lock.yaml, run make install in $1 and commit the lockfile"
+           else
+               echo "Lockfile not refreshed for the nested package, run the install of $1 and commit the lockfile"
+           fi
+       elif [ "$PACKAGE_MANAGER" == "pnpm" ]; then
            echo "DEPENDENCIES - Using pnpm to update $3@$4"
            pnpm add $3@$4
        elif [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
@@ -217,7 +235,7 @@ $old_version" | sort --sort=version | tail -n 1 )
        fi
 
        #back to default 16
-       if [ $(cat package.json | jq '.engines.node' | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
+       if [ $(cat "$DEPENDENT_PKG_JSON" | jq '.engines.node' | grep -v 16 | grep 14 | wc -l) -eq 1 ]; then
            nvm use 16
        fi
        
@@ -230,7 +248,7 @@ $old_version" | sort --sort=version | tail -n 1 )
        fi
        git status
        git diff
-       git add package.json
+       git add "${DEPENDENT_PKG_JSON:-package.json}"
        if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
            if [ $(grep "pnpm-lock.yaml" .gitignore | wc -l ) -eq 0 ] && [ -f pnpm-lock.yaml ]; then
                git add pnpm-lock.yaml
@@ -273,6 +291,12 @@ fi
 
 cd "$GIT_NAME"
 
+PKG_DIR=$(resolve_package_dir .)
+PKG_DIR=${PKG_DIR#./}
+PKG_JSON="$PKG_DIR/package.json"
+
+echo "Releasing the package from ${PKG_DIR}"
+
 
 #if PR
 if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT_CHANGE_BRANCH" == "develop" ]]; then
@@ -287,12 +311,12 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
         if [ -z "$existing_tags" ]; then
              echo "There are no tags, we need to first release initial version"
 	     git checkout master
-	     version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
+	     version=$(jq -r '.version' "$PKG_JSON")
 	     git tag -a $version -m "Initial release"
 	     git push origin tag $version
 	     git checkout $GIT_CHANGE_BRANCH     
 	fi
-        version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
+        version=$(jq -r '.version' "$PKG_JSON")
         
 	#check if version was already updated
         git fetch --tags
@@ -324,24 +348,37 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
                RELEASE_TYPE="major"
 	     fi
 	     
-	     release-it --config /release-it.json --no-git.tag -i $RELEASE_TYPE --ci
+	     ( cd "$PKG_DIR" && release-it --config /release-it.json --no-git.tag --no-git.commit --no-git.push -i $RELEASE_TYPE --ci )
+             version=$(jq -r '.version' "$PKG_JSON")
+             sync_shell_version package.json "$version"
+             git add "$PKG_JSON" "$PKG_DIR/CHANGELOG.md"
+             if [ "$PKG_DIR" != "." ]; then git add package.json; fi
+             if [ $(git diff --cached --name-only | wc -l) -gt 0 ]; then
+                 git commit -m "Automated release $version"
+                 git push
+             fi
         else
 	     echo "Existing version is not yet released, will only auto-update changelog"
              
 	     npx_command=$(grep after:bump /release-it.json | awk -F'"' '{print $4}' | awk -F';' '{print $1}' )
 	     
-	     sh -c "$npx_command"
-	     sed -i '/ Automated release [0-9\.]\+ \|Autobuild of storybook docs\|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' CHANGELOG.md
+	     ( cd "$PKG_DIR" && sh -c "$npx_command" )
+	     sync_shell_version package.json "$version"
+	     if [ "$PKG_DIR" != "." ] && ! git diff --quiet package.json; then git add package.json; fi
+	     sed -i '/ Automated release [0-9\.]\+ \|Autobuild of storybook docs\|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' "$PKG_DIR/CHANGELOG.md"
 
-	     if [ $(git diff CHANGELOG.md | wc -l ) -gt 0 ]; then
+	     if [ $(git diff "$PKG_DIR/CHANGELOG.md" | wc -l ) -gt 0 ]; then
+ 	             git add "$PKG_DIR/CHANGELOG.md"
+	     fi
+
+	     if [ $(git diff --cached --name-only | wc -l) -gt 0 ]; then
 
 		     # there were other commits besides the automated release ones"
- 	             git add CHANGELOG.md
 	             git commit -m "Automated release $version"
                      git push
 	     else
 	             echo "Did not find any new commits beside the automated ones, will not add them"
-		     git checkout -- CHANGELOG.md     
+		     git checkout -- "$PKG_DIR/CHANGELOG.md" package.json
 	     fi
 	fi
         
@@ -356,7 +393,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	echo "Starting release on github and npm"
 
         if [ -n "$NPM_TOKEN" ]; then
-            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
     	else
   	    echo "Did no receive NPM_TOKEN variable, necessary for npm release"
 	    exit 1
@@ -369,7 +406,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 	      git checkout $GIT_COMMIT
 	fi
 
-        version=$(grep '"version"' package.json | awk -F'"' '{print $4}')
+        version=$(jq -r '.version' "$PKG_JSON")
 
         #check if version was already updated
         git fetch --tags
@@ -392,7 +429,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		echo  "{\"tag_name\": \"$version\",\"name\": \"$version\", \"target_commitish\":\"${GIT_BRANCH}\",  \"body\":  \"$body\"}" 
 
 	    else
-	        body=$(npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs --ignore-commit-pattern 'Automated release [0-9\.]+ |Autobuild of storybook docs|Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]|[yY][aA][rR][nN]|[pP][nN][pP][mM]' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g'  | sed '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' )
+	        body=$( cd "$PKG_DIR" && npx auto-changelog --stdout --sort-commits date-desc --commit-limit false -u --template /release.hbs --ignore-commit-pattern 'Automated release [0-9\.]+ |Autobuild of storybook docs|Add Sonarqube tag using .* addons list|\[[jJ][eE][nN][kK][iI][nN][sS]|[yY][aA][rR][nN]|[pP][nN][pP][mM]' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' | sed 's/"/\\\"/g'  | sed '/ Automated release [0-9\.]\+ \|Add Sonarqube tag using .* addons list\|\[[jJ][eE][nN][kK][iI][nN][sS]\|[yY][aA][rR][nN]\|[pP][nN][pP][mM]/d' )
 	    fi
 
             body=$(echo "$body" | sed 's/[R|r]efs #\([0-9]*\)/Refs \[#\1\]\(https:\/\/taskman.eionet.europa.eu\/issues\/\1\)/g' )
@@ -405,7 +442,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
 	#check if released
 
-	package_name=$(grep '"name"' package.json | awk -F'"' '{print $4}')
+	package_name=$(jq -r '.name' "$PKG_JSON")
         
 	if [ $(npm search $package_name --json | grep "\"$package_name\"" | wc -l) -ne 0 ]; then
 
@@ -421,7 +458,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 			
 		echo "Publishing npm package"
 		echo "Checking if prepublish script exist"
-		if [ $(cat  package.json | jq '.scripts.prepublish | length') -gt 0 ]; then
+		if [ $(jq '.scripts.prepublish | length' "$PKG_JSON") -gt 0 ]; then
 		   echo "Found prepublish script, running it"
 		   PACKAGE_MANAGER=$(detect_package_manager)
 		   if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
@@ -435,16 +472,34 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 
                 if [ -n "$RUN_YARN_BEFORE_PUBLISH" ]; then
                    echo "Found variable RUN_YARN_BEFORE_PUBLISH, will now install"
+                   if [ "$PKG_DIR" != "." ]; then
+                     echo "Skipping the install of a nested package, the package manager of the repository is not installed here"
+                   else
                    PACKAGE_MANAGER=$(detect_package_manager)
                    if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
                      pnpm install
                    else
                      yarn
                    fi
+                   fi
                 fi
 	    echo "-----------------------------------------------------------------"
         echo "Will now run npm publish command:"
-                npm publish --access=public --verbose
+                manifest_backup=""
+                if [ "$PKG_DIR" != "." ]; then
+                    manifest_backup="$PKG_JSON.publish-backup"
+                    cp "$PKG_JSON" "$manifest_backup"
+                    strip_workspace_protocol "$PKG_JSON"
+                fi
+                publish_status=0
+                ( cd "$PKG_DIR" && npm publish --access=public --verbose ) || publish_status=$?
+                if [ -n "$manifest_backup" ]; then
+                    mv "$manifest_backup" "$PKG_JSON"
+                fi
+                if [ $publish_status -ne 0 ]; then
+                    echo "There was a problem publishing the npm package"
+                    exit $publish_status
+                fi
 		echo "Waiting for npm to sync their data for yarn before updating frontends"
                 sleep 20
 		#check if already published
