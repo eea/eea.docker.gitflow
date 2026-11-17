@@ -215,3 +215,14 @@ strip_workspace_protocol()
   ' "$manifest" > "$manifest.tmp"
   mv "$manifest.tmp" "$manifest"
 }
+
+# Sets PKG_DIR and PKG_JSON for the package released by the current checkout.
+# It has to be called again after every checkout, as the layout differs between
+# the released branch and the branch the repository is cloned on.
+set_package_paths()
+{
+  PKG_DIR=$(resolve_package_dir "${1:-.}")
+  PKG_DIR=${PKG_DIR#./}
+  PKG_JSON="$PKG_DIR/package.json"
+  export PKG_DIR PKG_JSON
+}

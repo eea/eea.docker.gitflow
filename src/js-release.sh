@@ -291,9 +291,7 @@ fi
 
 cd "$GIT_NAME"
 
-PKG_DIR=$(resolve_package_dir .)
-PKG_DIR=${PKG_DIR#./}
-PKG_JSON="$PKG_DIR/package.json"
+set_package_paths
 
 echo "Releasing the package from ${PKG_DIR}"
 
@@ -306,15 +304,18 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
         /wait_jenkins_branch_status.sh
 
 	git checkout $GIT_CHANGE_BRANCH
+	set_package_paths
 	existing_tags=$(git tag)
 
         if [ -z "$existing_tags" ]; then
              echo "There are no tags, we need to first release initial version"
 	     git checkout master
+	     set_package_paths
 	     version=$(jq -r '.version' "$PKG_JSON")
 	     git tag -a $version -m "Initial release"
 	     git push origin tag $version
 	     git checkout $GIT_CHANGE_BRANCH     
+	     set_package_paths
 	fi
         version=$(jq -r '.version' "$PKG_JSON")
         
@@ -378,7 +379,11 @@ if [ -n "$GIT_CHANGE_ID" ] && [[ "$GIT_CHANGE_TARGET" == "master" ]] && [[ "$GIT
                      git push
 	     else
 	             echo "Did not find any new commits beside the automated ones, will not add them"
-		     git checkout -- "$PKG_DIR/CHANGELOG.md" package.json
+		     if git ls-files --error-unmatch "$PKG_DIR/CHANGELOG.md" > /dev/null 2>&1; then
+		         git checkout -- "$PKG_DIR/CHANGELOG.md" package.json
+		     else
+		         rm -f "$PKG_DIR/CHANGELOG.md"
+		     fi
 	     fi
 	fi
         
@@ -404,6 +409,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
         if [ -n "$GIT_COMMIT" ]; then
               echo "Received commit as a variable, will checkout on it instead of the $GIT_BRANCH branch"
 	      git checkout $GIT_COMMIT
+	      set_package_paths
 	fi
 
         version=$(jq -r '.version' "$PKG_JSON")
