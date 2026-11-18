@@ -20,6 +20,9 @@ To run from jenkins:
 1. Version is not present in git tags
 1. Version format is number.number
 1. New version is bigger than last released version or no versions released yet
+1. Package has non-empty `keywords`, in `pyproject.toml` `[project]` if present, otherwise in setup.py (eggrepo returns a 500 on the package page without them)
+
+Packages with a `[project]` table in `pyproject.toml` get their metadata from the build backend and are released with `python -m build --sdist`, so `setup.py` is optional for them. Values in `setup.py` for fields that `[project]` declares are ignored by setuptools.
 
 
 ## Egg Release on commit to master
