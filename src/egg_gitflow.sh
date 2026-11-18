@@ -65,8 +65,16 @@ pyproject_metadata()
  # the package metadata (PKG-INFO headers) as the build backend from pyproject.toml generates it,
  # built in an isolated environment with the [build-system] requirements
  local out err=/tmp/pyproject_metadata.err
- if out=$(python -c 'import build.util
-m = build.util.project_wheel_metadata(".")
+ # the default runner of project_wheel_metadata hides the backend output, send it to stderr
+ # so the setuptools error is shown when the metadata build fails
+ if out=$(python -c 'import os, subprocess, sys
+import build.util
+
+def runner(cmd, cwd=None, extra_environ=None):
+    env = dict(os.environ, **(extra_environ or {}))
+    subprocess.check_call(cmd, cwd=cwd, env=env, stdout=sys.stderr)
+
+m = build.util.project_wheel_metadata(".", runner=runner)
 for key, value in m.items():
     print("%s: %s" % (key, " ".join(str(value).split())))' 2>"$err"); then
    echo "$out"
@@ -88,7 +96,8 @@ get_egg_name()
  # read the name from pyproject.toml or setup.py, fallback to GIT_NAME
  local name=""
  if has_pyproject; then
-   name=$(metadata_field "$(pyproject_metadata)" Name)
+   # name can not be dynamic in [project], read it without building the metadata
+   name=$(awk '/^\[/{p=($0 ~ /^\[project\][[:space:]]*$/)} p' pyproject.toml | grep -m 1 -E '^[[:space:]]*name[[:space:]]*=' | cut -d= -f2- | tr -d " \"'")
  elif [ -f setup.py ]; then
    name=$(python setup.py --name 2>/dev/null | tail -n 1)
  fi
@@ -364,6 +373,36 @@ $latestTag" | sort --sort=version | tail -n 1 )
         fi
 
         if has_pyproject; then
+          # readme is the long description (the PyPI project page), like long_description in
+          # setup.py; setuptools sets its content type from the file extension, so only the
+          # file is needed. eggrepo (clue.relmgr) renders it with docutils, which fails on a
+          # missing description. Checked before the metadata build, as setuptools also fails
+          # without readme when setup.py still sets long_description
+          echo "Check if readme exists in pyproject.toml"
+          if [ $(awk '/^\[/{p=($0 ~ /^\[project\][[:space:]]*$/)} p' pyproject.toml | grep -cE '^[[:space:]]*readme[[:space:]]*=|^[[:space:]]*dynamic[[:space:]]*=.*"readme"') -eq 0 ]; then
+                readme_file=""
+                for file in README.rst README.md; do
+                        if [ -f $file ]; then
+                                readme_file=$file
+                                break
+                        fi
+                done
+                if [ -z "$readme_file" ]; then
+                        echo "Did not find readme in pyproject.toml nor a README.rst or README.md file, please add one and set it in the [project] table, eg. readme = \"README.rst\""
+                        echo "Packages without a long description break the package page on the EEA egg repository"
+                        exit 1
+                fi
+                echo "Did not find readme in pyproject.toml, will add it with the existing $readme_file"
+                cp pyproject.toml /tmp/pyproject.toml
+                sed -i "0,/^\[project\][[:space:]]*$/s//[project]\nreadme = \"$readme_file\"/" pyproject.toml
+                if [ $(diff pyproject.toml /tmp/pyproject.toml | wc -l) -gt 0 ]; then
+                   update_file pyproject.toml "Updated pyproject.toml, added readme - needs review"
+                else
+                   echo "There is a problem with your pyproject.toml, check that it has a [project] table"
+                   exit 1
+                fi
+          fi
+
           echo "Found a [project] table in pyproject.toml, reading the package metadata with the build backend"
           package_metadata=$(pyproject_metadata || true)
           if [ -z "$package_metadata" ]; then
@@ -394,6 +433,22 @@ $latestTag" | sort --sort=version | tail -n 1 )
                         echo "Please add a long_description_content_type to setup.py, README.rst was not found"
                 fi
         fi
+
+        # eggrepo (clue.relmgr) renders the long description with docutils, which fails on a
+        # missing one; setuptools prints None for it (UNKNOWN in old versions)
+        echo "Check if long_description exists in setup.py"
+        if long_description=$(python setup.py --long-description 2>/dev/null); then
+                long_description=$(echo "$long_description" | tr -d '[:space:]')
+        else
+                echo "Could not run setup.py, checking long_description with grep"
+                long_description=$(grep -E "^[[:space:]]*long_description[[:space:]]*=[[:space:]]*[^[:space:]\"']|^[[:space:]]*long_description[[:space:]]*=[[:space:]]*[\"'][^\"']" setup.py || true)
+        fi
+        if [ -z "$long_description" ] || [ "$long_description" == "UNKNOWN" ] || [ "$long_description" == "None" ]; then
+                echo "Did not find long_description in setup.py, please add it, eg. long_description=open(\"README.rst\").read() + \"\\n\" + open(os.path.join(\"docs\", \"HISTORY.txt\")).read()"
+                echo "Packages without a long description break the package page on the EEA egg repository"
+                exit 1
+        fi
+        echo "Passed check: setup.py has long_description"
 
         if [ $(grep -c 'long_description_content_type=.*text/x-rst.*' setup.py) -eq 1 ]; then
                 description_content_type="text/x-rst"

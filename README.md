@@ -21,6 +21,7 @@ To run from jenkins:
 1. Version format is number.number
 1. New version is bigger than last released version or no versions released yet
 1. Package has non-empty `keywords`, in `pyproject.toml` `[project]` if present, otherwise in setup.py (eggrepo returns a 500 on the package page without them); checked before a release as well
+1. Long description is set: setup.py must have a non-empty `long_description`, and `long_description_content_type="text/x-rst"` is added to it when README.rst exists; `pyproject.toml` `[project]` must have `readme` (the content type comes from the file extension), it is added automatically from README.rst or README.md (eggrepo can not render the package page without a long description)
 
 Packages with a `[project]` table in `pyproject.toml` get their metadata from the build backend and are released with `python -m build --sdist`, so `setup.py` is optional for them. Values in `setup.py` for fields that `[project]` declares are ignored by setuptools.
 
