@@ -9,7 +9,7 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends jq bc bash curl gcc bc build-essential git dos2unix \
 # .run-deps git bash curl coreutils bc yarn jq make runc libseccomp build-base gcc libffi-dev npm libstdc++\
  && pip install --upgrade pip \ 
- && pip install docutils twine rstcheck zest.pocompile build \
+ && pip install docutils twine rstcheck zest.pocompile "build>=1.2,<2" \
  && pip install -I wheel==0.31.0 \
  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
  && curl -L -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 \

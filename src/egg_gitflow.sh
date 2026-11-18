@@ -64,10 +64,17 @@ pyproject_metadata()
 {
  # the package metadata (PKG-INFO headers) as the build backend from pyproject.toml generates it,
  # built in an isolated environment with the [build-system] requirements
- python -c 'import build.util
+ local out err=/tmp/pyproject_metadata.err
+ if out=$(python -c 'import build.util
 m = build.util.project_wheel_metadata(".")
 for key, value in m.items():
-    print("%s: %s" % (key, " ".join(str(value).split())))' 2>/dev/null
+    print("%s: %s" % (key, " ".join(str(value).split())))' 2>"$err"); then
+   echo "$out"
+   return 0
+ fi
+ echo "Could not build the package metadata from pyproject.toml, the build backend reported:" >&2
+ cat "$err" >&2
+ return 1
 }
 
 metadata_field()
@@ -86,6 +93,43 @@ get_egg_name()
    name=$(python setup.py --name 2>/dev/null | tail -n 1)
  fi
  echo "${name:-$GIT_NAME}"
+}
+
+check_package_keywords()
+{
+ # eggrepo (clue.relmgr) returns a 500 on /d/<egg>/ for a package without keywords,
+ # as new setuptools no longer writes an empty Keywords field in PKG-INFO
+ echo "Check if the package has keywords"
+ if has_pyproject; then
+   if [ -z "$package_metadata" ]; then
+     package_metadata=$(pyproject_metadata || true)
+   fi
+   if [ -z "$package_metadata" ]; then
+     echo "Could not get the package metadata from pyproject.toml, check that 'python -m build --sdist' works"
+     exit 1
+   fi
+   egg_keywords=$(metadata_field "$package_metadata" Keywords | tr -d ' ,')
+   if [ -z "$egg_keywords" ]; then
+     echo "Did not find keywords, please add them to the [project] table in pyproject.toml, eg. keywords = [\"EEA\", \"Add-ons\", \"Plone\", \"Zope\"]"
+     echo "Keywords set in setup.py are ignored when pyproject.toml has a [project] table"
+     echo "Packages without keywords break the package page on the EEA egg repository"
+     exit 1
+   fi
+   echo "Passed check: package has keywords"
+ elif [ -f setup.py ]; then
+   if egg_keywords=$(python setup.py --keywords 2>/dev/null); then
+     egg_keywords=$(echo "$egg_keywords" | tail -n 1 | tr -d ' ,')
+   else
+     echo "Could not run setup.py, checking keywords with grep"
+     egg_keywords=$(grep -E "^[[:space:]]*keywords[[:space:]]*=[[:space:]]*[[(]?[[:space:]]*[\"'][[:alnum:]]" setup.py || true)
+   fi
+   if [ -z "$egg_keywords" ] || [ "$egg_keywords" == "UNKNOWN" ]; then
+     echo "Did not find keywords in setup.py, please add them, eg. keywords=\"EEA Add-ons Plone Zope\""
+     echo "Packages without keywords break the package page on the EEA egg repository"
+     exit 1
+   fi
+   echo "Passed check: package has keywords"
+ fi
 }
 
 egg_name_regex()
@@ -357,33 +401,7 @@ $latestTag" | sort --sort=version | tail -n 1 )
 
         fi
 
-        # eggrepo (clue.relmgr) crashes with a 500 on /d/<egg>/ when the package has no
-        # keywords - new setuptools no longer writes an empty Keywords field in PKG-INFO
-        echo "Check if the package has keywords"
-        if has_pyproject; then
-                # setuptools ignores the keywords from setup.py when pyproject.toml has a [project] table
-                egg_keywords=$(metadata_field "$package_metadata" Keywords | tr -d ' ,')
-                if [ -z "$egg_keywords" ]; then
-                        echo "Did not find keywords, please add them to the [project] table in pyproject.toml, eg. keywords = [\"EEA\", \"Add-ons\", \"Plone\", \"Zope\"]"
-                        echo "Keywords set in setup.py are ignored when pyproject.toml has a [project] table"
-                        echo "Packages without keywords break the package page on the EEA egg repository"
-                        exit 1
-                fi
-                echo "Passed check: package has keywords"
-        elif [ -f setup.py ]; then
-                if egg_keywords=$(python setup.py --keywords 2>/dev/null); then
-                        egg_keywords=$(echo "$egg_keywords" | tail -n 1 | tr -d ' ,')
-                else
-                        echo "Could not run setup.py, checking keywords with grep"
-                        egg_keywords=$(grep -E "^[[:space:]]*keywords[[:space:]]*=[[:space:]]*[[(]?[[:space:]]*[\"'][[:alnum:]]" setup.py || true)
-                fi
-                if [ -z "$egg_keywords" ] || [ "$egg_keywords" == "UNKNOWN" ]; then
-                        echo "Did not find keywords in setup.py, please add them, eg. keywords=\"EEA Add-ons Plone Zope\""
-                        echo "Packages without keywords break the package page on the EEA egg repository"
-                        exit 1
-                fi
-                echo "Passed check: package has keywords"
-        fi
+        check_package_keywords
 
         if [[ "$description_content_type" == "text/x-rst"* ]]; then
                 echo "Check HISTORYFILE rst format"
@@ -519,6 +537,8 @@ if [[ "$GIT_BRANCH" == "master" ]] || [[ " $GIT_RELEASE_BRANCHES " == *" $GIT_BR
         echo "--------------------------------------------------------------------------------------------------------------------"
 
         if [ ! -z "$EGGREPO_USERNAME$EGGREPO_PASSWORD$PYPI_USERNAME$PYPI_PASSWORD$PYPI_TOKEN" ]; then
+          check_package_keywords
+
           echo "Compiling po files to mo"
           pocompile
 
