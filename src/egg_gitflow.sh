@@ -434,6 +434,22 @@ $latestTag" | sort --sort=version | tail -n 1 )
                 fi
         fi
 
+        # eggrepo (clue.relmgr) renders the long description with docutils, which fails on a
+        # missing one; setuptools prints None for it (UNKNOWN in old versions)
+        echo "Check if long_description exists in setup.py"
+        if long_description=$(python setup.py --long-description 2>/dev/null); then
+                long_description=$(echo "$long_description" | tr -d '[:space:]')
+        else
+                echo "Could not run setup.py, checking long_description with grep"
+                long_description=$(grep -E "^[[:space:]]*long_description[[:space:]]*=[[:space:]]*[^[:space:]\"']|^[[:space:]]*long_description[[:space:]]*=[[:space:]]*[\"'][^\"']" setup.py || true)
+        fi
+        if [ -z "$long_description" ] || [ "$long_description" == "UNKNOWN" ] || [ "$long_description" == "None" ]; then
+                echo "Did not find long_description in setup.py, please add it, eg. long_description=open(\"README.rst\").read() + \"\\n\" + open(os.path.join(\"docs\", \"HISTORY.txt\")).read()"
+                echo "Packages without a long description break the package page on the EEA egg repository"
+                exit 1
+        fi
+        echo "Passed check: setup.py has long_description"
+
         if [ $(grep -c 'long_description_content_type=.*text/x-rst.*' setup.py) -eq 1 ]; then
                 description_content_type="text/x-rst"
         fi
