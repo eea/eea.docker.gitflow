@@ -25,6 +25,27 @@ elif [ -f ./common_functions ]; then
     . ./common_functions
 fi
 
+check_package_docs()
+{
+  package_dir=${1:-.}
+  missing=""
+
+  if [ -z "$(find "$package_dir" -maxdepth 1 -iname 'readme*' -print -quit)" ]; then
+    missing="README"
+  fi
+
+  if [ -z "$(find "$package_dir" -maxdepth 1 -iname 'licen[cs]e*' -print -quit)" ]; then
+    missing="${missing:+$missing and }LICENSE"
+  fi
+
+  if [ -n "$missing" ]; then
+    echo "ERROR: $missing missing in '$package_dir'"
+    echo "npm takes README and LICENSE only from the package directory, so the published package would have no $missing on its npm page."
+    echo "Add the $missing file to '$package_dir' and release again."
+    exit 1
+  fi
+}
+
 export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
 
@@ -491,6 +512,7 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
                 fi
 	    echo "-----------------------------------------------------------------"
         echo "Will now run npm publish command:"
+                check_package_docs "$PKG_DIR"
                 manifest_backup=""
                 if [ "$PKG_DIR" != "." ]; then
                     manifest_backup="$PKG_JSON.publish-backup"
