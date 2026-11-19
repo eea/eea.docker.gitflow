@@ -490,10 +490,10 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
 		   PACKAGE_MANAGER=$(detect_package_manager)
 		   if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
 			   pnpm install
-			   pnpm prepublish
+			   ( cd "$PKG_DIR" && pnpm prepublish )
 		   else
 			   yarn
-			   yarn prepublish
+			   ( cd "$PKG_DIR" && yarn prepublish )
 		   fi
 		fi
 
