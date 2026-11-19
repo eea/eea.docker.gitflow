@@ -232,6 +232,10 @@ $old_version" | sort --sort=version | tail -n 1 )
            nvm use 22
        fi
 
+       if [ $(cat "$DEPENDENT_PKG_JSON" | jq -r '.engines.node // ""' | grep -c 22) -eq 1 ]; then
+           nvm use 22
+       fi
+
        # Detect package manager (pnpm vs yarn)
        PACKAGE_MANAGER=$(detect_package_manager)
 
