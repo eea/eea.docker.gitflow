@@ -515,14 +515,15 @@ if [ -z "$GIT_CHANGE_ID" ] && [[ "$GIT_BRANCH" == "master" ]] ; then
                 check_package_docs "$PKG_DIR"
                 manifest_backup=""
                 if [ "$PKG_DIR" != "." ]; then
-                    manifest_backup="$PKG_JSON.publish-backup"
+                    manifest_backup="$(mktemp)"
                     cp "$PKG_JSON" "$manifest_backup"
                     strip_workspace_protocol "$PKG_JSON"
                 fi
                 publish_status=0
                 ( cd "$PKG_DIR" && npm publish --access=public --verbose ) || publish_status=$?
                 if [ -n "$manifest_backup" ]; then
-                    mv "$manifest_backup" "$PKG_JSON"
+                    cp "$manifest_backup" "$PKG_JSON"
+                    rm -f "$manifest_backup"
                 fi
                 if [ $publish_status -ne 0 ]; then
                     echo "There was a problem publishing the npm package"
