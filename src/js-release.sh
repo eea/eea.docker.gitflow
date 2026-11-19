@@ -248,7 +248,7 @@ $old_version" | sort --sort=version | tail -n 1 )
            echo "DEPENDENCIES - Using pnpm to update $3@$4"
            pnpm add $3@$4
        elif [ $(yarn -v | grep ^1 | wc -l) -eq 1 ]; then
-           yarn add -W $3@$4
+           yarn add --ignore-engines -W $3@$4
            echo "DEPENDENCIES - Also run deduplicate to fix broken yarn.lock file"
            yarn-deduplicate yarn.lock
        else
