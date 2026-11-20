@@ -74,11 +74,11 @@ fi
 echo "Found new version $new_image_version"
 mkdir -p /artifacts
 
-if [ -n $DOCKER_ARTIFACT ]; then
+if [ -n "$DOCKER_ARTIFACT" ]; then
    echo $new_image_version > /artifacts/$DOCKER_ARTIFACT
 fi
 
-if [ -n $DOCKER_ARTIFACT_CONTENT ]; then
+if [ -n "$DOCKER_ARTIFACT_CONTENT" ]; then
    if [[ "$DOCKER_ARTIFACT_CONTENT" == "$new_image_version" ]]; then
      echo "Last succesfull job has already updated to $new_image_version"
 	 echo "Exiting"
