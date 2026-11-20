@@ -62,7 +62,9 @@ echo "Checked parameters, will start creating helm chart entry on ${GIT_ORG}/${R
 if [ -n "$HELM_CHART" ]; then
 	list_sources=$HELM_CHART
 else
-	list_sources=$(grep -R $DOCKER_IMAGENAME sources/ | awk -F: '{print $1}' | awk -F"/" '{print $2}' | uniq )
+	# only charts that really use the image (templates "image: <name>:<tag>" or values "repository: <name>"),
+	# each chart once - a plain grep on the name also matches ingress settings, docs, etc.
+	list_sources=$(grep -RlE "(image: *[\"']?${DOCKER_IMAGENAME}:|repository: *[\"']?${DOCKER_IMAGENAME}[\"']?[[:space:]]*$)" sources/*/values.yaml sources/*/templates 2>/dev/null | awk -F"/" '{print $2}' | sort -u || true)
 fi
 
 for i in $(echo $list_sources); do
@@ -107,7 +109,9 @@ for i in $(echo $list_sources); do
 		#comments are not allowed in values.yaml
 		sed -i "s|$DOCKER_IMAGENAME:[0-9]+.*|$DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION|g" values.yaml
 
-       if [ -n "$DOCKER_ADDITIONAL_SUFIX" ]; then
+       if ! compgen -G "templates/*.yaml" > /dev/null; then
+		 echo "No templates/*.yaml in $i, skipping template image update"
+       elif [ -n "$DOCKER_ADDITIONAL_SUFIX" ]; then
 
 		 # don't update version when gitflow-disable is on the same line
 		 # to be able to update version and version<sufix>
