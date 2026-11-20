@@ -49,6 +49,27 @@ elif [ -f ./common_functions ]; then
     . ./common_functions
 fi
 
+# set_image_version_on_line <file> <line> <key> - replaces the version after "<key>:" on that line
+# with DOCKER_IMAGEVERSION (+ DOCKER_ADDITIONAL_SUFIX if the old version had it), like the templates update
+set_image_version_on_line()
+{
+	local text new=$DOCKER_IMAGEVERSION
+	text=$(sed -n "${2}p" "$1")
+	[[ "$text" == *gitflow-disable* ]] && return 0
+	if [ -n "$DOCKER_ADDITIONAL_SUFIX" ] && [[ "$text" =~ ${DOCKER_ADDITIONAL_SUFIX}[\"\']?[[:space:]]*$ ]]; then
+		new=${new}${DOCKER_ADDITIONAL_SUFIX}
+	fi
+	sed -i -E "${2}s|(${3}: *[\"']?)[vV]?[0-9][^\"'[:space:]]*|\1${new}|" "$1"
+}
+
+# yq_line_offset <file> - yq "line" does not count the comments above the first key, add this to get the file line
+yq_line_offset()
+{
+	local first
+	first=$(grep -nvE '^[[:space:]]*(#.*)?$|^---' "$1" | head -n 1 | cut -d: -f1)
+	echo $(( ${first:-1} - $(yq '. | line' "$1") ))
+}
+
 # clone the repo
 rm -rf $RANCHER_HELM_GITNAME
 git clone $RANCHER_HELM_GITSRC
@@ -108,6 +129,18 @@ for i in $(echo $list_sources); do
 	else
 		#comments are not allowed in values.yaml
 		sed -i "s|$DOCKER_IMAGENAME:[0-9]+.*|$DOCKER_IMAGENAME:$DOCKER_IMAGEVERSION|g" values.yaml
+
+		# HELM_UPDATE_VALUES_TAG=yes - also update the image set in values.yaml as "repository: <name>" +
+		# "tag: <version>", and the questions.yaml default for that tag; edits only those lines, to keep
+		# the files' formatting. Opt-in, as some charts pin a values tag on purpose (e.g. a database major)
+		[[ "$HELM_UPDATE_VALUES_TAG" == "yes" ]] && DOCKER_IMAGENAME="$DOCKER_IMAGENAME" yq '.. | select(tag == "!!map" and .repository == strenv(DOCKER_IMAGENAME) and has("tag")) | .tag | select(tostring | test("^[vV]?[0-9]")) | (line | tostring) + " " + (path | join("."))' values.yaml | while read -r line tag_path; do
+			set_image_version_on_line values.yaml $(( line + $(yq_line_offset values.yaml) )) tag
+			if [ -f questions.yaml ]; then
+				for qline in $(TAG_PATH="$tag_path" yq '.questions[] | select(.variable == strenv(TAG_PATH)) | .default | select(tostring | test("^[vV]?[0-9]")) | line' questions.yaml); do
+					set_image_version_on_line questions.yaml $(( qline + $(yq_line_offset questions.yaml) )) default
+				done
+			fi
+		done
 
        if ! compgen -G "templates/*.yaml" > /dev/null; then
 		 echo "No templates/*.yaml in $i, skipping template image update"
