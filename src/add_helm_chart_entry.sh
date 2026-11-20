@@ -143,14 +143,17 @@ for i in $(echo $list_sources); do
         fi
 
         HELM_NEWVERSION=$(yq ".version"  sources/$i/Chart.yaml)
+        # the chart name can differ from its sources/ directory (cm-share -> cmshare); the index,
+        # fleet.yaml files and dependencies use the name
+        HELM_CHART_NAME=$(yq ".name"  sources/$i/Chart.yaml)
 
-        echo "Will now check if chart $i:$HELM_NEWVERSION is released, then update subcharts"
+        echo "Will now check if chart $HELM_CHART_NAME:$HELM_NEWVERSION is released, then update subcharts"
       
 	rm -rf index.yaml
 	wget -q $HELM_INDEX
 	timeout=1200
 
-	while [ $(yq '.entries.'$i'[] | select ( .version == "'$HELM_NEWVERSION'") ' index.yaml | wc -l ) -eq 0 ] && [ $timeout -gt 0 ]; do
+	while [ $(HELM_CHART_NAME="$HELM_CHART_NAME" HELM_NEWVERSION="$HELM_NEWVERSION" yq '.entries[strenv(HELM_CHART_NAME)][] | select ( .version == strenv(HELM_NEWVERSION) ) ' index.yaml | wc -l ) -eq 0 ] && [ $timeout -gt 0 ]; do
 		  sleep 20
 		  let timeout=timeout-20
 		  rm -rf index.yaml
@@ -170,13 +173,13 @@ for i in $(echo $list_sources); do
 		echo "Starting update on fleet files"
 	
     	export HELM_NEWVERSION
-		export HELM_CHART=$i
+		export HELM_CHART=$HELM_CHART_NAME
 
 		/update_fleet_files.sh
 	
 		echo "Updating related charts from helm-charts, if found"
 
-		./release_subchart.sh $i
+		./release_subchart.sh $HELM_CHART_NAME $HELM_NEWVERSION
 	fi
 
 done
